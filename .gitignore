@@ -1,0 +1,4 @@
+# import output: names / phone numbers from the client sheets — never commit
+data-import/import-report.txt
+data-import/*.csv
+data-import/*.xlsx
