@@ -1,6 +1,5 @@
 """One generic CRUD per lookup list: everyone reads, admins edit (admin area)."""
 
-from django.db.models import ProtectedError
 from rest_framework import permissions, serializers, viewsets
 
 from apps.core.views import IsAdminOrReadOnly, flag
@@ -37,11 +36,7 @@ def _make(slug, model, extra):
                 qs = qs.filter(is_active=True)
             return qs
 
-        def perform_destroy(self, instance):
-            try:
-                instance.delete()
-            except ProtectedError:
-                raise  # -> 409 by the exception handler; deactivate instead
+        # DELETE of a value still in use raises ProtectedError -> 409 (deactivate it instead)
 
     ViewSet.__name__ = f"{model.__name__}ViewSet"
     return ViewSet

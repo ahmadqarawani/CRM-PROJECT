@@ -1,10 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { Link, NavLink, Outlet, useNavigate } from 'react-router'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { api, unwrap, type Me } from '../api/client'
 import { useDashboard, useMarkNotification, useNotifications, useReadAll, useSearch } from '../api/hooks'
 import { ago } from '../lib/format'
 import { useLiveEvents } from '../lib/live'
+import { ErrorBoundary } from './ErrorBoundary'
 import { Logo } from './Logo'
 import { Avatar, cx } from './ui'
 
@@ -18,6 +19,7 @@ const I = {
   settings: <><circle cx="12" cy="12" r="3" /><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M6 18l1.4-1.4M16.6 7.4 18 6" /></>,
   bell: <><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" /><path d="M10 20.5a2 2 0 0 0 4 0" /></>,
   search: <><circle cx="11" cy="11" r="6.5" /><path d="m20 20-4-4" /></>,
+  more: <><circle cx="5.5" cy="12" r="1.3" /><circle cx="12" cy="12" r="1.3" /><circle cx="18.5" cy="12" r="1.3" /></>,
 }
 export function Icon({ d, size = 17 }: { d: ReactNode; size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">{d}</svg>
@@ -43,9 +45,12 @@ function NavItem({ to, icon, label, count, hot }: { to: string; icon: ReactNode;
 export function Shell({ me }: { me: Me }) {
   const [toast, setToast] = useState<string | null>(null)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
   const dash = useDashboard()
+  const unread = dash.data?.unread_notifications ?? 0
   const qc = useQueryClient()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
 
   const onNotification = useCallback(() => setToast('وصلك إشعار جديد'), [])
   useLiveEvents(onNotification)
@@ -75,8 +80,8 @@ export function Shell({ me }: { me: Me }) {
   }
 
   return (
-    <div className="grid h-full grid-cols-[232px_1fr]">
-      <aside className="flex flex-col border-e border-line bg-surface px-3 py-4">
+    <div className="grid h-full grid-cols-1 md:grid-cols-[232px_1fr]">
+      <aside className="hidden flex-col border-e border-line bg-surface px-3 py-4 md:flex">
         <Logo />
         <button
           onClick={() => setSearchOpen(true)}
@@ -87,11 +92,12 @@ export function Shell({ me }: { me: Me }) {
         </button>
         <nav className="flex flex-col gap-0.5">
           <NavItem to="/" icon={I.today} label="اليوم" count={dash.data?.overdue_count} hot />
-          <NavItem to="/requests" icon={I.board} label="الطلبات" count={dash.data?.open_requests} />
-          <NavItem to="/clients" icon={I.clients} label="العملاء" />
-          <NavItem to="/apartments" icon={I.home} label="الشقق" />
-          <NavItem to="/tasks" icon={I.tasks} label="المهام" count={dash.data?.my_tasks_today} />
+          <NavItem to="/finishing" icon={I.board} label="الإكساء" />
+          <NavItem to="/real-estate" icon={I.board} label="طلبات العقارات" />
+          <NavItem to="/properties" icon={I.home} label="العقارات المعروضة" />
+          <NavItem to="/contacts" icon={I.clients} label="العملاء" />
           <div className="px-2.5 pt-5 pb-1.5 text-[11.5px] text-faint">أخرى</div>
+          <NavItem to="/contacts/duplicates" icon={I.clients} label="مكررات محتملة" />
           <NavItem to="/archive" icon={I.archive} label="الأرشيف" />
           {me.is_admin && <NavItem to="/settings" icon={I.settings} label="الإعدادات" />}
         </nav>
@@ -101,28 +107,117 @@ export function Shell({ me }: { me: Me }) {
             <div className="truncate">{me.name}</div>
             <button onClick={logout} className="text-[12px] text-faint hover:text-ink">تسجيل خروج</button>
           </div>
-          <Bell unread={dash.data?.unread_notifications ?? 0} />
+          <Bell unread={unread} />
         </div>
       </aside>
 
-      <main className="min-w-0 overflow-auto">
-        <Outlet />
+      <main className="min-w-0 overflow-auto pb-16 md:pb-0">
+        <ErrorBoundary key={pathname}><Outlet /></ErrorBoundary>
       </main>
 
+      <nav className="fixed inset-x-0 bottom-0 z-20 flex border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden">
+        {[['/', I.today, 'اليوم'], ['/finishing', I.board, 'الإكساء'], ['/real-estate', I.home, 'العقارات'], ['/contacts', I.clients, 'العملاء']].map(([to, icon, label]) => (
+          <NavLink key={to as string} to={to as string} end={to === '/'} className={({ isActive }) => cx('flex flex-1 flex-col items-center gap-0.5 py-2 text-[11.5px] no-underline', isActive ? 'text-primary' : 'text-muted')}>
+            <Icon d={icon} size={20} />{label as string}
+          </NavLink>
+        ))}
+        <button onClick={() => setSearchOpen(true)} className="flex flex-1 flex-col items-center gap-0.5 py-2 text-[11.5px] text-muted"><Icon d={I.search} size={20} />بحث</button>
+        <button onClick={() => setMoreOpen(true)} className="relative flex flex-1 flex-col items-center gap-0.5 py-2 text-[11.5px] text-muted">
+          <Icon d={I.more} size={20} />المزيد
+          {unread > 0 && <span className="absolute top-1.5 left-[calc(50%-14px)] size-2 rounded-full bg-accent" />}
+        </button>
+      </nav>
+      {moreOpen && <MoreSheet me={me} unread={unread} onLogout={logout} onClose={() => setMoreOpen(false)} />}
       {searchOpen && <SearchPalette onClose={() => setSearchOpen(false)} />}
       {toast && (
-        <div className="fixed bottom-5 left-5 z-50 rounded-md border border-line bg-navy px-4 py-2.5 text-[13px] text-white shadow-lg">{toast}</div>
+        <div className="fixed bottom-20 left-4 z-50 rounded-md border border-line bg-navy px-4 py-2.5 text-[13px] text-white shadow-lg md:bottom-5 md:left-5">{toast}</div>
       )}
     </div>
   )
 }
 
-function Bell({ unread }: { unread: number }) {
-  const [open, setOpen] = useState(false)
+/** Phones: everything the sidebar has that the bottom bar doesn't. */
+function MoreSheet({ me, unread, onLogout, onClose }: { me: Me; unread: number; onLogout: () => void; onClose: () => void }) {
+  const [view, setView] = useState<'menu' | 'notifications'>('menu')
+  const { pathname } = useLocation()
+  const first = useRef(pathname)
+  useEffect(() => { if (pathname !== first.current) onClose() }, [pathname, onClose])
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+  const links: [string, ReactNode, string][] = [
+    ['/properties', I.home, 'العقارات المعروضة'], ['/contacts/duplicates', I.clients, 'مكررات محتملة'], ['/archive', I.archive, 'الأرشيف'],
+    ...(me.is_admin ? [['/settings', I.settings, 'الإعدادات'] as [string, ReactNode, string]] : []),
+  ]
+  return (
+    <div className="fixed inset-0 z-40 bg-navy/25 md:hidden" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()}
+        className="absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-auto rounded-t-[14px] bg-surface pb-[calc(env(safe-area-inset-bottom)+8px)] shadow-[0_-8px_30px_rgb(11_46_74/0.15)]">
+        <div className="flex items-center gap-2.5 border-b border-line px-4 py-3">
+          {view === 'notifications'
+            ? <button onClick={() => setView('menu')} className="text-[13px] text-primary">→ رجوع</button>
+            : <><Avatar name={me.name} /><b className="min-w-0 flex-1 truncate font-medium">{me.name}</b></>}
+          <button onClick={onClose} className="ms-auto rounded p-1 text-faint hover:bg-subtle" aria-label="إغلاق">✕</button>
+        </div>
+        {view === 'notifications' ? <NotificationList onPicked={onClose} /> : (
+          <nav className="flex flex-col p-2">
+            {links.map(([to, icon, label]) => (
+              <NavLink key={to} to={to} onClick={onClose}
+                className={({ isActive }) => cx('flex items-center gap-3 rounded-md px-3 py-3 no-underline', isActive ? 'bg-primary-soft text-navy' : 'text-ink')}>
+                <Icon d={icon} size={18} />{label}
+              </NavLink>
+            ))}
+            <button onClick={() => setView('notifications')} className="flex items-center gap-3 rounded-md px-3 py-3 text-start">
+              <Icon d={I.bell} size={18} />الإشعارات
+              {unread > 0 && <span className="num ms-auto grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1.5 text-[11px] text-white">{unread}</span>}
+            </button>
+            <button onClick={onLogout} className="mt-1 flex items-center gap-3 rounded-md border-t border-line px-3 py-3 text-start text-muted">تسجيل خروج</button>
+          </nav>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function NotificationList({ onPicked }: { onPicked: () => void }) {
   const list = useNotifications()
   const mark = useMarkNotification()
   const readAll = useReadAll()
   const navigate = useNavigate()
+  return (
+    <>
+      <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
+        <b className="font-medium">الإشعارات</b>
+        <button onClick={() => readAll.mutate()} className="text-[12.5px] text-primary hover:underline">اعتبرها كلها مقروءة</button>
+      </div>
+      <div className="max-h-[360px] overflow-auto">
+        {list.data?.results.length === 0 && <div className="px-4 py-6 text-center text-[13px] text-faint">ما في إشعارات</div>}
+        {list.data?.results.map((n) => (
+          <button
+            key={n.id}
+            onClick={() => {
+              mark.mutate(n.id)
+              onPicked()
+              navigate(n.deal_id ? `/finishing?open=${n.deal_id}` : '/')
+            }}
+            className={cx('flex w-full items-start gap-2.5 border-b border-line px-4 py-2.5 text-start last:border-0 hover:bg-bg', !n.is_read && 'bg-accent-soft/40')}
+          >
+            <span className={cx('mt-1.5 size-2 flex-none rounded-full', n.is_read ? 'bg-line-strong' : n.kind === 'ACTIVITY_OVERDUE' ? 'bg-accent' : 'bg-primary')} />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[13.5px]">{n.message}</span>
+              <span className="text-[12px] text-faint">{ago(n.created_at)}</span>
+            </span>
+          </button>
+        ))}
+      </div>
+    </>
+  )
+}
+
+function Bell({ unread }: { unread: number }) {
+  const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -140,30 +235,7 @@ function Bell({ unread }: { unread: number }) {
       </button>
       {open && (
         <div className="absolute bottom-10 right-0 z-40 w-[340px] rounded-[10px] border border-line bg-surface shadow-[0_12px_40px_rgb(11_46_74/0.16)]">
-          <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
-            <b className="font-medium">الإشعارات</b>
-            <button onClick={() => readAll.mutate()} className="text-[12.5px] text-primary hover:underline">اعتبرها كلها مقروءة</button>
-          </div>
-          <div className="max-h-[360px] overflow-auto">
-            {list.data?.results.length === 0 && <div className="px-4 py-6 text-center text-[13px] text-faint">ما في إشعارات</div>}
-            {list.data?.results.map((n) => (
-              <button
-                key={n.id}
-                onClick={() => {
-                  mark.mutate(n.id)
-                  setOpen(false)
-                  navigate(n.request ? `/requests?open=${n.request.id}` : '/tasks')
-                }}
-                className={cx('flex w-full items-start gap-2.5 border-b border-line px-4 py-2.5 text-start last:border-0 hover:bg-bg', !n.is_read && 'bg-accent-soft/40')}
-              >
-                <span className={cx('mt-1.5 size-2 flex-none rounded-full', n.is_read ? 'bg-line-strong' : n.kind === 'REQUEST_OVERDUE' ? 'bg-accent' : 'bg-primary')} />
-                <span className="flex-1">
-                  <span className="block text-[13.5px]">{n.message}</span>
-                  <span className="text-[12px] text-faint">{ago(n.created_at)}</span>
-                </span>
-              </button>
-            ))}
-          </div>
+          <NotificationList onPicked={() => setOpen(false)} />
         </div>
       )}
     </div>
@@ -186,10 +258,9 @@ function SearchPalette({ onClose }: { onClose: () => void }) {
 
   const groups = res.data && q.trim().length >= 2
     ? [
-        { label: 'عملاء', items: res.data.clients.map((c) => ({ key: `c${c.id}`, text: c.name, sub: c.phone, to: `/clients/${c.id}` })) },
-        { label: 'شقق', items: res.data.apartments.map((a) => ({ key: `a${a.id}`, text: a.title, sub: null, to: `/apartments/${a.id}` })) },
-        { label: 'طلبات', items: res.data.requests.map((r) => ({ key: `r${r.id}`, text: r.title, sub: `#${r.id}`, to: `/requests?open=${r.id}` })) },
-        { label: 'ملفات', items: res.data.documents.map((d) => ({ key: `d${d.id}`, text: d.original_name, sub: null, to: `/clients/${d.client_id}?tab=files` })) },
+        { label: 'عملاء', items: res.data.contacts.map((c) => ({ key: `c${c.id}`, text: c.name, sub: c.phone, to: `/contacts/${c.id}` })) },
+        { label: 'طلبات', items: res.data.deals.map((d) => ({ key: `d${d.id}`, text: d.title || `#${d.id}`, sub: `#${d.id}`, to: `/${d.kind === 'FINISHING' ? 'finishing' : 'real-estate'}?open=${d.id}` })) },
+        { label: 'عقارات', items: res.data.properties.map((p) => ({ key: `p${p.id}`, text: p.code, sub: p.address, to: `/properties/${p.id}` })) },
       ].filter((g) => g.items.length)
     : []
 
@@ -202,11 +273,11 @@ function SearchPalette({ onClose }: { onClose: () => void }) {
             autoFocus
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="ابحث عن عميل، رقم هاتف، شقة، طلب، ملف…"
+            placeholder="اسم، رقم بأي شكل، كود عقار…"
             className="h-12 flex-1 bg-transparent text-[15px] outline-none placeholder:text-faint"
           />
         </div>
-        <div className="max-h-[50vh] overflow-auto py-1.5">
+        <div className="max-h-[50dvh] overflow-auto py-1.5">
           {q.trim().length < 2 && <div className="px-4 py-5 text-center text-[13px] text-faint">اكتب حرفين على الأقل</div>}
           {q.trim().length >= 2 && groups.length === 0 && !res.isFetching && (
             <div className="px-4 py-5 text-center text-[13px] text-faint">ما لقينا شي</div>
@@ -216,15 +287,15 @@ function SearchPalette({ onClose }: { onClose: () => void }) {
               <div className="px-4 pt-2 pb-1 text-[11.5px] text-faint">{g.label}</div>
               {g.items.map((it) => (
                 <button key={it.key} onClick={() => go(it.to)} className="flex w-full items-center gap-2 px-4 py-2 text-start hover:bg-bg">
-                  <span>{it.text}</span>
-                  {it.sub && <span className="num ms-auto text-faint">{it.sub}</span>}
+                  <span className="min-w-0 truncate">{it.text}</span>
+                  {it.sub && <span className="num ms-auto max-w-[45%] flex-none truncate text-faint">{it.sub}</span>}
                 </button>
               ))}
             </div>
           ))}
         </div>
         <div className="border-t border-line px-4 py-2 text-[12px] text-faint">
-          <Link to="/clients" onClick={onClose} className="text-primary">كل العملاء</Link>
+          <Link to="/contacts" onClick={onClose} className="text-primary">كل العملاء</Link>
         </div>
       </div>
     </div>

@@ -170,6 +170,14 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
     "COMPONENT_SPLIT_REQUEST": True,  # separate read/write components (nested read, *_id write)
     "SERVE_INCLUDE_SCHEMA": False,
+    # several models have a "type"/"kind" choice field: give each enum a stable, readable name
+    "ENUM_NAME_OVERRIDES": {
+        "ActivityTypeEnum": "apps.activities.models.Activity.Type",
+        "StageTypeEnum": "apps.deals.models.Stage.Type",
+        "DealKindEnum": "apps.deals.models.Deal.Kind",
+        "NotificationKindEnum": "apps.notifications.models.Notification.Kind",
+        "PipelineEnum": "apps.deals.models.Pipeline",
+    },
 }
 
 # --- domain settings ---

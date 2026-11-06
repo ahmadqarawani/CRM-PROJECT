@@ -37,6 +37,17 @@ class BaseViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, DeletePermission]
     http_method_names = ["get", "post", "patch", "delete", "head", "options"]
 
+    def filter_queryset(self, queryset):
+        """Always end the ordering with the pk: with ties (e.g. 200 requests that all "need attention") the
+        database may order them differently per query, and a card would then show on two pages or on none."""
+        qs = super().filter_queryset(queryset)
+        if self.action != "list" or not hasattr(qs, "query"):
+            return qs
+        order = list(qs.query.order_by) or list(qs.model._meta.ordering)
+        if not {"pk", "-pk", "id", "-id"} & set(order):
+            qs = qs.order_by(*order, "-pk")
+        return qs
+
     def archived_filter(self, qs):
         archived = flag(self.request, "archived")
         return qs.filter(archived_at__isnull=not archived) if archived else qs.filter(archived_at__isnull=True)

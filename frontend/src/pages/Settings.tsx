@@ -1,96 +1,212 @@
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import type { Stage } from '../api/client'
-import { useDeleteStage, useSaveStage, useStages } from '../api/hooks'
-import { Badge, Button, Card, Dialog, Dot, Field, FormError, Input, PageHeader, Select, Spinner } from '../components/ui'
-import { applyServerErrors } from '../lib/forms'
+import { call, type Lookup, type Stage } from '../api/client'
+import { useCatalog, useSaveCatalog, useSaveStage, useStages, useUsers, type CatalogSlug } from '../api/hooks'
+import { Tabs } from '../components/bits'
+import { Badge, Button, Card, Dot, Field, FormError, Input, PageHeader, Select } from '../components/ui'
+
+type Tab = 'stages' | 'lists' | 'users' | 'email' | 'handover'
 
 export function Settings() {
-  const stages = useStages(true)
-  const save = useSaveStage()
-  const del = useDeleteStage()
-  const [edit, setEdit] = useState<Stage | 'new' | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  const swap = async (a: Stage, b: Stage) => {
-    await save.mutateAsync({ id: a.id, body: { order: b.order } })
-    await save.mutateAsync({ id: b.id, body: { order: a.order } })
-  }
-
-  const list = stages.data ?? []
+  const [tab, setTab] = useState<Tab>('stages')
   return (
-    <div className="mx-auto max-w-[860px]">
-      <PageHeader title="مراحل الطلبات" sub="المدة المسموحة بكل مرحلة هي اللي بتحدد إذا الطلب متأخر"
-        actions={<Button variant="primary" onClick={() => setEdit('new')}>+ مرحلة</Button>} />
-      <div className="px-6 py-2">
-        {error && <FormError message={error} />}
-        {stages.isLoading ? <Spinner /> : (
-          <Card className="mt-2">
-            {list.map((s, i) => (
-              <div key={s.id} className="flex items-center gap-3 border-b border-line px-4 py-2.5 last:border-0">
-                <div className="flex flex-col">
-                  <button disabled={i === 0} onClick={() => swap(s, list[i - 1])} className="text-faint hover:text-ink disabled:opacity-30">▲</button>
-                  <button disabled={i === list.length - 1} onClick={() => swap(s, list[i + 1])} className="text-faint hover:text-ink disabled:opacity-30">▼</button>
-                </div>
-                <Dot color={s.color ?? '#999'} />
-                <span className={s.is_active ? '' : 'text-faint line-through'}>{s.name}</span>
-                {s.requires_follow_up && <Badge tone="primary">بدها موعد متابعة</Badge>}
-                {s.closes_as === 'WON' && <Badge tone="mint">بتسكّر: تم</Badge>}
-                {s.closes_as === 'LOST' && <Badge tone="danger">بتسكّر: ملغي</Badge>}
-                <span className="ms-auto text-[13px] text-muted">{s.sla_days ? <><span className="num">{s.sla_days}</span> يوم مسموح</> : 'بلا حد'}</span>
-                <Button size="sm" variant="ghost" onClick={() => setEdit(s)}>تعديل</Button>
-                <Button size="sm" variant="ghost" onClick={async () => {
-                  setError(null)
-                  try { await del.mutateAsync(s.id) } catch (e) { setError(`${(e as Error).message} — فيك توقّفها بدل الحذف`) }
-                }}>حذف</Button>
-              </div>
-            ))}
-          </Card>
-        )}
+    <div className="mx-auto max-w-[900px] pb-24">
+      <PageHeader title="الإعدادات" sub="القوائم والمراحل والمستخدمين والإيميل — كلها بتتعدّل من هون" />
+      <div className="px-4 md:px-6">
+        <Tabs value={tab} onChange={setTab} items={[['stages', 'المراحل'], ['lists', 'القوائم'], ['users', 'المستخدمين'], ['email', 'الإيميل والإشعارات'], ['handover', 'تسليم الشغل']]} />
+        {tab === 'stages' && <Stages />}
+        {tab === 'lists' && <Lists />}
+        {tab === 'users' && <Users />}
+        {tab === 'email' && <Email />}
+        {tab === 'handover' && <HandOver />}
       </div>
-      <StageDialog open={edit !== null} stage={edit && edit !== 'new' ? edit : undefined} nextOrder={(list.at(-1)?.order ?? 0) + 1}
-        onClose={() => setEdit(null)} />
     </div>
   )
 }
 
-type F = { name: string; color: string; sla_days: string; requires_follow_up: boolean; closes_as: '' | 'WON' | 'LOST'; is_active: boolean; root?: string }
+function Stages() {
+  return <>{(['FINISHING', 'BROKERAGE'] as const).map((p) => <PipelineStages key={p} pipeline={p} />)}</>
+}
 
-function StageDialog({ open, stage, nextOrder, onClose }: { open: boolean; stage?: Stage; nextOrder: number; onClose: () => void }) {
+function PipelineStages({ pipeline }: { pipeline: 'FINISHING' | 'BROKERAGE' }) {
+  const stages = useStages(pipeline, true)
   const save = useSaveStage()
-  const { register, handleSubmit, reset, setError, formState: { errors, isSubmitting } } = useForm<F>()
-  useEffect(() => {
-    if (open) reset({
-      name: stage?.name ?? '', color: stage?.color ?? '#64748b', sla_days: stage?.sla_days?.toString() ?? '',
-      requires_follow_up: stage?.requires_follow_up ?? false, closes_as: (stage?.closes_as ?? '') as F['closes_as'], is_active: stage?.is_active ?? true,
-    })
-  }, [open, stage, reset])
-  const submit = handleSubmit(async (v) => {
-    try {
-      await save.mutateAsync({
-        id: stage?.id,
-        body: { name: v.name, color: v.color, sla_days: v.sla_days ? Number(v.sla_days) : null, requires_follow_up: v.requires_follow_up,
-          closes_as: v.closes_as, is_active: v.is_active, ...(stage ? {} : { order: nextOrder }) },
-      })
-      onClose()
-    } catch (e) {
-      applyServerErrors(e, setError, ['name', 'color', 'sla_days', 'closes_as'])
-    }
-  })
+  const list = stages.data ?? []
+  const swap = async (a: Stage, b: Stage) => {
+    await save.mutateAsync({ id: a.id, body: { order: b.order } })
+    await save.mutateAsync({ id: b.id, body: { order: a.order } })
+  }
   return (
-    <Dialog open={open} onClose={onClose} title={stage ? 'تعديل المرحلة' : 'مرحلة جديدة'}
-      footer={<><Button variant="primary" onClick={submit} disabled={isSubmitting}>حفظ</Button><Button variant="ghost" onClick={onClose}>إلغاء</Button></>}>
-      <form onSubmit={submit} className="grid grid-cols-2 gap-3">
-        <Field label="الاسم" error={errors.name?.message} className="col-span-2"><Input {...register('name', { required: 'مطلوب' })} /></Field>
-        <Field label="اللون" error={errors.color?.message}><Input type="color" className="p-1" {...register('color')} /></Field>
-        <Field label="الأيام المسموحة" hint="فاضي = بلا حد" error={errors.sla_days?.message}><Input dir="ltr" inputMode="numeric" {...register('sla_days')} /></Field>
-        <Field label="بتسكّر الطلب؟" error={errors.closes_as?.message} className="col-span-2">
-          <Select {...register('closes_as')}><option value="">لأ، مرحلة عادية</option><option value="WON">نعم: تم</option><option value="LOST">نعم: ملغي</option></Select>
-        </Field>
-        <label className="col-span-2 flex items-center gap-2"><input type="checkbox" {...register('requires_follow_up')} />ما بينقل الطلب لهون بدون موعد متابعة</label>
-        <label className="col-span-2 flex items-center gap-2"><input type="checkbox" {...register('is_active')} />فعّالة (بتبيّن بالـ Kanban)</label>
-        <div className="col-span-2"><FormError message={errors.root?.message} /></div>
+    <section className="mb-6">
+      <div className="mb-2 flex items-center"><h3 className="m-0 text-[14px] font-semibold text-navy">{pipeline === 'FINISHING' ? 'خط الإكساء' : 'خط الوساطة العقارية'}</h3>
+        <Button size="sm" variant="ghost" className="ms-auto" onClick={() => save.mutate({ body: { pipeline, name: 'مرحلة جديدة', order: (list.at(-1)?.order ?? 0) + 1 } })}>+ مرحلة</Button></div>
+      <Card>
+        {list.map((s, i) => (
+          <div key={s.id} className="flex flex-wrap items-center gap-2 border-b border-line px-3 py-2 last:border-0">
+            <div className="flex flex-col leading-none">
+              <button disabled={i === 0} onClick={() => swap(s, list[i - 1])} className="text-faint disabled:opacity-30">▲</button>
+              <button disabled={i === list.length - 1} onClick={() => swap(s, list[i + 1])} className="text-faint disabled:opacity-30">▼</button>
+            </div>
+            <input type="color" value={s.color ?? '#64748b'} onChange={(e) => save.mutate({ id: s.id, body: { color: e.target.value } })} className="h-6 w-7 border-0 bg-transparent p-0" />
+            <Input defaultValue={s.name} onBlur={(e) => e.target.value !== s.name && save.mutate({ id: s.id, body: { name: e.target.value } })} className="w-44" />
+            <Select className="w-28" value={s.type} onChange={(e) => save.mutate({ id: s.id, body: { type: e.target.value as never } })}>
+              <option value="OPEN">مفتوحة</option><option value="WON">رابحة</option><option value="LOST">خاسرة</option>
+            </Select>
+            <span className="text-[12.5px] text-muted">بتعتبر واقفة بعد</span>
+            <Input dir="ltr" className="w-16" defaultValue={s.rotting_days ?? ''} onBlur={(e) => save.mutate({ id: s.id, body: { rotting_days: e.target.value ? Number(e.target.value) : null } })} />
+            <span className="text-[12.5px] text-muted">يوم</span>
+            <label className="ms-auto flex items-center gap-1 text-[12.5px] text-muted"><input type="checkbox" checked={!!s.is_active} onChange={(e) => save.mutate({ id: s.id, body: { is_active: e.target.checked } })} />فعّالة</label>
+          </div>
+        ))}
+      </Card>
+    </section>
+  )
+}
+
+const LISTS: [CatalogSlug, string, string?][] = [
+  ['sources', 'مصادر العملاء', 'opens_whatsapp'], ['lost-reasons', 'أسباب الخسارة'], ['locations', 'المناطق'], ['property-types', 'أنواع العقارات'],
+  ['finish-levels', 'مستويات الإكساء'], ['service-types', 'خدمات الإكساء'], ['ownership-types', 'أنواع الملكية'], ['features', 'إضافات العقار'], ['tags', 'الوسوم'],
+]
+
+function Lists() {
+  const [slug, setSlug] = useState<CatalogSlug>('sources')
+  const q = useCatalog(slug, true)
+  const save = useSaveCatalog(slug)
+  const [name, setName] = useState('')
+  const extra = LISTS.find((l) => l[0] === slug)?.[2]
+  return (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-[200px_1fr]">
+      <div className="flex flex-row flex-wrap gap-1 md:flex-col">
+        {LISTS.map(([s, label]) => (
+          <button key={s} onClick={() => setSlug(s)} className={`rounded-md px-2.5 py-1.5 text-start text-[13.5px] ${slug === s ? 'bg-primary-soft text-navy' : 'text-muted hover:bg-subtle'}`}>{label}</button>
+        ))}
+      </div>
+      <div>
+        <form className="mb-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); if (name.trim()) save.mutate({ body: { name: name.trim() } }, { onSuccess: () => setName('') }) }}>
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="إضافة قيمة جديدة…" />
+          <Button variant="primary" type="submit">إضافة</Button>
+        </form>
+        <Card className="max-h-[60vh] overflow-auto">
+          {q.data?.map((o: Lookup) => (
+            <div key={o.id} className="flex items-center gap-2 border-b border-line px-3 py-1.5 last:border-0">
+              <Input defaultValue={o.name} className="h-8" onBlur={(e) => e.target.value !== o.name && save.mutate({ id: o.id, body: { name: e.target.value } })} />
+              {extra === 'opens_whatsapp' && (
+                <label className="flex flex-none items-center gap-1 text-[12.5px] text-muted"><input type="checkbox" checked={!!o.opens_whatsapp} onChange={(e) => save.mutate({ id: o.id, body: { opens_whatsapp: e.target.checked } })} />زر واتساب</label>
+              )}
+              <label className="flex flex-none items-center gap-1 text-[12.5px] text-muted"><input type="checkbox" checked={!!o.is_active} onChange={(e) => save.mutate({ id: o.id, body: { is_active: e.target.checked } })} />فعّال</label>
+            </div>
+          ))}
+        </Card>
+        <p className="text-[12.5px] text-faint">القيمة المستعملة ما بتنحذف — بتوقّفها (فعّال) فبتختفي من الخيارات وبتضل بالسجلات القديمة.</p>
+      </div>
+    </div>
+  )
+}
+
+type UserRow = { id: number; username: string; name: string; email: string; is_active: boolean; is_admin: boolean; can_delete: boolean; last_login: string | null }
+
+function Users() {
+  const qc = useQueryClient()
+  const users = useQuery({ queryKey: ['admin-users'], queryFn: () => call<UserRow[]>('GET', '/api/v1/admin/users/') })
+  const [form, setForm] = useState({ username: '', name: '', password: '', can_delete_input: false, is_admin: false })
+  const [err, setErr] = useState<string>()
+  const refresh = () => { qc.invalidateQueries({ queryKey: ['admin-users'] }); qc.invalidateQueries({ queryKey: ['users'] }) }
+  const patch = (id: number, body: object) => call('PATCH', `/api/v1/admin/users/${id}/`, body).then(refresh)
+  return (
+    <div>
+      <Card className="mb-4">
+        {users.data?.map((u) => (
+          <div key={u.id} className="flex flex-wrap items-center gap-3 border-b border-line px-3.5 py-2.5 last:border-0">
+            <div className="min-w-32"><b className="font-medium">{u.name || u.username}</b><div className="text-[12px] text-faint" dir="ltr">{u.username}</div></div>
+            {u.is_admin && <Badge tone="primary">مسؤول</Badge>}
+            <label className="flex items-center gap-1 text-[13px]"><input type="checkbox" checked={u.can_delete} onChange={(e) => patch(u.id, { can_delete_input: e.target.checked })} />صلاحية الحذف</label>
+            <label className="flex items-center gap-1 text-[13px]"><input type="checkbox" checked={u.is_active} onChange={(e) => patch(u.id, { is_active: e.target.checked })} />فعّال</label>
+            <Button size="sm" variant="ghost" className="ms-auto" onClick={() => { const pw = prompt('كلمة سر جديدة (8 أحرف على الأقل)'); if (pw) patch(u.id, { password: pw }).catch((e) => alert(e.message)) }}>تغيير كلمة السر</Button>
+          </div>
+        ))}
+      </Card>
+      <h3 className="mb-2 text-[14px] font-semibold text-navy">مستخدم جديد</h3>
+      <form className="grid grid-cols-1 gap-3 sm:grid-cols-2" onSubmit={async (e) => {
+        e.preventDefault(); setErr(undefined)
+        try { await call('POST', '/api/v1/admin/users/', form); setForm({ username: '', name: '', password: '', can_delete_input: false, is_admin: false }); refresh() }
+        catch (x) { setErr((x as Error).message) }
+      }}>
+        <Field label="اسم المستخدم"><Input dir="ltr" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} /></Field>
+        <Field label="الاسم الظاهر"><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+        <Field label="كلمة السر"><Input type="password" dir="ltr" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></Field>
+        <div className="flex flex-wrap items-end gap-x-4 gap-y-2 pb-2 text-[13px]">
+          <label className="flex items-center gap-1"><input type="checkbox" checked={form.can_delete_input} onChange={(e) => setForm({ ...form, can_delete_input: e.target.checked })} />صلاحية الحذف</label>
+          <label className="flex items-center gap-1"><input type="checkbox" checked={form.is_admin} onChange={(e) => setForm({ ...form, is_admin: e.target.checked })} />مسؤول (الإعدادات)</label>
+        </div>
+        <div className="sm:col-span-2"><FormError message={err} /></div>
+        <div><Button variant="primary" type="submit">إنشاء</Button></div>
       </form>
-    </Dialog>
+    </div>
+  )
+}
+
+type SiteSettings = { email_enabled: boolean; smtp_host: string; smtp_port: number; smtp_use_tls: boolean; smtp_username: string; smtp_password_set: boolean; from_email: string; digest_hour: number; quiet_start_hour: number; quiet_end_hour: number; weekly_report_recipients: string }
+
+function Email() {
+  const q = useQuery({ queryKey: ['site-settings'], queryFn: () => call<SiteSettings>('GET', '/api/v1/admin/settings/') })
+  const [s, setS] = useState<SiteSettings | null>(null)
+  const [password, setPassword] = useState('')
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  useEffect(() => { if (q.data) setS(q.data) }, [q.data])
+  if (!s) return null
+  const save = async () => {
+    setMsg(null)
+    try { const r = await call<SiteSettings>('PATCH', '/api/v1/admin/settings/', { ...s, smtp_password: password }); setS(r); setPassword(''); setMsg({ ok: true, text: 'انحفظ' }) }
+    catch (e) { setMsg({ ok: false, text: (e as Error).message }) }
+  }
+  const test = async () => {
+    setMsg(null)
+    try { await call('POST', '/api/v1/admin/settings/test-email/'); setMsg({ ok: true, text: 'وصل إيميل تجربة ✓' }) }
+    catch (e) { setMsg({ ok: false, text: (e as Error).message }) }
+  }
+  const num = (k: keyof SiteSettings) => (e: React.ChangeEvent<HTMLInputElement>) => setS({ ...s, [k]: Number(e.target.value) })
+  return (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <p className="sm:col-span-2 m-0 text-[13px] text-muted">Gmail: فعّل التحقق بخطوتين بحسابك، وبعدين اعمل <b>App Password</b> من إعدادات حساب Google وحطها هون (مش كلمة سر الحساب).</p>
+      <label className="sm:col-span-2 flex items-center gap-2"><input type="checkbox" checked={s.email_enabled} onChange={(e) => setS({ ...s, email_enabled: e.target.checked })} />تفعيل إرسال الإيميلات</label>
+      <Field label="الإيميل (اسم المستخدم)"><Input dir="ltr" value={s.smtp_username} onChange={(e) => setS({ ...s, smtp_username: e.target.value })} /></Field>
+      <Field label="App Password" hint={s.smtp_password_set ? 'محفوظة — اتركها فاضية لتضل متل ما هي' : 'مش محفوظة لسا'}><Input type="password" dir="ltr" value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
+      <Field label="SMTP host"><Input dir="ltr" value={s.smtp_host} onChange={(e) => setS({ ...s, smtp_host: e.target.value })} /></Field>
+      <Field label="Port"><Input dir="ltr" value={s.smtp_port} onChange={num('smtp_port')} /></Field>
+      <Field label="الإرسال باسم" hint="اختياري"><Input dir="ltr" value={s.from_email} onChange={(e) => setS({ ...s, from_email: e.target.value })} /></Field>
+      <Field label="مستلمو التقرير الأسبوعي" hint="مفصولين بفاصلة"><Input dir="ltr" value={s.weekly_report_recipients} onChange={(e) => setS({ ...s, weekly_report_recipients: e.target.value })} /></Field>
+      <Field label="ساعة ملخص الصبح"><Input dir="ltr" value={s.digest_hour} onChange={num('digest_hour')} /></Field>
+      <div className="grid grid-cols-2 gap-2">
+        <Field label="هدوء من الساعة"><Input dir="ltr" value={s.quiet_start_hour} onChange={num('quiet_start_hour')} /></Field>
+        <Field label="لغاية"><Input dir="ltr" value={s.quiet_end_hour} onChange={num('quiet_end_hour')} /></Field>
+      </div>
+      <div className="sm:col-span-2 flex items-center gap-2">
+        <Button variant="primary" onClick={save}>حفظ</Button><Button onClick={test}>إرسال إيميل تجربة</Button>
+        {msg && <span className={msg.ok ? 'text-mint-ink' : 'text-danger'}>{msg.text}</span>}
+      </div>
+    </div>
+  )
+}
+
+function HandOver() {
+  const users = useUsers()
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
+  const [res, setRes] = useState<string>()
+  return (
+    <div className="max-w-lg">
+      <p className="text-[13px] text-muted">بتنقل كل الشغل المفتوح (العملاء، الطلبات، المواعيد، العقارات) من موظف لموظف بخطوة وحدة. السجل القديم بيضل متل ما هو.</p>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Field label="من"><Select value={from} onChange={(e) => setFrom(e.target.value)}><option value="">—</option>{users.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</Select></Field>
+        <Field label="إلى"><Select value={to} onChange={(e) => setTo(e.target.value)}><option value="">—</option>{users.data?.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</Select></Field>
+      </div>
+      <Button className="mt-3" variant="primary" disabled={!from || !to || from === to} onClick={async () => {
+        if (!confirm('متأكد؟')) return
+        const r = await call<Record<string, number>>('POST', '/api/v1/admin/hand-over/', { from_user_id: Number(from), to_user_id: Number(to) })
+        setRes(`انتقل: ${r.deals} طلب، ${r.activities} موعد، ${r.contacts} عميل، ${r.properties} عقار`)
+      }}>تسليم</Button>
+      {res && <p className="text-mint-ink">{res}</p>}
+      <div className="mt-6"><Dot color="var(--color-faint)" /> <span className="text-[12.5px] text-faint">المستخدمين ما بينحذفوا أبداً — بتوقّف الحساب من تبويب المستخدمين.</span></div>
+    </div>
   )
 }

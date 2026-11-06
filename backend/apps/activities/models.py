@@ -2,6 +2,8 @@
 a call made now has done_at; a site visit next Sunday has due_at; the deal's "next step"
 is its nearest open planned activity."""
 
+import builtins
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -45,10 +47,10 @@ class Activity(models.Model):
                    models.Index(fields=["assignee", "done_at", "due_at"])]
         verbose_name_plural = "activities"
 
-    @property
+    @builtins.property  # a field here is named `property`
     def is_planned(self) -> bool:
         return self.done_at is None and self.due_at is not None
 
-    @property
+    @builtins.property  # a field here is named `property`
     def when(self):
         return self.done_at or self.due_at or self.created_at

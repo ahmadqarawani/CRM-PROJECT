@@ -11,10 +11,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Activities are a log: create and read only. "I contacted the client" is a POST here. */
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
         get: operations["v1_activities_list"];
         put?: never;
-        /** @description Activities are a log: create and read only. "I contacted the client" is a POST here. */
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
         post: operations["v1_activities_create"];
         delete?: never;
         options?: never;
@@ -22,40 +22,137 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/apartments/": {
+    "/api/v1/activities/{id}/": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** @description No DELETE by default: removal is archiving via PATCH {"is_archived": true}. */
-        get: operations["v1_apartments_list"];
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        get: operations["v1_activities_retrieve"];
         put?: never;
-        /** @description No DELETE by default: removal is archiving via PATCH {"is_archived": true}. */
-        post: operations["v1_apartments_create"];
+        post?: never;
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        delete: operations["v1_activities_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        patch: operations["v1_activities_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/activities/{id}/complete/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Mark a planned activity done, write the outcome, and (optionally) plan the next one. */
+        post: operations["v1_activities_complete_create"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/apartments/{id}/": {
+    "/api/v1/admin/hand-over/": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** @description No DELETE by default: removal is archiving via PATCH {"is_archived": true}. */
-        get: operations["v1_apartments_retrieve"];
+        get?: never;
+        put?: never;
+        post: operations["v1_admin_hand_over_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settings/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_admin_settings_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** @description No DELETE by default: removal is archiving via PATCH {"is_archived": true}. */
-        patch: operations["v1_apartments_partial_update"];
+        patch: operations["v1_admin_settings_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/admin/settings/test-email/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["v1_admin_settings_test_email_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_admin_users_list"];
+        put?: never;
+        post: operations["v1_admin_users_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_admin_users_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["v1_admin_users_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/audit/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Who changed what and when (django-auditlog), for one record. */
+        get: operations["v1_audit_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/auth/csrf/": {
@@ -123,40 +220,380 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/clients/": {
+    "/api/v1/catalog/features/": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** @description No DELETE by default: removal is archiving via PATCH {"is_archived": true}. */
-        get: operations["v1_clients_list"];
+        get: operations["v1_catalog_features_list"];
         put?: never;
-        /** @description No DELETE by default: removal is archiving via PATCH {"is_archived": true}. */
-        post: operations["v1_clients_create"];
+        post: operations["v1_catalog_features_create"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/clients/{id}/": {
+    "/api/v1/catalog/features/{id}/": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** @description No DELETE by default: removal is archiving via PATCH {"is_archived": true}. */
-        get: operations["v1_clients_retrieve"];
+        get: operations["v1_catalog_features_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["v1_catalog_features_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["v1_catalog_features_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/catalog/finish-levels/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_catalog_finish_levels_list"];
+        put?: never;
+        post: operations["v1_catalog_finish_levels_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/finish-levels/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_catalog_finish_levels_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["v1_catalog_finish_levels_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["v1_catalog_finish_levels_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/catalog/locations/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_catalog_locations_list"];
+        put?: never;
+        post: operations["v1_catalog_locations_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/locations/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_catalog_locations_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["v1_catalog_locations_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["v1_catalog_locations_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/catalog/lost-reasons/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_catalog_lost_reasons_list"];
+        put?: never;
+        post: operations["v1_catalog_lost_reasons_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/lost-reasons/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_catalog_lost_reasons_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["v1_catalog_lost_reasons_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["v1_catalog_lost_reasons_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/catalog/ownership-types/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_catalog_ownership_types_list"];
+        put?: never;
+        post: operations["v1_catalog_ownership_types_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/ownership-types/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_catalog_ownership_types_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["v1_catalog_ownership_types_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["v1_catalog_ownership_types_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/catalog/property-types/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_catalog_property_types_list"];
+        put?: never;
+        post: operations["v1_catalog_property_types_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/property-types/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_catalog_property_types_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["v1_catalog_property_types_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["v1_catalog_property_types_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/catalog/service-types/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_catalog_service_types_list"];
+        put?: never;
+        post: operations["v1_catalog_service_types_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/service-types/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_catalog_service_types_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["v1_catalog_service_types_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["v1_catalog_service_types_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/catalog/sources/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_catalog_sources_list"];
+        put?: never;
+        post: operations["v1_catalog_sources_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/sources/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_catalog_sources_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["v1_catalog_sources_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["v1_catalog_sources_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/catalog/tags/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_catalog_tags_list"];
+        put?: never;
+        post: operations["v1_catalog_tags_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/tags/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_catalog_tags_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["v1_catalog_tags_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["v1_catalog_tags_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/contacts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        get: operations["v1_contacts_list"];
+        put?: never;
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        post: operations["v1_contacts_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contacts/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        get: operations["v1_contacts_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        delete: operations["v1_contacts_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        patch: operations["v1_contacts_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/contacts/{id}/merge/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        post: operations["v1_contacts_merge_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contacts/check-phone/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Live duplicate check while typing a number. */
+        get: operations["v1_contacts_check_phone_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** @description No DELETE by default: removal is archiving via PATCH {"is_archived": true}. */
-        patch: operations["v1_clients_partial_update"];
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contacts/duplicates/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        get: operations["v1_contacts_duplicates_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/dashboard/": {
@@ -175,6 +612,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/deals/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        get: operations["v1_deals_list"];
+        put?: never;
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        post: operations["v1_deals_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/deals/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        get: operations["v1_deals_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        delete: operations["v1_deals_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        patch: operations["v1_deals_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/deals/{id}/convert-to-finishing/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        post: operations["v1_deals_convert_to_finishing_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/deals/{id}/match/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        post: operations["v1_deals_match_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/deals/{id}/matches/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Available properties fitting this buy/rent demand + what the client said about each. */
+        get: operations["v1_deals_matches_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/documents/": {
         parameters: {
             query?: never;
@@ -182,10 +707,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description No DELETE by default: removal is archiving via PATCH {"is_archived": true}. */
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
         get: operations["v1_documents_list"];
         put?: never;
-        /** @description No DELETE by default: removal is archiving via PATCH {"is_archived": true}. */
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
         post: operations["v1_documents_create"];
         delete?: never;
         options?: never;
@@ -200,14 +725,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description No DELETE by default: removal is archiving via PATCH {"is_archived": true}. */
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
         get: operations["v1_documents_retrieve"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        delete: operations["v1_documents_destroy"];
         options?: never;
         head?: never;
-        /** @description No DELETE by default: removal is archiving via PATCH {"is_archived": true}. */
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
         patch: operations["v1_documents_partial_update"];
         trace?: never;
     };
@@ -218,13 +744,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * @description Auth is checked here; the bytes are sent by nginx (X-Accel-Redirect) in production.
-         *     FileResponse under ASGI would read the whole file through Python.
-         */
+        /** @description Auth checked here; bytes sent by nginx (X-Accel-Redirect) in production. */
         get: operations["v1_documents_file_retrieve"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notification-preferences/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Each user mutes the kinds they don't want. */
+        get: operations["v1_notification_preferences_list"];
+        put?: never;
+        /** @description Each user mutes the kinds they don't want. */
+        post: operations["v1_notification_preferences_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -279,40 +820,149 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/requests/": {
+    "/api/v1/payments/": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** @description No DELETE by default: removal is archiving via PATCH {"is_archived": true}. */
-        get: operations["v1_requests_list"];
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        get: operations["v1_payments_list"];
         put?: never;
-        /** @description No DELETE by default: removal is archiving via PATCH {"is_archived": true}. */
-        post: operations["v1_requests_create"];
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        post: operations["v1_payments_create"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/requests/{id}/": {
+    "/api/v1/payments/{id}/": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** @description No DELETE by default: removal is archiving via PATCH {"is_archived": true}. */
-        get: operations["v1_requests_retrieve"];
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        get: operations["v1_payments_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        delete: operations["v1_payments_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        patch: operations["v1_payments_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/properties/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        get: operations["v1_properties_list"];
+        put?: never;
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        post: operations["v1_properties_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/properties/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        get: operations["v1_properties_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        delete: operations["v1_properties_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        patch: operations["v1_properties_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/properties/{id}/demands/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Open buy/rent requests this property fits (matching, other direction). */
+        get: operations["v1_properties_demands_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /** @description No DELETE by default: removal is archiving via PATCH {"is_archived": true}. */
-        patch: operations["v1_requests_partial_update"];
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quotes/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        get: operations["v1_quotes_list"];
+        put?: never;
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        post: operations["v1_quotes_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quotes/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        get: operations["v1_quotes_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        delete: operations["v1_quotes_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
+        patch: operations["v1_quotes_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/reports/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Simple counts for the weekly report / reports page: by source, by stage, lost reasons. */
+        get: operations["v1_reports_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/search/": {
@@ -338,16 +988,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * @description DELETE works only for a stage that was never used (PROTECT -> 409); otherwise
-         *     PATCH {"is_active": false}.
-         */
         get: operations["v1_stages_list"];
         put?: never;
-        /**
-         * @description DELETE works only for a stage that was never used (PROTECT -> 409); otherwise
-         *     PATCH {"is_active": false}.
-         */
         post: operations["v1_stages_create"];
         delete?: never;
         options?: never;
@@ -362,57 +1004,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * @description DELETE works only for a stage that was never used (PROTECT -> 409); otherwise
-         *     PATCH {"is_active": false}.
-         */
         get: operations["v1_stages_retrieve"];
-        put?: never;
+        put: operations["v1_stages_update"];
         post?: never;
-        /**
-         * @description DELETE works only for a stage that was never used (PROTECT -> 409); otherwise
-         *     PATCH {"is_active": false}.
-         */
         delete: operations["v1_stages_destroy"];
         options?: never;
         head?: never;
-        /**
-         * @description DELETE works only for a stage that was never used (PROTECT -> 409); otherwise
-         *     PATCH {"is_active": false}.
-         */
         patch: operations["v1_stages_partial_update"];
-        trace?: never;
-    };
-    "/api/v1/tasks/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["v1_tasks_list"];
-        put?: never;
-        post: operations["v1_tasks_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tasks/{id}/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["v1_tasks_retrieve"];
-        put?: never;
-        post?: never;
-        delete: operations["v1_tasks_destroy"];
-        options?: never;
-        head?: never;
-        patch: operations["v1_tasks_partial_update"];
         trace?: never;
     };
     "/api/v1/timeline/": {
@@ -422,7 +1020,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Activities + stage changes + uploaded files for one client or one request, newest first. */
+        /** @description Activities (done + planned + system) and uploaded files for a contact, deal or property. */
         get: operations["v1_timeline_retrieve"];
         put?: never;
         post?: never;
@@ -455,114 +1053,265 @@ export interface components {
     schemas: {
         Activity: {
             readonly id: number;
-            type: components["schemas"]["TypeEnum"];
-            body?: string;
-            client_id: number;
-            request_id?: number | null;
-            readonly by: components["schemas"]["UserRef"] | null;
-            /** Format: date-time */
-            at?: string;
-        };
-        ActivityRequest: {
-            type: components["schemas"]["TypeEnum"];
-            body?: string;
-            client_id: number;
-            request_id?: number | null;
-            /** Format: date-time */
-            at?: string;
-        };
-        Apartment: {
-            readonly id: number;
-            readonly client: components["schemas"]["ClientRef"];
-            title: string;
-            address?: string;
-            floor?: string;
-            /** Format: decimal */
-            area_m2?: string | null;
-            rooms?: number | null;
+            type: components["schemas"]["ActivityTypeEnum"];
+            subject?: string;
             notes?: string;
-            is_archived?: boolean;
+            outcome?: string;
+            readonly contact: components["schemas"]["ContactRef"];
+            readonly deal: components["schemas"]["DealMini"] | null;
+            /** Format: date-time */
+            due_at?: string | null;
+            /** Format: date-time */
+            done_at?: string | null;
+            interest?: number | null;
+            readonly assignee: components["schemas"]["UserRef"] | null;
+            readonly created_by: components["schemas"]["UserRef"] | null;
             /** Format: date-time */
             readonly created_at: string;
-            /** Format: date-time */
-            readonly updated_at: string;
         };
-        ApartmentRef: {
-            readonly id: number;
-            title: string;
-        };
-        ApartmentRefRequest: {
-            title: string;
-        };
-        ApartmentRequest: {
-            client_id: number;
-            title: string;
-            address?: string;
-            floor?: string;
-            /** Format: decimal */
-            area_m2?: string | null;
-            rooms?: number | null;
+        ActivityRequest: {
+            type: components["schemas"]["ActivityTypeEnum"];
+            subject?: string;
             notes?: string;
-            is_archived?: boolean;
+            outcome?: string;
+            contact_id: number;
+            deal_id?: number | null;
+            property_id?: number | null;
+            /** Format: date-time */
+            due_at?: string | null;
+            /** Format: date-time */
+            done_at?: string | null;
+            interest?: number | null;
+            assignee_id?: number | null;
+            is_done?: boolean;
+            /** Format: date-time */
+            next_due?: string | null;
+            next_type?: components["schemas"]["ActivityTypeEnum"];
+            next_subject?: string;
         };
+        /**
+         * @description * `CALL` - مكالمة
+         *     * `WHATSAPP` - واتساب
+         *     * `MEETING` - اجتماع / جلسة اتفاق
+         *     * `SITE_VISIT` - معاينة
+         *     * `VIEWING` - جولة على عقار
+         *     * `TASK` - مهمة
+         *     * `NOTE` - ملاحظة
+         *     * `SYSTEM` - النظام
+         * @enum {string}
+         */
+        ActivityTypeEnum: "CALL" | "WHATSAPP" | "MEETING" | "SITE_VISIT" | "VIEWING" | "TASK" | "NOTE" | "SYSTEM";
+        /**
+         * @description * `ALL` - الكل
+         *     * `FINISHING` - الإكساء
+         *     * `BROKERAGE` - الوساطة
+         * @enum {string}
+         */
+        AppliesToEnum: "ALL" | "FINISHING" | "BROKERAGE";
         /** @enum {unknown} */
         BlankEnum: "";
         /**
-         * @description * `CONTRACT` - عقد
-         *     * `QUOTE` - عرض سعر
+         * @description * `UNDER_CONSTRUCTION` - قيد الإنشاء
+         *     * `NEW` - جديد
+         *     * `USED` - مستخدم
+         * @enum {string}
+         */
+        BuildingStateEnum: "UNDER_CONSTRUCTION" | "NEW" | "USED";
+        /**
+         * @description * `PHOTO` - صور
          *     * `PLAN` - مخطط
-         *     * `INVOICE` - فاتورة
-         *     * `PHOTO` - صور
+         *     * `QUOTE` - دراسة / عرض سعر
+         *     * `CONTRACT` - عقد
+         *     * `INVOICE` - فاتورة / إيصال
+         *     * `OWNERSHIP` - أوراق ملكية
          *     * `OTHER` - أخرى
          * @enum {string}
          */
-        CategoryEnum: "CONTRACT" | "QUOTE" | "PLAN" | "INVOICE" | "PHOTO" | "OTHER";
-        Client: {
+        CategoryEnum: "PHOTO" | "PLAN" | "QUOTE" | "CONTRACT" | "INVOICE" | "OWNERSHIP" | "OTHER";
+        CompleteActivityRequest: {
+            outcome?: string;
+            interest?: number;
+            /** Format: date-time */
+            next_due?: string;
+            next_type?: string;
+        };
+        Contact: {
             readonly id: number;
-            name: string;
-            phone?: string | null;
-            whatsapp?: string;
+            name?: string;
+            readonly display_name: string;
+            phones?: components["schemas"]["Phone"][];
+            readonly source: components["schemas"]["SourceRef"] | null;
+            referred_by?: string;
+            readonly assignee: components["schemas"]["UserRef"] | null;
             email?: string;
-            city?: string;
-            source?: string;
-            tags?: string[];
             notes?: string;
+            readonly tags: components["schemas"]["TagRef"][];
             /** Format: date-time */
             readonly last_contact_at: string | null;
             /** @default 0 */
-            readonly open_requests: number;
+            readonly open_deals: number;
+            /** @default 0 */
+            readonly properties_count: number;
             /** @default false */
-            readonly has_overdue: boolean;
+            readonly needs_attention: boolean;
+            readonly merged_into: number | null;
             is_archived?: boolean;
             /** Format: date-time */
             readonly created_at: string;
             /** Format: date-time */
             readonly updated_at: string;
         };
-        ClientRef: {
+        ContactRef: {
             readonly id: number;
-            name: string;
+            readonly name: string;
         };
-        ClientRefRequest: {
-            name: string;
-        };
-        ClientRequest: {
-            name: string;
-            phone?: string | null;
-            whatsapp?: string;
+        ContactRequest: {
+            name?: string;
+            phones?: components["schemas"]["PhoneRequest"][];
+            source_id?: number | null;
+            referred_by?: string;
+            assignee_id?: number | null;
             email?: string;
-            city?: string;
-            source?: string;
-            tags?: string[];
             notes?: string;
+            tag_ids?: number[];
             is_archived?: boolean;
         };
+        Deal: {
+            readonly id: number;
+            kind: components["schemas"]["DealKindEnum"];
+            readonly pipeline: components["schemas"]["PipelineEnum"];
+            title?: string;
+            readonly contact: components["schemas"]["ContactRef"];
+            readonly stage: components["schemas"]["StageRef"];
+            readonly status: string;
+            /** Format: date-time */
+            readonly stage_entered_at: string;
+            readonly days_in_stage: number;
+            temperature?: components["schemas"]["TemperatureEnum"] | components["schemas"]["BlankEnum"];
+            readonly source: components["schemas"]["SourceRef"] | null;
+            readonly assignee: components["schemas"]["UserRef"] | null;
+            readonly engineer: components["schemas"]["UserRef"] | null;
+            readonly property: components["schemas"]["PropertyRef"] | null;
+            readonly location: components["schemas"]["LocationRef"] | null;
+            address?: string;
+            /** Format: decimal */
+            expected_amount?: string | null;
+            /** Format: decimal */
+            contract_amount?: string | null;
+            /** Format: decimal */
+            commission_amount?: string | null;
+            /** Format: decimal */
+            readonly paid_amount: string | null;
+            currency?: string;
+            readonly lost_reason: components["schemas"]["LostReasonRef"] | null;
+            lost_notes?: string;
+            /** Format: date-time */
+            readonly closed_at: string | null;
+            /** Format: date */
+            expected_close?: string | null;
+            /** Format: date */
+            execution_started_at?: string | null;
+            /** Format: date */
+            handover_expected?: string | null;
+            /** Format: date-time */
+            readonly last_contact_at: string | null;
+            /** Format: date-time */
+            readonly next_step_at: string | null;
+            readonly needs_attention: boolean;
+            readonly attention_reasons: string[];
+            finishing?: components["schemas"]["Finishing"] | null;
+            demand?: components["schemas"]["Demand"] | null;
+            readonly tags: components["schemas"]["TagRef"][];
+            is_archived?: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
         /**
-         * @description * `WON` - تم
-         *     * `LOST` - ملغي
+         * @description * `FINISHING` - إكساء
+         *     * `BUY` - شراء
+         *     * `RENT` - استئجار
+         *     * `SELL` - بيع عقار
+         *     * `LEASE` - تأجير عقار
          * @enum {string}
          */
-        ClosesAsEnum: "WON" | "LOST";
+        DealKindEnum: "FINISHING" | "BUY" | "RENT" | "SELL" | "LEASE";
+        DealMini: {
+            readonly id: number;
+            title?: string;
+            kind: components["schemas"]["DealKindEnum"];
+        };
+        DealMiniRequest: {
+            title?: string;
+            kind: components["schemas"]["DealKindEnum"];
+        };
+        DealRequest: {
+            kind: components["schemas"]["DealKindEnum"];
+            title?: string;
+            contact_id: number;
+            stage_id?: number;
+            temperature?: components["schemas"]["TemperatureEnum"] | components["schemas"]["BlankEnum"];
+            source_id?: number | null;
+            assignee_id?: number | null;
+            engineer_id?: number | null;
+            property_id?: number | null;
+            location_id?: number | null;
+            address?: string;
+            /** Format: decimal */
+            expected_amount?: string | null;
+            /** Format: decimal */
+            contract_amount?: string | null;
+            /** Format: decimal */
+            commission_amount?: string | null;
+            currency?: string;
+            lost_reason_id?: number | null;
+            lost_notes?: string;
+            /** Format: date */
+            expected_close?: string | null;
+            /** Format: date */
+            execution_started_at?: string | null;
+            /** Format: date */
+            handover_expected?: string | null;
+            finishing?: components["schemas"]["FinishingRequest"] | null;
+            demand?: components["schemas"]["DemandRequest"] | null;
+            tag_ids?: number[];
+            is_archived?: boolean;
+        };
+        Demand: {
+            readonly property_types: components["schemas"]["PropertyTypeRef"][];
+            readonly locations: components["schemas"]["LocationRef"][];
+            /** Format: decimal */
+            budget_min?: string | null;
+            /** Format: decimal */
+            budget_max?: string | null;
+            /** Format: decimal */
+            area_min?: string | null;
+            /** Format: decimal */
+            area_max?: string | null;
+            rooms_min?: number | null;
+            floor_min?: number | null;
+            floor_max?: number | null;
+            readonly finish_levels: components["schemas"]["FinishLevelRef"][];
+            notes?: string;
+        };
+        DemandRequest: {
+            property_type_ids?: number[];
+            location_ids?: number[];
+            /** Format: decimal */
+            budget_min?: string | null;
+            /** Format: decimal */
+            budget_max?: string | null;
+            /** Format: decimal */
+            area_min?: string | null;
+            /** Format: decimal */
+            area_max?: string | null;
+            rooms_min?: number | null;
+            floor_min?: number | null;
+            floor_max?: number | null;
+            finish_level_ids?: number[];
+            notes?: string;
+        };
         Document: {
             readonly id: number;
             readonly url: string;
@@ -570,9 +1319,6 @@ export interface components {
             readonly content_type: string;
             readonly size_bytes: number;
             category?: components["schemas"]["CategoryEnum"];
-            client_id?: number | null;
-            apartment_id?: number | null;
-            request_id?: number | null;
             readonly uploaded_by: components["schemas"]["UserRef"] | null;
             is_archived?: boolean;
             /** Format: date-time */
@@ -582,45 +1328,213 @@ export interface components {
             /** Format: binary */
             file: string;
             category?: components["schemas"]["CategoryEnum"];
-            client_id?: number | null;
-            apartment_id?: number | null;
-            request_id?: number | null;
+            contact_id?: number | null;
+            deal_id?: number | null;
+            property_id?: number | null;
+            quote_id?: number | null;
             is_archived?: boolean;
         };
+        DuplicatePair: {
+            a: {
+                [key: string]: unknown;
+            };
+            b: {
+                [key: string]: unknown;
+            };
+            /** Format: double */
+            score: number;
+        };
+        Feature: {
+            readonly id: number;
+            name: string;
+            order?: number;
+            is_active?: boolean;
+        };
+        FeatureRef: {
+            readonly id: number;
+            name: string;
+        };
+        FeatureRefRequest: {
+            name: string;
+        };
+        FeatureRequest: {
+            name: string;
+            order?: number;
+            is_active?: boolean;
+        };
+        FinishLevel: {
+            readonly id: number;
+            name: string;
+            order?: number;
+            is_active?: boolean;
+        };
+        FinishLevelRef: {
+            readonly id: number;
+            name: string;
+        };
+        FinishLevelRefRequest: {
+            name: string;
+        };
+        FinishLevelRequest: {
+            name: string;
+            order?: number;
+            is_active?: boolean;
+        };
+        Finishing: {
+            readonly service_type: components["schemas"]["ServiceTypeRef"] | null;
+            readonly target_level: components["schemas"]["FinishLevelRef"] | null;
+            readonly current_level: components["schemas"]["FinishLevelRef"] | null;
+            readonly property_type: components["schemas"]["PropertyTypeRef"] | null;
+            /** Format: decimal */
+            area_m2?: string | null;
+            /** Format: decimal */
+            budget_min?: string | null;
+            /** Format: decimal */
+            budget_max?: string | null;
+            property_note?: string;
+        };
+        FinishingRequest: {
+            service_type_id?: number | null;
+            target_level_id?: number | null;
+            current_level_id?: number | null;
+            property_type_id?: number | null;
+            /** Format: decimal */
+            area_m2?: string | null;
+            /** Format: decimal */
+            budget_min?: string | null;
+            /** Format: decimal */
+            budget_max?: string | null;
+            property_note?: string;
+        };
+        HandOverRequest: {
+            from_user_id: number;
+            to_user_id: number;
+        };
+        HandOverResult: {
+            deals: number;
+            activities: number;
+            contacts: number;
+            properties: number;
+        };
         /**
-         * @description * `REQUEST_OVERDUE` - Request Overdue
-         *     * `TASK_DUE` - Task Due
-         *     * `TASK_ASSIGNED` - Task Assigned
+         * @description * `SALE` - بيع
+         *     * `RENT` - إيجار
+         *     * `BOTH` - بيع أو إيجار
          * @enum {string}
          */
-        KindEnum: "REQUEST_OVERDUE" | "TASK_DUE" | "TASK_ASSIGNED";
+        ListingEnum: "SALE" | "RENT" | "BOTH";
+        Location: {
+            readonly id: number;
+            name: string;
+            order?: number;
+            is_active?: boolean;
+        };
+        LocationRef: {
+            readonly id: number;
+            name: string;
+        };
+        LocationRefRequest: {
+            name: string;
+        };
+        LocationRequest: {
+            name: string;
+            order?: number;
+            is_active?: boolean;
+        };
         LoginRequest: {
             username: string;
             password: string;
         };
+        LostReason: {
+            readonly id: number;
+            name: string;
+            order?: number;
+            is_active?: boolean;
+            applies_to?: components["schemas"]["AppliesToEnum"];
+        };
+        LostReasonRef: {
+            readonly id: number;
+            name: string;
+        };
+        LostReasonRefRequest: {
+            name: string;
+        };
+        LostReasonRequest: {
+            name: string;
+            order?: number;
+            is_active?: boolean;
+            applies_to?: components["schemas"]["AppliesToEnum"];
+        };
+        MatchUpdateRequest: {
+            property_id: number;
+            status: components["schemas"]["MatchUpdateStatusEnum"];
+            note?: string;
+        };
+        /**
+         * @description * `SUGGESTED` - مقترح
+         *     * `SENT` - أُرسل
+         *     * `VIEWED` - عاينه
+         *     * `INTERESTED` - مهتم
+         *     * `REJECTED` - رفض
+         * @enum {string}
+         */
+        MatchUpdateStatusEnum: "SUGGESTED" | "SENT" | "VIEWED" | "INTERESTED" | "REJECTED";
         Me: {
             id: number;
             username: string;
             name: string;
             is_admin: boolean;
+            can_delete: boolean;
+        };
+        MergeRequestRequest: {
+            other_id: number;
         };
         Notification: {
             readonly id: number;
-            readonly kind: components["schemas"]["KindEnum"];
+            readonly kind: components["schemas"]["NotificationKindEnum"];
             readonly message: string;
-            readonly request: components["schemas"]["RequestRef"] | null;
-            readonly task: components["schemas"]["TaskRef"] | null;
+            readonly deal_id: number | null;
+            readonly activity_id: number | null;
             is_read: boolean;
             /** Format: date-time */
             readonly created_at: string;
         };
         /**
-         * @description * `FOLLOWUP_DUE` - FOLLOWUP_DUE
-         *     * `STAGE_SLA` - STAGE_SLA
-         *     * `NO_CONTACT` - NO_CONTACT
+         * @description * `ACTIVITY_DUE` - موعد قريب
+         *     * `ACTIVITY_OVERDUE` - متابعة متأخرة
+         *     * `NO_NEXT_STEP` - طلب بلا خطوة جاية
+         *     * `DEAL_STUCK` - طلب واقف بمرحلته
+         *     * `ASSIGNED` - انسندلك
+         *     * `DIGEST` - ملخص اليوم
          * @enum {string}
          */
-        OverdueReasonsEnum: "FOLLOWUP_DUE" | "STAGE_SLA" | "NO_CONTACT";
+        NotificationKindEnum: "ACTIVITY_DUE" | "ACTIVITY_OVERDUE" | "NO_NEXT_STEP" | "DEAL_STUCK" | "ASSIGNED" | "DIGEST";
+        /**
+         * @description * `OWNER` - مالك
+         *     * `AGENT` - وكيل
+         *     * `BROKER` - وسيط
+         *     * `RELATIVE` - قريب المالك
+         * @enum {string}
+         */
+        OwnerRoleEnum: "OWNER" | "AGENT" | "BROKER" | "RELATIVE";
+        OwnershipType: {
+            readonly id: number;
+            name: string;
+            order?: number;
+            is_active?: boolean;
+        };
+        OwnershipTypeRef: {
+            readonly id: number;
+            name: string;
+        };
+        OwnershipTypeRefRequest: {
+            name: string;
+        };
+        OwnershipTypeRequest: {
+            name: string;
+            order?: number;
+            is_active?: boolean;
+        };
         PaginatedActivityList: {
             /** @example 123 */
             count: number;
@@ -636,7 +1550,7 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Activity"][];
         };
-        PaginatedApartmentList: {
+        PaginatedContactList: {
             /** @example 123 */
             count: number;
             /**
@@ -649,9 +1563,9 @@ export interface components {
              * @example http://api.example.org/accounts/?page=2
              */
             previous?: string | null;
-            results: components["schemas"]["Apartment"][];
+            results: components["schemas"]["Contact"][];
         };
-        PaginatedClientList: {
+        PaginatedDealList: {
             /** @example 123 */
             count: number;
             /**
@@ -664,7 +1578,7 @@ export interface components {
              * @example http://api.example.org/accounts/?page=2
              */
             previous?: string | null;
-            results: components["schemas"]["Client"][];
+            results: components["schemas"]["Deal"][];
         };
         PaginatedDocumentList: {
             /** @example 123 */
@@ -681,6 +1595,21 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Document"][];
         };
+        PaginatedDuplicatePairList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["DuplicatePair"][];
+        };
         PaginatedNotificationList: {
             /** @example 123 */
             count: number;
@@ -696,7 +1625,7 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Notification"][];
         };
-        PaginatedRequestList: {
+        PaginatedPropertyList: {
             /** @example 123 */
             count: number;
             /**
@@ -709,9 +1638,9 @@ export interface components {
              * @example http://api.example.org/accounts/?page=2
              */
             previous?: string | null;
-            results: components["schemas"]["Request"][];
+            results: components["schemas"]["Property"][];
         };
-        PaginatedTaskList: {
+        PaginatedPropertyMatchList: {
             /** @example 123 */
             count: number;
             /**
@@ -724,202 +1653,603 @@ export interface components {
              * @example http://api.example.org/accounts/?page=2
              */
             previous?: string | null;
-            results: components["schemas"]["Task"][];
+            results: components["schemas"]["PropertyMatch"][];
         };
-        PatchedApartmentRequest: {
-            client_id?: number;
-            title?: string;
-            address?: string;
-            floor?: string;
-            /** Format: decimal */
-            area_m2?: string | null;
-            rooms?: number | null;
+        PatchedActivityRequest: {
+            type?: components["schemas"]["ActivityTypeEnum"];
+            subject?: string;
             notes?: string;
+            outcome?: string;
+            contact_id?: number;
+            deal_id?: number | null;
+            property_id?: number | null;
+            /** Format: date-time */
+            due_at?: string | null;
+            /** Format: date-time */
+            done_at?: string | null;
+            interest?: number | null;
+            assignee_id?: number | null;
+            is_done?: boolean;
+            /** Format: date-time */
+            next_due?: string | null;
+            next_type?: components["schemas"]["ActivityTypeEnum"];
+            next_subject?: string;
+        };
+        PatchedContactRequest: {
+            name?: string;
+            phones?: components["schemas"]["PhoneRequest"][];
+            source_id?: number | null;
+            referred_by?: string;
+            assignee_id?: number | null;
+            email?: string;
+            notes?: string;
+            tag_ids?: number[];
             is_archived?: boolean;
         };
-        PatchedClientRequest: {
-            name?: string;
-            phone?: string | null;
-            whatsapp?: string;
-            email?: string;
-            city?: string;
-            source?: string;
-            tags?: string[];
-            notes?: string;
+        PatchedDealRequest: {
+            kind?: components["schemas"]["DealKindEnum"];
+            title?: string;
+            contact_id?: number;
+            stage_id?: number;
+            temperature?: components["schemas"]["TemperatureEnum"] | components["schemas"]["BlankEnum"];
+            source_id?: number | null;
+            assignee_id?: number | null;
+            engineer_id?: number | null;
+            property_id?: number | null;
+            location_id?: number | null;
+            address?: string;
+            /** Format: decimal */
+            expected_amount?: string | null;
+            /** Format: decimal */
+            contract_amount?: string | null;
+            /** Format: decimal */
+            commission_amount?: string | null;
+            currency?: string;
+            lost_reason_id?: number | null;
+            lost_notes?: string;
+            /** Format: date */
+            expected_close?: string | null;
+            /** Format: date */
+            execution_started_at?: string | null;
+            /** Format: date */
+            handover_expected?: string | null;
+            finishing?: components["schemas"]["FinishingRequest"] | null;
+            demand?: components["schemas"]["DemandRequest"] | null;
+            tag_ids?: number[];
             is_archived?: boolean;
         };
         PatchedDocumentRequest: {
             /** Format: binary */
             file?: string;
             category?: components["schemas"]["CategoryEnum"];
-            client_id?: number | null;
-            apartment_id?: number | null;
-            request_id?: number | null;
+            contact_id?: number | null;
+            deal_id?: number | null;
+            property_id?: number | null;
+            quote_id?: number | null;
             is_archived?: boolean;
+        };
+        PatchedFeatureRequest: {
+            name?: string;
+            order?: number;
+            is_active?: boolean;
+        };
+        PatchedFinishLevelRequest: {
+            name?: string;
+            order?: number;
+            is_active?: boolean;
+        };
+        PatchedLocationRequest: {
+            name?: string;
+            order?: number;
+            is_active?: boolean;
+        };
+        PatchedLostReasonRequest: {
+            name?: string;
+            order?: number;
+            is_active?: boolean;
+            applies_to?: components["schemas"]["AppliesToEnum"];
         };
         PatchedNotificationRequest: {
             is_read?: boolean;
         };
-        PatchedRequestRequest: {
-            title?: string;
-            description?: string;
-            /** Format: decimal */
-            budget?: string | null;
-            priority?: components["schemas"]["PriorityEnum"];
-            client_id?: number;
-            apartment_id?: number | null;
-            stage_id?: number;
-            assignee_id?: number | null;
-            /** Format: date-time */
-            next_follow_up_at?: string | null;
-            is_archived?: boolean;
-        };
-        PatchedStageRequest: {
+        PatchedOwnershipTypeRequest: {
             name?: string;
-            color?: string;
             order?: number;
-            sla_days?: number | null;
-            requires_follow_up?: boolean;
-            closes_as?: components["schemas"]["ClosesAsEnum"] | components["schemas"]["BlankEnum"];
             is_active?: boolean;
         };
-        PatchedTaskRequest: {
-            title?: string;
-            /** Format: date-time */
-            due_at?: string;
-            is_done?: boolean;
-            client_id?: number | null;
-            request_id?: number | null;
+        PatchedPaymentRequest: {
+            deal_id?: number;
+            /** Format: decimal */
+            amount?: string;
+            currency?: string;
+            /** Format: date */
+            paid_at?: string;
+            note?: string;
+        };
+        PatchedPropertyRequest: {
+            legacy_code?: string;
+            owner_id?: number;
+            owner_role?: components["schemas"]["OwnerRoleEnum"];
+            property_type_id?: number | null;
+            listing?: components["schemas"]["ListingEnum"];
+            status?: components["schemas"]["PropertyStatusEnum"];
+            location_id?: number | null;
+            address?: string;
+            /** Format: decimal */
+            area_m2?: string | null;
+            area_note?: string;
+            rooms?: number | null;
+            bathrooms?: number | null;
+            floor?: number | null;
+            floor_note?: string;
+            layout_note?: string;
+            building_state?: components["schemas"]["BuildingStateEnum"] | components["schemas"]["BlankEnum"];
+            finish_level_id?: number | null;
+            feature_ids?: number[];
+            ownership_type_id?: number | null;
+            /** Format: decimal */
+            price?: string | null;
+            /** Format: decimal */
+            rent_monthly?: string | null;
+            currency?: string;
+            price_note?: string;
+            /** Format: decimal */
+            commission_pct?: string | null;
+            description?: string;
             assignee_id?: number | null;
+            /** Format: date */
+            listed_at?: string | null;
+            tag_ids?: number[];
+            is_archived?: boolean;
+        };
+        PatchedPropertyTypeRequest: {
+            name?: string;
+            order?: number;
+            is_active?: boolean;
+            has_rooms?: boolean;
+        };
+        PatchedQuoteRequest: {
+            deal_id?: number;
+            status?: components["schemas"]["QuoteStatusEnum"];
+            /** Format: decimal */
+            amount?: string | null;
+            currency?: string;
+            /** Format: date-time */
+            sent_at?: string | null;
+            /** Format: date */
+            valid_until?: string | null;
+            notes?: string;
+        };
+        PatchedServiceTypeRequest: {
+            name?: string;
+            order?: number;
+            is_active?: boolean;
+        };
+        PatchedSiteSettingsRequest: {
+            smtp_password?: string;
+            email_enabled?: boolean;
+            smtp_host?: string;
+            smtp_port?: number;
+            smtp_use_tls?: boolean;
+            smtp_username?: string;
+            from_email?: string;
+            digest_hour?: number;
+            quiet_start_hour?: number;
+            quiet_end_hour?: number;
+            weekly_report_recipients?: string;
+        };
+        PatchedSourceRequest: {
+            name?: string;
+            order?: number;
+            is_active?: boolean;
+            opens_whatsapp?: boolean;
+        };
+        PatchedStageRequest: {
+            pipeline?: components["schemas"]["PipelineEnum"];
+            name?: string;
+            order?: number;
+            color?: string;
+            type?: components["schemas"]["StageTypeEnum"];
+            rotting_days?: number | null;
+            is_active?: boolean;
+        };
+        PatchedTagRequest: {
+            name?: string;
+            order?: number;
+            is_active?: boolean;
+            color?: string;
+        };
+        /** @description Everyone has the same rights, plus two switches the admin sets: admin area, and hard delete. */
+        PatchedUserAdminRequest: {
+            /**
+             * اسم المستخدم
+             * @description مطلوب. 150 رمزاً أو أقل، مكونة من حروف وأرقام و @/./+/-/_ فقط
+             */
+            username?: string;
+            name?: string;
+            /** عنوان بريد إلكتروني */
+            email?: string;
+            /**
+             * نشط
+             * @description يحدد ما إذا كان المستخدم سيُعامل على أنّه نشط. أزل تحديد هذا الحقل بدلاً من حذف الحسابات.
+             */
+            is_active?: boolean;
+            is_admin?: boolean;
+            can_delete_input?: boolean;
+            password?: string;
+        };
+        Payment: {
+            readonly id: number;
+            /** Format: decimal */
+            amount: string;
+            currency?: string;
+            /** Format: date */
+            paid_at: string;
+            note?: string;
+        };
+        PaymentRequest: {
+            deal_id: number;
+            /** Format: decimal */
+            amount: string;
+            currency?: string;
+            /** Format: date */
+            paid_at: string;
+            note?: string;
+        };
+        Phone: {
+            number: string;
+            has_whatsapp?: boolean;
+            label?: string;
+        };
+        PhoneCheck: {
+            number: string | null;
+            contact: {
+                [key: string]: unknown;
+            } | null;
+        };
+        PhoneRequest: {
+            number: string;
+            has_whatsapp?: boolean;
+            label?: string;
         };
         /**
-         * @description * `LOW` - Low
-         *     * `NORMAL` - Normal
-         *     * `HIGH` - High
+         * @description * `FINISHING` - الإكساء
+         *     * `BROKERAGE` - الوساطة العقارية
          * @enum {string}
          */
-        PriorityEnum: "LOW" | "NORMAL" | "HIGH";
-        Request: {
+        PipelineEnum: "FINISHING" | "BROKERAGE";
+        Preference: {
+            kind: components["schemas"]["NotificationKindEnum"];
+            muted: boolean;
+        };
+        PreferenceRequest: {
+            kind: components["schemas"]["NotificationKindEnum"];
+            muted: boolean;
+        };
+        Property: {
             readonly id: number;
-            title: string;
-            description?: string;
+            readonly code: string;
+            legacy_code?: string;
+            readonly owner: components["schemas"]["ContactRef"];
+            owner_role?: components["schemas"]["OwnerRoleEnum"];
+            readonly property_type: components["schemas"]["PropertyTypeRef"] | null;
+            listing?: components["schemas"]["ListingEnum"];
+            status?: components["schemas"]["PropertyStatusEnum"];
+            readonly location: components["schemas"]["LocationRef"] | null;
+            address?: string;
             /** Format: decimal */
-            budget?: string | null;
-            priority?: components["schemas"]["PriorityEnum"];
-            readonly status: components["schemas"]["StatusEnum"];
-            readonly client: components["schemas"]["ClientRef"];
-            readonly apartment: components["schemas"]["ApartmentRef"] | null;
-            readonly stage: components["schemas"]["StageRef"];
+            area_m2?: string | null;
+            area_note?: string;
+            rooms?: number | null;
+            bathrooms?: number | null;
+            floor?: number | null;
+            floor_note?: string;
+            layout_note?: string;
+            building_state?: components["schemas"]["BuildingStateEnum"] | components["schemas"]["BlankEnum"];
+            readonly finish_level: components["schemas"]["FinishLevelRef"] | null;
+            readonly features: components["schemas"]["FeatureRef"][];
+            readonly ownership_type: components["schemas"]["OwnershipTypeRef"] | null;
+            /** Format: decimal */
+            price?: string | null;
+            /** Format: decimal */
+            rent_monthly?: string | null;
+            currency?: string;
+            price_note?: string;
+            /** Format: decimal */
+            commission_pct?: string | null;
+            description?: string;
             readonly assignee: components["schemas"]["UserRef"] | null;
-            /** Format: date-time */
-            next_follow_up_at?: string | null;
-            /** Format: date-time */
-            readonly last_contact_at: string | null;
-            /** Format: date-time */
-            readonly stage_entered_at: string;
-            readonly days_in_stage: number;
-            readonly is_overdue: boolean;
-            readonly overdue_reasons: components["schemas"]["OverdueReasonsEnum"][];
+            /** Format: date */
+            listed_at?: string | null;
+            readonly tags: components["schemas"]["TagRef"][];
             is_archived?: boolean;
             /** Format: date-time */
             readonly created_at: string;
             /** Format: date-time */
             readonly updated_at: string;
         };
-        RequestRef: {
+        PropertyMatch: {
+            property: {
+                [key: string]: unknown;
+            };
+            status: string | null;
+        };
+        PropertyRef: {
             readonly id: number;
-            title: string;
+            code?: string;
+            address?: string;
         };
-        RequestRefRequest: {
-            title: string;
+        PropertyRefRequest: {
+            code?: string;
+            address?: string;
         };
-        RequestRequest: {
-            title: string;
-            description?: string;
+        PropertyRequest: {
+            legacy_code?: string;
+            owner_id: number;
+            owner_role?: components["schemas"]["OwnerRoleEnum"];
+            property_type_id?: number | null;
+            listing?: components["schemas"]["ListingEnum"];
+            status?: components["schemas"]["PropertyStatusEnum"];
+            location_id?: number | null;
+            address?: string;
             /** Format: decimal */
-            budget?: string | null;
-            priority?: components["schemas"]["PriorityEnum"];
-            client_id: number;
-            apartment_id?: number | null;
-            stage_id?: number;
+            area_m2?: string | null;
+            area_note?: string;
+            rooms?: number | null;
+            bathrooms?: number | null;
+            floor?: number | null;
+            floor_note?: string;
+            layout_note?: string;
+            building_state?: components["schemas"]["BuildingStateEnum"] | components["schemas"]["BlankEnum"];
+            finish_level_id?: number | null;
+            feature_ids?: number[];
+            ownership_type_id?: number | null;
+            /** Format: decimal */
+            price?: string | null;
+            /** Format: decimal */
+            rent_monthly?: string | null;
+            currency?: string;
+            price_note?: string;
+            /** Format: decimal */
+            commission_pct?: string | null;
+            description?: string;
             assignee_id?: number | null;
-            /** Format: date-time */
-            next_follow_up_at?: string | null;
+            /** Format: date */
+            listed_at?: string | null;
+            tag_ids?: number[];
             is_archived?: boolean;
+        };
+        /**
+         * @description * `AVAILABLE` - متاح
+         *     * `RESERVED` - محجوز
+         *     * `SOLD` - مباع
+         *     * `RENTED` - مؤجر
+         *     * `WITHDRAWN` - مسحوب
+         * @enum {string}
+         */
+        PropertyStatusEnum: "AVAILABLE" | "RESERVED" | "SOLD" | "RENTED" | "WITHDRAWN";
+        PropertyType: {
+            readonly id: number;
+            name: string;
+            order?: number;
+            is_active?: boolean;
+            has_rooms?: boolean;
+        };
+        PropertyTypeRef: {
+            readonly id: number;
+            name: string;
+            has_rooms?: boolean;
+        };
+        PropertyTypeRefRequest: {
+            name: string;
+            has_rooms?: boolean;
+        };
+        PropertyTypeRequest: {
+            name: string;
+            order?: number;
+            is_active?: boolean;
+            has_rooms?: boolean;
+        };
+        Quote: {
+            readonly id: number;
+            readonly version: number;
+            status?: components["schemas"]["QuoteStatusEnum"];
+            /** Format: decimal */
+            amount?: string | null;
+            currency?: string;
+            /** Format: date-time */
+            sent_at?: string | null;
+            /** Format: date */
+            valid_until?: string | null;
+            notes?: string;
+            readonly created_by: components["schemas"]["UserRef"] | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        QuoteRequest: {
+            deal_id: number;
+            status?: components["schemas"]["QuoteStatusEnum"];
+            /** Format: decimal */
+            amount?: string | null;
+            currency?: string;
+            /** Format: date-time */
+            sent_at?: string | null;
+            /** Format: date */
+            valid_until?: string | null;
+            notes?: string;
+        };
+        /**
+         * @description * `DRAFT` - مسودة
+         *     * `SENT` - مُرسلة
+         *     * `ACCEPTED` - مقبولة
+         *     * `REJECTED` - مرفوضة
+         *     * `EXPIRED` - منتهية
+         *     * `CANCELLED` - ملغاة
+         * @enum {string}
+         */
+        QuoteStatusEnum: "DRAFT" | "SENT" | "ACCEPTED" | "REJECTED" | "EXPIRED" | "CANCELLED";
+        ServiceType: {
+            readonly id: number;
+            name: string;
+            order?: number;
+            is_active?: boolean;
+        };
+        ServiceTypeRef: {
+            readonly id: number;
+            name: string;
+        };
+        ServiceTypeRefRequest: {
+            name: string;
+        };
+        ServiceTypeRequest: {
+            name: string;
+            order?: number;
+            is_active?: boolean;
+        };
+        SiteSettings: {
+            readonly smtp_password_set: boolean;
+            email_enabled?: boolean;
+            smtp_host?: string;
+            smtp_port?: number;
+            smtp_use_tls?: boolean;
+            smtp_username?: string;
+            from_email?: string;
+            digest_hour?: number;
+            quiet_start_hour?: number;
+            quiet_end_hour?: number;
+            weekly_report_recipients?: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        Source: {
+            readonly id: number;
+            name: string;
+            order?: number;
+            is_active?: boolean;
+            opens_whatsapp?: boolean;
+        };
+        SourceRef: {
+            readonly id: number;
+            name: string;
+        };
+        SourceRefRequest: {
+            name: string;
+        };
+        SourceRequest: {
+            name: string;
+            order?: number;
+            is_active?: boolean;
+            opens_whatsapp?: boolean;
         };
         Stage: {
             readonly id: number;
+            pipeline: components["schemas"]["PipelineEnum"];
             name: string;
-            color?: string;
             order: number;
-            sla_days?: number | null;
-            requires_follow_up?: boolean;
-            closes_as?: components["schemas"]["ClosesAsEnum"] | components["schemas"]["BlankEnum"];
+            color?: string;
+            type?: components["schemas"]["StageTypeEnum"];
+            rotting_days?: number | null;
             is_active?: boolean;
         };
         StageRef: {
             readonly id: number;
             name: string;
             color?: string;
+            type?: components["schemas"]["StageTypeEnum"];
         };
         StageRefRequest: {
             name: string;
             color?: string;
+            type?: components["schemas"]["StageTypeEnum"];
         };
         StageRequest: {
+            pipeline: components["schemas"]["PipelineEnum"];
             name: string;
-            color?: string;
             order: number;
-            sla_days?: number | null;
-            requires_follow_up?: boolean;
-            closes_as?: components["schemas"]["ClosesAsEnum"] | components["schemas"]["BlankEnum"];
+            color?: string;
+            type?: components["schemas"]["StageTypeEnum"];
+            rotting_days?: number | null;
             is_active?: boolean;
         };
         /**
-         * @description * `OPEN` - Open
-         *     * `WON` - Won
-         *     * `LOST` - Lost
+         * @description * `OPEN` - مفتوحة
+         *     * `WON` - رابحة
+         *     * `LOST` - خاسرة
          * @enum {string}
          */
-        StatusEnum: "OPEN" | "WON" | "LOST";
-        Task: {
+        StageTypeEnum: "OPEN" | "WON" | "LOST";
+        Tag: {
             readonly id: number;
-            title: string;
-            /** Format: date-time */
-            due_at: string;
-            is_done?: boolean;
-            /** Format: date-time */
-            readonly done_at: string | null;
-            client_id?: number | null;
-            request_id?: number | null;
-            readonly assignee: components["schemas"]["UserRef"] | null;
-            /** Format: date-time */
-            readonly created_at: string;
+            name: string;
+            order?: number;
+            is_active?: boolean;
+            color?: string;
         };
-        TaskRef: {
+        TagRef: {
             readonly id: number;
-            title: string;
+            name: string;
+            color?: string;
         };
-        TaskRefRequest: {
-            title: string;
+        TagRefRequest: {
+            name: string;
+            color?: string;
         };
-        TaskRequest: {
-            title: string;
-            /** Format: date-time */
-            due_at: string;
-            is_done?: boolean;
-            client_id?: number | null;
-            request_id?: number | null;
-            assignee_id?: number | null;
+        TagRequest: {
+            name: string;
+            order?: number;
+            is_active?: boolean;
+            color?: string;
         };
         /**
-         * @description * `CALL` - مكالمة
-         *     * `WHATSAPP` - واتساب
-         *     * `VISIT` - زيارة
-         *     * `NOTE` - ملاحظة
+         * @description * `HOT` - ساخن
+         *     * `WARM` - دافئ
+         *     * `COLD` - بارد
          * @enum {string}
          */
-        TypeEnum: "CALL" | "WHATSAPP" | "VISIT" | "NOTE";
+        TemperatureEnum: "HOT" | "WARM" | "COLD";
+        /** @description Everyone has the same rights, plus two switches the admin sets: admin area, and hard delete. */
+        UserAdmin: {
+            readonly id: number;
+            /**
+             * اسم المستخدم
+             * @description مطلوب. 150 رمزاً أو أقل، مكونة من حروف وأرقام و @/./+/-/_ فقط
+             */
+            username: string;
+            name?: string;
+            /** عنوان بريد إلكتروني */
+            email?: string;
+            /**
+             * نشط
+             * @description يحدد ما إذا كان المستخدم سيُعامل على أنّه نشط. أزل تحديد هذا الحقل بدلاً من حذف الحسابات.
+             */
+            is_active?: boolean;
+            is_admin?: boolean;
+            readonly can_delete: boolean;
+            /**
+             * آخر دخول
+             * Format: date-time
+             */
+            readonly last_login: string | null;
+        };
+        /** @description Everyone has the same rights, plus two switches the admin sets: admin area, and hard delete. */
+        UserAdminRequest: {
+            /**
+             * اسم المستخدم
+             * @description مطلوب. 150 رمزاً أو أقل، مكونة من حروف وأرقام و @/./+/-/_ فقط
+             */
+            username: string;
+            name?: string;
+            /** عنوان بريد إلكتروني */
+            email?: string;
+            /**
+             * نشط
+             * @description يحدد ما إذا كان المستخدم سيُعامل على أنّه نشط. أزل تحديد هذا الحقل بدلاً من حذف الحسابات.
+             */
+            is_active?: boolean;
+            is_admin?: boolean;
+            can_delete_input?: boolean;
+            password?: string;
+        };
         UserRef: {
             readonly id: number;
             readonly name: string;
@@ -936,14 +2266,19 @@ export interface operations {
     v1_activities_list: {
         parameters: {
             query?: {
-                client?: number;
+                assignee?: string;
+                contact?: number;
+                deal?: number;
+                due?: "overdue" | "today" | "week";
                 /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
                 ordering?: string;
                 /** @description رقم الصفحة ضمن النتائج المقسمة. */
                 page?: number;
                 /** @description عدد النتائج التي يجب إرجاعها في كل صفحة. */
                 page_size?: number;
-                request?: number;
+                planned?: boolean;
+                property?: number;
+                type?: string;
             };
             header?: never;
             path?: never;
@@ -986,21 +2321,14 @@ export interface operations {
             };
         };
     };
-    v1_apartments_list: {
+    v1_activities_retrieve: {
         parameters: {
-            query?: {
-                archived?: boolean;
-                client?: number;
-                /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
-                ordering?: string;
-                /** @description رقم الصفحة ضمن النتائج المقسمة. */
-                page?: number;
-                /** @description عدد النتائج التي يجب إرجاعها في كل صفحة. */
-                page_size?: number;
-                search?: string;
-            };
+            query?: never;
             header?: never;
-            path?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا activity. */
+                id: number;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -1010,12 +2338,89 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedApartmentList"];
+                    "application/json": components["schemas"]["Activity"];
                 };
             };
         };
     };
-    v1_apartments_create: {
+    v1_activities_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا activity. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_activities_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا activity. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedActivityRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedActivityRequest"];
+                "multipart/form-data": components["schemas"]["PatchedActivityRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Activity"];
+                };
+            };
+        };
+    };
+    v1_activities_complete_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا activity. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CompleteActivityRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CompleteActivityRequest"];
+                "multipart/form-data": components["schemas"]["CompleteActivityRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Activity"];
+                };
+            };
+        };
+    };
+    v1_admin_hand_over_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -1024,9 +2429,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ApartmentRequest"];
-                "application/x-www-form-urlencoded": components["schemas"]["ApartmentRequest"];
-                "multipart/form-data": components["schemas"]["ApartmentRequest"];
+                "application/json": components["schemas"]["HandOverRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["HandOverRequest"];
+                "multipart/form-data": components["schemas"]["HandOverRequest"];
             };
         };
         responses: {
@@ -1035,17 +2440,126 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Apartment"];
+                    "application/json": components["schemas"]["HandOverResult"];
                 };
             };
         };
     };
-    v1_apartments_retrieve: {
+    v1_admin_settings_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteSettings"];
+                };
+            };
+        };
+    };
+    v1_admin_settings_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedSiteSettingsRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedSiteSettingsRequest"];
+                "multipart/form-data": components["schemas"]["PatchedSiteSettingsRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteSettings"];
+                };
+            };
+        };
+    };
+    v1_admin_settings_test_email_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_admin_users_list: {
+        parameters: {
+            query?: {
+                /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
+                ordering?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserAdmin"][];
+                };
+            };
+        };
+    };
+    v1_admin_users_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserAdminRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["UserAdminRequest"];
+                "multipart/form-data": components["schemas"]["UserAdminRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserAdmin"];
+                };
+            };
+        };
+    };
+    v1_admin_users_retrieve: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description نوع رقم صحيح فريد يحدد هذا apartment. */
+                /** @description نوع رقم صحيح فريد يحدد هذا المستخدم. */
                 id: number;
             };
             cookie?: never;
@@ -1057,26 +2571,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Apartment"];
+                    "application/json": components["schemas"]["UserAdmin"];
                 };
             };
         };
     };
-    v1_apartments_partial_update: {
+    v1_admin_users_partial_update: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description نوع رقم صحيح فريد يحدد هذا apartment. */
+                /** @description نوع رقم صحيح فريد يحدد هذا المستخدم. */
                 id: number;
             };
             cookie?: never;
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedApartmentRequest"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedApartmentRequest"];
-                "multipart/form-data": components["schemas"]["PatchedApartmentRequest"];
+                "application/json": components["schemas"]["PatchedUserAdminRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedUserAdminRequest"];
+                "multipart/form-data": components["schemas"]["PatchedUserAdminRequest"];
             };
         };
         responses: {
@@ -1085,7 +2599,31 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Apartment"];
+                    "application/json": components["schemas"]["UserAdmin"];
+                };
+            };
+        };
+    };
+    v1_audit_retrieve: {
+        parameters: {
+            query: {
+                id: number;
+                model: "activity" | "contact" | "deal" | "property";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };
@@ -1170,19 +2708,11 @@ export interface operations {
             };
         };
     };
-    v1_clients_list: {
+    v1_catalog_features_list: {
         parameters: {
             query?: {
-                archived?: boolean;
                 /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
                 ordering?: string;
-                overdue?: boolean;
-                /** @description رقم الصفحة ضمن النتائج المقسمة. */
-                page?: number;
-                /** @description عدد النتائج التي يجب إرجاعها في كل صفحة. */
-                page_size?: number;
-                search?: string;
-                tag?: string;
             };
             header?: never;
             path?: never;
@@ -1195,12 +2725,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedClientList"];
+                    "application/json": components["schemas"]["Feature"][];
                 };
             };
         };
     };
-    v1_clients_create: {
+    v1_catalog_features_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -1209,9 +2739,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ClientRequest"];
-                "application/x-www-form-urlencoded": components["schemas"]["ClientRequest"];
-                "multipart/form-data": components["schemas"]["ClientRequest"];
+                "application/json": components["schemas"]["FeatureRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["FeatureRequest"];
+                "multipart/form-data": components["schemas"]["FeatureRequest"];
             };
         };
         responses: {
@@ -1220,17 +2750,17 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Client"];
+                    "application/json": components["schemas"]["Feature"];
                 };
             };
         };
     };
-    v1_clients_retrieve: {
+    v1_catalog_features_retrieve: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description نوع رقم صحيح فريد يحدد هذا client. */
+                /** @description نوع رقم صحيح فريد يحدد هذا feature. */
                 id: number;
             };
             cookie?: never;
@@ -1242,26 +2772,47 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Client"];
+                    "application/json": components["schemas"]["Feature"];
                 };
             };
         };
     };
-    v1_clients_partial_update: {
+    v1_catalog_features_destroy: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description نوع رقم صحيح فريد يحدد هذا client. */
+                /** @description نوع رقم صحيح فريد يحدد هذا feature. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_catalog_features_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا feature. */
                 id: number;
             };
             cookie?: never;
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedClientRequest"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedClientRequest"];
-                "multipart/form-data": components["schemas"]["PatchedClientRequest"];
+                "application/json": components["schemas"]["PatchedFeatureRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedFeatureRequest"];
+                "multipart/form-data": components["schemas"]["PatchedFeatureRequest"];
             };
         };
         responses: {
@@ -1270,14 +2821,1163 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Client"];
+                    "application/json": components["schemas"]["Feature"];
+                };
+            };
+        };
+    };
+    v1_catalog_finish_levels_list: {
+        parameters: {
+            query?: {
+                /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
+                ordering?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinishLevel"][];
+                };
+            };
+        };
+    };
+    v1_catalog_finish_levels_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FinishLevelRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["FinishLevelRequest"];
+                "multipart/form-data": components["schemas"]["FinishLevelRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinishLevel"];
+                };
+            };
+        };
+    };
+    v1_catalog_finish_levels_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا finish level. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinishLevel"];
+                };
+            };
+        };
+    };
+    v1_catalog_finish_levels_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا finish level. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_catalog_finish_levels_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا finish level. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedFinishLevelRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedFinishLevelRequest"];
+                "multipart/form-data": components["schemas"]["PatchedFinishLevelRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinishLevel"];
+                };
+            };
+        };
+    };
+    v1_catalog_locations_list: {
+        parameters: {
+            query?: {
+                /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
+                ordering?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Location"][];
+                };
+            };
+        };
+    };
+    v1_catalog_locations_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocationRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["LocationRequest"];
+                "multipart/form-data": components["schemas"]["LocationRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Location"];
+                };
+            };
+        };
+    };
+    v1_catalog_locations_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا location. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Location"];
+                };
+            };
+        };
+    };
+    v1_catalog_locations_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا location. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_catalog_locations_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا location. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedLocationRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedLocationRequest"];
+                "multipart/form-data": components["schemas"]["PatchedLocationRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Location"];
+                };
+            };
+        };
+    };
+    v1_catalog_lost_reasons_list: {
+        parameters: {
+            query?: {
+                /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
+                ordering?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LostReason"][];
+                };
+            };
+        };
+    };
+    v1_catalog_lost_reasons_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LostReasonRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["LostReasonRequest"];
+                "multipart/form-data": components["schemas"]["LostReasonRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LostReason"];
+                };
+            };
+        };
+    };
+    v1_catalog_lost_reasons_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا lost reason. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LostReason"];
+                };
+            };
+        };
+    };
+    v1_catalog_lost_reasons_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا lost reason. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_catalog_lost_reasons_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا lost reason. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedLostReasonRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedLostReasonRequest"];
+                "multipart/form-data": components["schemas"]["PatchedLostReasonRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LostReason"];
+                };
+            };
+        };
+    };
+    v1_catalog_ownership_types_list: {
+        parameters: {
+            query?: {
+                /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
+                ordering?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnershipType"][];
+                };
+            };
+        };
+    };
+    v1_catalog_ownership_types_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OwnershipTypeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["OwnershipTypeRequest"];
+                "multipart/form-data": components["schemas"]["OwnershipTypeRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnershipType"];
+                };
+            };
+        };
+    };
+    v1_catalog_ownership_types_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا ownership type. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnershipType"];
+                };
+            };
+        };
+    };
+    v1_catalog_ownership_types_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا ownership type. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_catalog_ownership_types_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا ownership type. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedOwnershipTypeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedOwnershipTypeRequest"];
+                "multipart/form-data": components["schemas"]["PatchedOwnershipTypeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnershipType"];
+                };
+            };
+        };
+    };
+    v1_catalog_property_types_list: {
+        parameters: {
+            query?: {
+                /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
+                ordering?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PropertyType"][];
+                };
+            };
+        };
+    };
+    v1_catalog_property_types_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PropertyTypeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PropertyTypeRequest"];
+                "multipart/form-data": components["schemas"]["PropertyTypeRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PropertyType"];
+                };
+            };
+        };
+    };
+    v1_catalog_property_types_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا property type. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PropertyType"];
+                };
+            };
+        };
+    };
+    v1_catalog_property_types_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا property type. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_catalog_property_types_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا property type. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedPropertyTypeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPropertyTypeRequest"];
+                "multipart/form-data": components["schemas"]["PatchedPropertyTypeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PropertyType"];
+                };
+            };
+        };
+    };
+    v1_catalog_service_types_list: {
+        parameters: {
+            query?: {
+                /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
+                ordering?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceType"][];
+                };
+            };
+        };
+    };
+    v1_catalog_service_types_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceTypeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ServiceTypeRequest"];
+                "multipart/form-data": components["schemas"]["ServiceTypeRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceType"];
+                };
+            };
+        };
+    };
+    v1_catalog_service_types_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا service type. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceType"];
+                };
+            };
+        };
+    };
+    v1_catalog_service_types_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا service type. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_catalog_service_types_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا service type. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedServiceTypeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedServiceTypeRequest"];
+                "multipart/form-data": components["schemas"]["PatchedServiceTypeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceType"];
+                };
+            };
+        };
+    };
+    v1_catalog_sources_list: {
+        parameters: {
+            query?: {
+                /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
+                ordering?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Source"][];
+                };
+            };
+        };
+    };
+    v1_catalog_sources_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SourceRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SourceRequest"];
+                "multipart/form-data": components["schemas"]["SourceRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Source"];
+                };
+            };
+        };
+    };
+    v1_catalog_sources_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا source. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Source"];
+                };
+            };
+        };
+    };
+    v1_catalog_sources_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا source. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_catalog_sources_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا source. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedSourceRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedSourceRequest"];
+                "multipart/form-data": components["schemas"]["PatchedSourceRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Source"];
+                };
+            };
+        };
+    };
+    v1_catalog_tags_list: {
+        parameters: {
+            query?: {
+                /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
+                ordering?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tag"][];
+                };
+            };
+        };
+    };
+    v1_catalog_tags_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TagRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["TagRequest"];
+                "multipart/form-data": components["schemas"]["TagRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tag"];
+                };
+            };
+        };
+    };
+    v1_catalog_tags_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا tag. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tag"];
+                };
+            };
+        };
+    };
+    v1_catalog_tags_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا tag. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_catalog_tags_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا tag. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedTagRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedTagRequest"];
+                "multipart/form-data": components["schemas"]["PatchedTagRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tag"];
+                };
+            };
+        };
+    };
+    v1_contacts_list: {
+        parameters: {
+            query?: {
+                archived?: boolean;
+                assignee?: string;
+                attention?: boolean;
+                /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
+                ordering?: string;
+                /** @description رقم الصفحة ضمن النتائج المقسمة. */
+                page?: number;
+                /** @description عدد النتائج التي يجب إرجاعها في كل صفحة. */
+                page_size?: number;
+                search?: string;
+                source?: number;
+                tag?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedContactList"];
+                };
+            };
+        };
+    };
+    v1_contacts_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ContactRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ContactRequest"];
+                "multipart/form-data": components["schemas"]["ContactRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Contact"];
+                };
+            };
+        };
+    };
+    v1_contacts_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا contact. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Contact"];
+                };
+            };
+        };
+    };
+    v1_contacts_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا contact. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_contacts_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا contact. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedContactRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedContactRequest"];
+                "multipart/form-data": components["schemas"]["PatchedContactRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Contact"];
+                };
+            };
+        };
+    };
+    v1_contacts_merge_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا contact. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MergeRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["MergeRequestRequest"];
+                "multipart/form-data": components["schemas"]["MergeRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Contact"];
+                };
+            };
+        };
+    };
+    v1_contacts_check_phone_retrieve: {
+        parameters: {
+            query: {
+                phone: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhoneCheck"];
+                };
+            };
+        };
+    };
+    v1_contacts_duplicates_list: {
+        parameters: {
+            query?: {
+                /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
+                ordering?: string;
+                /** @description رقم الصفحة ضمن النتائج المقسمة. */
+                page?: number;
+                /** @description عدد النتائج التي يجب إرجاعها في كل صفحة. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedDuplicatePairList"];
                 };
             };
         };
     };
     v1_dashboard_retrieve: {
         parameters: {
-            query?: never;
+            query?: {
+                scope?: "all" | "me";
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1296,20 +3996,233 @@ export interface operations {
             };
         };
     };
-    v1_documents_list: {
+    v1_deals_list: {
         parameters: {
             query?: {
-                apartment?: number;
                 archived?: boolean;
-                category?: string;
-                client?: number;
+                assignee?: string;
+                attention?: boolean;
+                contact?: number;
+                engineer?: string;
+                kind?: string;
                 /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
                 ordering?: string;
                 /** @description رقم الصفحة ضمن النتائج المقسمة. */
                 page?: number;
                 /** @description عدد النتائج التي يجب إرجاعها في كل صفحة. */
                 page_size?: number;
-                request?: number;
+                pipeline?: string;
+                property?: number;
+                search?: string;
+                stage?: number;
+                status?: string;
+                tag?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedDealList"];
+                };
+            };
+        };
+    };
+    v1_deals_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DealRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["DealRequest"];
+                "multipart/form-data": components["schemas"]["DealRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deal"];
+                };
+            };
+        };
+    };
+    v1_deals_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا deal. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deal"];
+                };
+            };
+        };
+    };
+    v1_deals_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا deal. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_deals_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا deal. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedDealRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedDealRequest"];
+                "multipart/form-data": components["schemas"]["PatchedDealRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deal"];
+                };
+            };
+        };
+    };
+    v1_deals_convert_to_finishing_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا deal. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Deal"];
+                };
+            };
+        };
+    };
+    v1_deals_match_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا deal. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MatchUpdateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["MatchUpdateRequest"];
+                "multipart/form-data": components["schemas"]["MatchUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_deals_matches_list: {
+        parameters: {
+            query?: {
+                /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
+                ordering?: string;
+                /** @description رقم الصفحة ضمن النتائج المقسمة. */
+                page?: number;
+                /** @description عدد النتائج التي يجب إرجاعها في كل صفحة. */
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا deal. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedPropertyMatchList"];
+                };
+            };
+        };
+    };
+    v1_documents_list: {
+        parameters: {
+            query?: {
+                archived?: boolean;
+                category?: string;
+                contact?: number;
+                deal?: number;
+                /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
+                ordering?: string;
+                /** @description رقم الصفحة ضمن النتائج المقسمة. */
+                page?: number;
+                /** @description عدد النتائج التي يجب إرجاعها في كل صفحة. */
+                page_size?: number;
+                property?: number;
+                quote?: number;
             };
             header?: never;
             path?: never;
@@ -1374,6 +4287,27 @@ export interface operations {
             };
         };
     };
+    v1_documents_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا document. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     v1_documents_partial_update: {
         parameters: {
             query?: never;
@@ -1420,6 +4354,50 @@ export interface operations {
                 };
                 content: {
                     "application/octet-stream": string;
+                };
+            };
+        };
+    };
+    v1_notification_preferences_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Preference"][];
+                };
+            };
+        };
+    };
+    v1_notification_preferences_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreferenceRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PreferenceRequest"];
+                "multipart/form-data": components["schemas"]["PreferenceRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Preference"];
                 };
             };
         };
@@ -1497,23 +4475,12 @@ export interface operations {
             };
         };
     };
-    v1_requests_list: {
+    v1_payments_list: {
         parameters: {
             query?: {
-                apartment?: number;
-                archived?: boolean;
-                /** @description user id or 'me' */
-                assignee?: string;
-                client?: number;
+                deal?: number;
                 /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
                 ordering?: string;
-                overdue?: boolean;
-                /** @description رقم الصفحة ضمن النتائج المقسمة. */
-                page?: number;
-                /** @description عدد النتائج التي يجب إرجاعها في كل صفحة. */
-                page_size?: number;
-                stage?: number;
-                status?: "LOST" | "OPEN" | "WON";
             };
             header?: never;
             path?: never;
@@ -1526,12 +4493,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedRequestList"];
+                    "application/json": components["schemas"]["Payment"][];
                 };
             };
         };
     };
-    v1_requests_create: {
+    v1_payments_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -1540,9 +4507,9 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RequestRequest"];
-                "application/x-www-form-urlencoded": components["schemas"]["RequestRequest"];
-                "multipart/form-data": components["schemas"]["RequestRequest"];
+                "application/json": components["schemas"]["PaymentRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PaymentRequest"];
+                "multipart/form-data": components["schemas"]["PaymentRequest"];
             };
         };
         responses: {
@@ -1551,17 +4518,17 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Request"];
+                    "application/json": components["schemas"]["Payment"];
                 };
             };
         };
     };
-    v1_requests_retrieve: {
+    v1_payments_retrieve: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description نوع رقم صحيح فريد يحدد هذا request. */
+                /** @description نوع رقم صحيح فريد يحدد هذا payment. */
                 id: number;
             };
             cookie?: never;
@@ -1573,26 +4540,47 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Request"];
+                    "application/json": components["schemas"]["Payment"];
                 };
             };
         };
     };
-    v1_requests_partial_update: {
+    v1_payments_destroy: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description نوع رقم صحيح فريد يحدد هذا request. */
+                /** @description نوع رقم صحيح فريد يحدد هذا payment. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_payments_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا payment. */
                 id: number;
             };
             cookie?: never;
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedRequestRequest"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedRequestRequest"];
-                "multipart/form-data": components["schemas"]["PatchedRequestRequest"];
+                "application/json": components["schemas"]["PatchedPaymentRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPaymentRequest"];
+                "multipart/form-data": components["schemas"]["PatchedPaymentRequest"];
             };
         };
         responses: {
@@ -1601,7 +4589,302 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Request"];
+                    "application/json": components["schemas"]["Payment"];
+                };
+            };
+        };
+    };
+    v1_properties_list: {
+        parameters: {
+            query?: {
+                archived?: boolean;
+                assignee?: string;
+                listing?: string;
+                location?: number;
+                /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
+                ordering?: string;
+                owner?: number;
+                /** @description رقم الصفحة ضمن النتائج المقسمة. */
+                page?: number;
+                /** @description عدد النتائج التي يجب إرجاعها في كل صفحة. */
+                page_size?: number;
+                property_type?: number;
+                search?: string;
+                status?: string;
+                tag?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedPropertyList"];
+                };
+            };
+        };
+    };
+    v1_properties_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PropertyRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PropertyRequest"];
+                "multipart/form-data": components["schemas"]["PropertyRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Property"];
+                };
+            };
+        };
+    };
+    v1_properties_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا property. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Property"];
+                };
+            };
+        };
+    };
+    v1_properties_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا property. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_properties_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا property. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedPropertyRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPropertyRequest"];
+                "multipart/form-data": components["schemas"]["PatchedPropertyRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Property"];
+                };
+            };
+        };
+    };
+    v1_properties_demands_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا property. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Property"];
+                };
+            };
+        };
+    };
+    v1_quotes_list: {
+        parameters: {
+            query?: {
+                deal?: number;
+                /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
+                ordering?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Quote"][];
+                };
+            };
+        };
+    };
+    v1_quotes_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuoteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["QuoteRequest"];
+                "multipart/form-data": components["schemas"]["QuoteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Quote"];
+                };
+            };
+        };
+    };
+    v1_quotes_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا quote. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Quote"];
+                };
+            };
+        };
+    };
+    v1_quotes_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا quote. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_quotes_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا quote. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedQuoteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedQuoteRequest"];
+                "multipart/form-data": components["schemas"]["PatchedQuoteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Quote"];
+                };
+            };
+        };
+    };
+    v1_reports_retrieve: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };
@@ -1635,6 +4918,7 @@ export interface operations {
                 include_inactive?: boolean;
                 /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
                 ordering?: string;
+                pipeline?: string;
             };
             header?: never;
             path?: never;
@@ -1699,6 +4983,34 @@ export interface operations {
             };
         };
     };
+    v1_stages_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا stage. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StageRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["StageRequest"];
+                "multipart/form-data": components["schemas"]["StageRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Stage"];
+                };
+            };
+        };
+    };
     v1_stages_destroy: {
         parameters: {
             query?: never;
@@ -1748,139 +5060,12 @@ export interface operations {
             };
         };
     };
-    v1_tasks_list: {
-        parameters: {
-            query?: {
-                /** @description user id or 'me' */
-                assignee?: string;
-                client?: number;
-                done?: boolean;
-                due?: "overdue" | "today" | "week";
-                /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
-                ordering?: string;
-                /** @description رقم الصفحة ضمن النتائج المقسمة. */
-                page?: number;
-                /** @description عدد النتائج التي يجب إرجاعها في كل صفحة. */
-                page_size?: number;
-                request?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedTaskList"];
-                };
-            };
-        };
-    };
-    v1_tasks_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TaskRequest"];
-                "application/x-www-form-urlencoded": components["schemas"]["TaskRequest"];
-                "multipart/form-data": components["schemas"]["TaskRequest"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Task"];
-                };
-            };
-        };
-    };
-    v1_tasks_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description نوع رقم صحيح فريد يحدد هذا task. */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Task"];
-                };
-            };
-        };
-    };
-    v1_tasks_destroy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description نوع رقم صحيح فريد يحدد هذا task. */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    v1_tasks_partial_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description نوع رقم صحيح فريد يحدد هذا task. */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["PatchedTaskRequest"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedTaskRequest"];
-                "multipart/form-data": components["schemas"]["PatchedTaskRequest"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Task"];
-                };
-            };
-        };
-    };
     v1_timeline_retrieve: {
         parameters: {
             query?: {
-                client?: number;
-                request?: number;
+                contact?: number;
+                deal?: number;
+                property?: number;
             };
             header?: never;
             path?: never;

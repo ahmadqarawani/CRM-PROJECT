@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import F, Max, OuterRef, Q, Subquery
 from django.utils import timezone
 
 from apps.contacts.models import Contact
@@ -17,6 +17,16 @@ def _touch_contact(act: Activity) -> None:
     Contact.objects.filter(newer, pk=act.contact_id).update(last_contact_at=act.done_at)
     if act.deal_id:
         Deal.objects.filter(newer, pk=act.deal_id).update(last_contact_at=act.done_at)
+
+
+def backfill_last_contact() -> int:
+    """Set each contact's last_contact_at from its done contact-type activities (for bulk imports,
+    which create activities directly and skip _touch_contact). Returns how many contacts changed."""
+    latest = (Activity.objects.filter(contact=OuterRef("pk"), type__in=Activity.CONTACT_TYPES, done_at__isnull=False)
+              .values("contact").annotate(m=Max("done_at")).values("m"))
+    qs = Contact.objects.annotate(latest=Subquery(latest)).filter(latest__isnull=False)
+    stale = qs.filter(Q(last_contact_at__isnull=True) | Q(last_contact_at__lt=F("latest")))
+    return stale.update(last_contact_at=Subquery(latest))
 
 
 def _check_links(contact, deal, prop):

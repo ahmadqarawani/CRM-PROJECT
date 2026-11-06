@@ -89,7 +89,7 @@ export function Dialog({ open, onClose, title, children, footer, wide }: {
         wide ? 'w-[min(720px,94vw)]' : 'w-[min(480px,94vw)]')}
     >
       {open && (
-        <div className="flex max-h-[86vh] flex-col">
+        <div className="flex max-h-[86dvh] flex-col">
           <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
             <h2 className="m-0 text-[16px] font-semibold text-navy">{title}</h2>
             <button onClick={onClose} className="rounded p-1 text-faint hover:bg-subtle hover:text-ink" aria-label="إغلاق">✕</button>
@@ -175,6 +175,43 @@ export function Chip({ on, children, onClick }: { on?: boolean; children: ReactN
     >
       {children}
     </button>
+  )
+}
+
+/* ---------- Pager: "31–60 من 461" + السابق / page numbers / التالي ---------- */
+export const PAGE_SIZE = 30
+
+function pageWindow(page: number, pages: number): (number | '…')[] {
+  const keep = new Set([1, pages, page - 1, page, page + 1].filter((p) => p >= 1 && p <= pages))
+  const out: (number | '…')[] = []
+  ;[...keep].sort((a, b) => a - b).forEach((p, i, arr) => {
+    if (i > 0 && p - arr[i - 1] > 1) out.push('…')
+    out.push(p)
+  })
+  return out
+}
+
+export function Pager({ page, count, pageSize = PAGE_SIZE, onChange, className }: {
+  page: number; count: number; pageSize?: number; onChange: (page: number) => void; className?: string
+}) {
+  const pages = Math.max(1, Math.ceil(count / pageSize))
+  if (pages <= 1) return null
+  const go = (p: number) => {
+    onChange(Math.min(Math.max(1, p), pages))
+    ;(document.querySelector('[data-scroll]') ?? document.querySelector('main'))?.scrollTo({ top: 0 })
+  }
+  const from = (page - 1) * pageSize + 1
+  const to = Math.min(page * pageSize, count)
+  return (
+    <nav aria-label="الصفحات" className={cx('mt-4 flex flex-wrap items-center justify-center gap-1.5 text-[13px]', className)}>
+      <span className="me-1 w-full text-center text-faint sm:w-auto"><span className="num">{from}–{to}</span> من <span className="num">{count}</span></span>
+      <Button size="sm" disabled={page <= 1} onClick={() => go(page - 1)}>السابق</Button>
+      {pageWindow(page, pages).map((p, i) => p === '…'
+        ? <span key={`gap${i}`} className="px-1 text-faint">…</span>
+        : <button key={p} onClick={() => go(p)} aria-current={p === page ? 'page' : undefined}
+            className={cx('num h-7 min-w-7 rounded-md px-1.5', p === page ? 'bg-primary text-white' : 'text-muted hover:bg-subtle')}>{p}</button>)}
+      <Button size="sm" disabled={page >= pages} onClick={() => go(page + 1)}>التالي</Button>
+    </nav>
   )
 }
 

@@ -71,7 +71,12 @@ def set_phones(contact: Contact, phones: list[dict]) -> None:
 def possible_duplicates(limit: int = 100, threshold: float = 0.85) -> list[dict]:
     """Pairs of active contacts that look like the same person (same or very similar name key).
     Exact phone duplicates cannot exist (unique), so this is about names only."""
-    rows = list(Contact.objects.active().exclude(name_key="").values_list("pk", "name_key"))
+    from apps.core.text import name_words
+
+    # a single first name ("عمر") is far too common to mean "same person": need first + family name
+    rows = [(pk, key) for pk, key, name in
+            Contact.objects.active().exclude(name_key="").values_list("pk", "name_key", "name")
+            if len(name_words(name)) >= 2]
     pairs = []
     for i, (a, ka) in enumerate(rows):
         for b, kb in rows[i + 1:]:

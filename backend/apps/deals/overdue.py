@@ -3,8 +3,20 @@
   NO_NEXT_STEP      an open deal has no planned activity at all
   STUCK             the deal sat in its stage longer than the stage's rotting_days"""
 
-from django.db.models import (BooleanField, DateTimeField, DurationField, Exists, ExpressionWrapper, F, Func, Min,
-                              OuterRef, Q, Subquery, Value)
+from django.db.models import (
+    BooleanField,
+    DateTimeField,
+    DurationField,
+    Exists,
+    ExpressionWrapper,
+    F,
+    Func,
+    Min,
+    OuterRef,
+    Q,
+    Subquery,
+    Value,
+)
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 

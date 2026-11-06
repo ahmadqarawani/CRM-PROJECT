@@ -6,6 +6,8 @@
 - `frontend/`: React 19 + Vite + Tailwind (SPA)
 - `ARCHITECTURE.md`: المعمارية والقرارات ونتائج الاختبار
 - `design/`: بحث التصميم وعيّنة الألوان
+- `data-import/`: نموذج البيانات، وتحليل الشيتات، وتقرير الاستيراد
+- `HANDOFF.md`: لوين وصلنا وشو الخطوة الجاية
 
 ## التشغيل المحلي
 
@@ -16,7 +18,8 @@ cp .env.example .env            # وعدّل القيم (DJANGO_DEBUG=1 للتط
 uv sync
 uv run python manage.py migrate
 uv run python manage.py createcachetable
-DEMO_PASSWORD=... uv run python manage.py seed_demo     # اختياري: بيانات تجريبية (admin / samer)
+uv run python manage.py bootstrap_team    # ahmad, tarek, rand, ameer (بعدين: manage.py changepassword ahmad)
+uv run python manage.py import_sheets --leads <csv> --properties <csv>   # dry run، وبعدين --commit
 uv run granian --interface asginl --host 127.0.0.1 --port 8000 config.asgi:application
 
 # 2) frontend (بتاب تاني)
@@ -29,7 +32,7 @@ npm run dev                      # http://localhost:5173  (بيعمل proxy لـ
 
 | الأمر | شو بيعمل |
 |---|---|
-| `uv run pytest` | 62 اختبار للـ backend |
+| `uv run pytest` | 41 اختبار للـ backend |
 | `uv run python scripts/e2e_sse.py` | e2e للـ SSE على Granian |
 | `uv run python manage.py spectacular --file schema.yml` | OpenAPI schema |
 | `npx -p openapi-typescript@7 -p typescript@5 openapi-typescript ../backend/schema.yml -o src/api/schema.d.ts` | توليد الـ types للفرونت (من `frontend/`) |
@@ -38,8 +41,7 @@ npm run dev                      # http://localhost:5173  (بيعمل proxy لـ
 ## المجدولات (cron)
 
 ```
-*/5 * * * *   cd backend && uv run python manage.py scan_overdue
-30 2 * * *    cd backend && uv run python manage.py cleanup
+*/5 * * * *   cd backend && uv run python manage.py notify_tick
 ```
 
 ## ملاحظة للـ Windows

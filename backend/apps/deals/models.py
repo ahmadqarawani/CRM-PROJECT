@@ -1,6 +1,8 @@
 """Deals on pipelines (Odoo crm.lead / Frappe CRM Deal pattern): one table for every request,
 whatever the section; the section is the pipeline. Type-specific details live in 1:1 tables."""
 
+import builtins
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -91,7 +93,7 @@ class Deal(TimeStamped, Archivable):
         self.pipeline = self.PIPELINE_OF.get(self.kind, Pipeline.BROKERAGE)
         super().save(*args, **kwargs)
 
-    @property
+    @builtins.property  # a field here is named `property`
     def status(self) -> str:
         return self.stage.type
 

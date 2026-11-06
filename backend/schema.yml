@@ -6,13 +6,29 @@ paths:
   /api/v1/activities/:
     get:
       operationId: v1_activities_list
-      description: 'Activities are a log: create and read only. "I contacted the client"
-        is a POST here.'
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
       parameters:
       - in: query
-        name: client
+        name: assignee
+        schema:
+          type: string
+      - in: query
+        name: contact
         schema:
           type: integer
+      - in: query
+        name: deal
+        schema:
+          type: integer
+      - in: query
+        name: due
+        schema:
+          type: string
+          enum:
+          - overdue
+          - today
+          - week
       - name: ordering
         required: false
         in: query
@@ -32,9 +48,17 @@ paths:
         schema:
           type: integer
       - in: query
-        name: request
+        name: planned
+        schema:
+          type: boolean
+      - in: query
+        name: property
         schema:
           type: integer
+      - in: query
+        name: type
+        schema:
+          type: string
       tags:
       - v1
       security:
@@ -48,8 +72,8 @@ paths:
           description: ''
     post:
       operationId: v1_activities_create
-      description: 'Activities are a log: create and read only. "I contacted the client"
-        is a POST here.'
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
       tags:
       - v1
       requestBody:
@@ -73,42 +97,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/Activity'
           description: ''
-  /api/v1/apartments/:
+  /api/v1/activities/{id}/:
     get:
-      operationId: v1_apartments_list
-      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
-        true}.'
+      operationId: v1_activities_retrieve
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
       parameters:
-      - in: query
-        name: archived
-        schema:
-          type: boolean
-      - in: query
-        name: client
+      - in: path
+        name: id
         schema:
           type: integer
-      - name: ordering
-        required: false
-        in: query
-        description: أي حقل يجب استخدامه عند ترتيب النتائج.
-        schema:
-          type: string
-      - name: page
-        required: false
-        in: query
-        description: رقم الصفحة ضمن النتائج المقسمة.
-        schema:
-          type: integer
-      - name: page_size
-        required: false
-        in: query
-        description: عدد النتائج التي يجب إرجاعها في كل صفحة.
-        schema:
-          type: integer
-      - in: query
-        name: search
-        schema:
-          type: string
+        description: نوع رقم صحيح فريد يحدد هذا activity.
+        required: true
       tags:
       - v1
       security:
@@ -118,25 +118,109 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedApartmentList'
+                $ref: '#/components/schemas/Activity'
           description: ''
-    post:
-      operationId: v1_apartments_create
-      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
-        true}.'
+    patch:
+      operationId: v1_activities_partial_update
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا activity.
+        required: true
       tags:
       - v1
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ApartmentRequest'
+              $ref: '#/components/schemas/PatchedActivityRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/ApartmentRequest'
+              $ref: '#/components/schemas/PatchedActivityRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/ApartmentRequest'
+              $ref: '#/components/schemas/PatchedActivityRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+          description: ''
+    delete:
+      operationId: v1_activities_destroy
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا activity.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/activities/{id}/complete/:
+    post:
+      operationId: v1_activities_complete_create
+      description: Mark a planned activity done, write the outcome, and (optionally)
+        plan the next one.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا activity.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteActivityRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CompleteActivityRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CompleteActivityRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+          description: ''
+  /api/v1/admin/hand-over/:
+    post:
+      operationId: v1_admin_hand_over_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HandOverRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HandOverRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HandOverRequest'
         required: true
       security:
       - cookieAuth: []
@@ -145,19 +229,113 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Apartment'
+                $ref: '#/components/schemas/HandOverResult'
           description: ''
-  /api/v1/apartments/{id}/:
+  /api/v1/admin/settings/:
     get:
-      operationId: v1_apartments_retrieve
-      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
-        true}.'
+      operationId: v1_admin_settings_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteSettings'
+          description: ''
+    patch:
+      operationId: v1_admin_settings_partial_update
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSiteSettingsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSiteSettingsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSiteSettingsRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteSettings'
+          description: ''
+  /api/v1/admin/settings/test-email/:
+    post:
+      operationId: v1_admin_settings_test_email_create
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/admin/users/:
+    get:
+      operationId: v1_admin_users_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserAdmin'
+          description: ''
+    post:
+      operationId: v1_admin_users_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserAdminRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserAdminRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserAdminRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAdmin'
+          description: ''
+  /api/v1/admin/users/{id}/:
+    get:
+      operationId: v1_admin_users_retrieve
       parameters:
       - in: path
         name: id
         schema:
           type: integer
-        description: نوع رقم صحيح فريد يحدد هذا apartment.
+        description: نوع رقم صحيح فريد يحدد هذا المستخدم.
         required: true
       tags:
       - v1
@@ -168,18 +346,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Apartment'
+                $ref: '#/components/schemas/UserAdmin'
           description: ''
     patch:
-      operationId: v1_apartments_partial_update
-      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
-        true}.'
+      operationId: v1_admin_users_partial_update
       parameters:
       - in: path
         name: id
         schema:
           type: integer
-        description: نوع رقم صحيح فريد يحدد هذا apartment.
+        description: نوع رقم صحيح فريد يحدد هذا المستخدم.
         required: true
       tags:
       - v1
@@ -187,13 +363,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedApartmentRequest'
+              $ref: '#/components/schemas/PatchedUserAdminRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedApartmentRequest'
+              $ref: '#/components/schemas/PatchedUserAdminRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedApartmentRequest'
+              $ref: '#/components/schemas/PatchedUserAdminRequest'
       security:
       - cookieAuth: []
       responses:
@@ -201,7 +377,40 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Apartment'
+                $ref: '#/components/schemas/UserAdmin'
+          description: ''
+  /api/v1/audit/:
+    get:
+      operationId: v1_audit_retrieve
+      description: Who changed what and when (django-auditlog), for one record, in
+        readable Arabic.
+      parameters:
+      - in: query
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: model
+        schema:
+          type: string
+          enum:
+          - activity
+          - contact
+          - deal
+          - property
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
           description: ''
   /api/v1/auth/csrf/:
     get:
@@ -267,14 +476,1066 @@ paths:
               schema:
                 $ref: '#/components/schemas/Me'
           description: ''
-  /api/v1/clients/:
+  /api/v1/catalog/features/:
     get:
-      operationId: v1_clients_list
-      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
-        true}.'
+      operationId: v1_catalog_features_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Feature'
+          description: ''
+    post:
+      operationId: v1_catalog_features_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeatureRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FeatureRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FeatureRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feature'
+          description: ''
+  /api/v1/catalog/features/{id}/:
+    get:
+      operationId: v1_catalog_features_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا feature.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feature'
+          description: ''
+    patch:
+      operationId: v1_catalog_features_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا feature.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFeatureRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFeatureRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFeatureRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feature'
+          description: ''
+    delete:
+      operationId: v1_catalog_features_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا feature.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/catalog/finish-levels/:
+    get:
+      operationId: v1_catalog_finish_levels_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FinishLevel'
+          description: ''
+    post:
+      operationId: v1_catalog_finish_levels_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinishLevelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FinishLevelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FinishLevelRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinishLevel'
+          description: ''
+  /api/v1/catalog/finish-levels/{id}/:
+    get:
+      operationId: v1_catalog_finish_levels_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا finish level.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinishLevel'
+          description: ''
+    patch:
+      operationId: v1_catalog_finish_levels_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا finish level.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFinishLevelRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFinishLevelRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFinishLevelRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinishLevel'
+          description: ''
+    delete:
+      operationId: v1_catalog_finish_levels_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا finish level.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/catalog/locations/:
+    get:
+      operationId: v1_catalog_locations_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Location'
+          description: ''
+    post:
+      operationId: v1_catalog_locations_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LocationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LocationRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+          description: ''
+  /api/v1/catalog/locations/{id}/:
+    get:
+      operationId: v1_catalog_locations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا location.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+          description: ''
+    patch:
+      operationId: v1_catalog_locations_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا location.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedLocationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedLocationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedLocationRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+          description: ''
+    delete:
+      operationId: v1_catalog_locations_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا location.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/catalog/lost-reasons/:
+    get:
+      operationId: v1_catalog_lost_reasons_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LostReason'
+          description: ''
+    post:
+      operationId: v1_catalog_lost_reasons_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LostReasonRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LostReasonRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LostReasonRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LostReason'
+          description: ''
+  /api/v1/catalog/lost-reasons/{id}/:
+    get:
+      operationId: v1_catalog_lost_reasons_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا lost reason.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LostReason'
+          description: ''
+    patch:
+      operationId: v1_catalog_lost_reasons_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا lost reason.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedLostReasonRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedLostReasonRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedLostReasonRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LostReason'
+          description: ''
+    delete:
+      operationId: v1_catalog_lost_reasons_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا lost reason.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/catalog/ownership-types/:
+    get:
+      operationId: v1_catalog_ownership_types_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OwnershipType'
+          description: ''
+    post:
+      operationId: v1_catalog_ownership_types_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OwnershipTypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OwnershipTypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OwnershipTypeRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnershipType'
+          description: ''
+  /api/v1/catalog/ownership-types/{id}/:
+    get:
+      operationId: v1_catalog_ownership_types_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا ownership type.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnershipType'
+          description: ''
+    patch:
+      operationId: v1_catalog_ownership_types_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا ownership type.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOwnershipTypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOwnershipTypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOwnershipTypeRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnershipType'
+          description: ''
+    delete:
+      operationId: v1_catalog_ownership_types_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا ownership type.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/catalog/property-types/:
+    get:
+      operationId: v1_catalog_property_types_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PropertyType'
+          description: ''
+    post:
+      operationId: v1_catalog_property_types_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PropertyTypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PropertyTypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PropertyTypeRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PropertyType'
+          description: ''
+  /api/v1/catalog/property-types/{id}/:
+    get:
+      operationId: v1_catalog_property_types_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا property type.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PropertyType'
+          description: ''
+    patch:
+      operationId: v1_catalog_property_types_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا property type.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPropertyTypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPropertyTypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPropertyTypeRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PropertyType'
+          description: ''
+    delete:
+      operationId: v1_catalog_property_types_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا property type.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/catalog/service-types/:
+    get:
+      operationId: v1_catalog_service_types_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceType'
+          description: ''
+    post:
+      operationId: v1_catalog_service_types_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceTypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ServiceTypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ServiceTypeRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceType'
+          description: ''
+  /api/v1/catalog/service-types/{id}/:
+    get:
+      operationId: v1_catalog_service_types_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا service type.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceType'
+          description: ''
+    patch:
+      operationId: v1_catalog_service_types_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا service type.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedServiceTypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedServiceTypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedServiceTypeRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceType'
+          description: ''
+    delete:
+      operationId: v1_catalog_service_types_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا service type.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/catalog/sources/:
+    get:
+      operationId: v1_catalog_sources_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Source'
+          description: ''
+    post:
+      operationId: v1_catalog_sources_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SourceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SourceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SourceRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+          description: ''
+  /api/v1/catalog/sources/{id}/:
+    get:
+      operationId: v1_catalog_sources_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا source.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+          description: ''
+    patch:
+      operationId: v1_catalog_sources_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا source.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSourceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSourceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSourceRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+          description: ''
+    delete:
+      operationId: v1_catalog_sources_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا source.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/catalog/tags/:
+    get:
+      operationId: v1_catalog_tags_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+          description: ''
+    post:
+      operationId: v1_catalog_tags_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+          description: ''
+  /api/v1/catalog/tags/{id}/:
+    get:
+      operationId: v1_catalog_tags_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا tag.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+          description: ''
+    patch:
+      operationId: v1_catalog_tags_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا tag.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTagRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTagRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTagRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+          description: ''
+    delete:
+      operationId: v1_catalog_tags_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا tag.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/contacts/:
+    get:
+      operationId: v1_contacts_list
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
       parameters:
       - in: query
         name: archived
+        schema:
+          type: boolean
+      - in: query
+        name: assignee
+        schema:
+          type: string
+      - in: query
+        name: attention
         schema:
           type: boolean
       - name: ordering
@@ -283,10 +1544,6 @@ paths:
         description: أي حقل يجب استخدامه عند ترتيب النتائج.
         schema:
           type: string
-      - in: query
-        name: overdue
-        schema:
-          type: boolean
       - name: page
         required: false
         in: query
@@ -304,9 +1561,13 @@ paths:
         schema:
           type: string
       - in: query
+        name: source
+        schema:
+          type: integer
+      - in: query
         name: tag
         schema:
-          type: string
+          type: integer
       tags:
       - v1
       security:
@@ -316,26 +1577,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedClientList'
+                $ref: '#/components/schemas/PaginatedContactList'
           description: ''
     post:
-      operationId: v1_clients_create
-      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
-        true}.'
+      operationId: v1_contacts_create
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
       tags:
       - v1
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ClientRequest'
+              $ref: '#/components/schemas/ContactRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/ClientRequest'
+              $ref: '#/components/schemas/ContactRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/ClientRequest'
-        required: true
+              $ref: '#/components/schemas/ContactRequest'
       security:
       - cookieAuth: []
       responses:
@@ -343,19 +1603,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Client'
+                $ref: '#/components/schemas/Contact'
           description: ''
-  /api/v1/clients/{id}/:
+  /api/v1/contacts/{id}/:
     get:
-      operationId: v1_clients_retrieve
-      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
-        true}.'
+      operationId: v1_contacts_retrieve
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
       parameters:
       - in: path
         name: id
         schema:
           type: integer
-        description: نوع رقم صحيح فريد يحدد هذا client.
+        description: نوع رقم صحيح فريد يحدد هذا contact.
         required: true
       tags:
       - v1
@@ -366,18 +1626,18 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Client'
+                $ref: '#/components/schemas/Contact'
           description: ''
     patch:
-      operationId: v1_clients_partial_update
-      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
-        true}.'
+      operationId: v1_contacts_partial_update
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
       parameters:
       - in: path
         name: id
         schema:
           type: integer
-        description: نوع رقم صحيح فريد يحدد هذا client.
+        description: نوع رقم صحيح فريد يحدد هذا contact.
         required: true
       tags:
       - v1
@@ -385,13 +1645,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedClientRequest'
+              $ref: '#/components/schemas/PatchedContactRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedClientRequest'
+              $ref: '#/components/schemas/PatchedContactRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedClientRequest'
+              $ref: '#/components/schemas/PatchedContactRequest'
       security:
       - cookieAuth: []
       responses:
@@ -399,11 +1659,128 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Client'
+                $ref: '#/components/schemas/Contact'
+          description: ''
+    delete:
+      operationId: v1_contacts_destroy
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا contact.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/contacts/{id}/merge/:
+    post:
+      operationId: v1_contacts_merge_create
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا contact.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MergeRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MergeRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MergeRequestRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+          description: ''
+  /api/v1/contacts/check-phone/:
+    get:
+      operationId: v1_contacts_check_phone_retrieve
+      description: Live duplicate check while typing a number.
+      parameters:
+      - in: query
+        name: phone
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhoneCheck'
+          description: ''
+  /api/v1/contacts/duplicates/:
+    get:
+      operationId: v1_contacts_duplicates_list
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: رقم الصفحة ضمن النتائج المقسمة.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: عدد النتائج التي يجب إرجاعها في كل صفحة.
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDuplicatePairList'
           description: ''
   /api/v1/dashboard/:
     get:
       operationId: v1_dashboard_retrieve
+      parameters:
+      - in: query
+        name: scope
+        schema:
+          type: string
+          enum:
+          - all
+          - me
       tags:
       - v1
       security:
@@ -416,16 +1793,354 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/deals/:
+    get:
+      operationId: v1_deals_list
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
+      - in: query
+        name: archived
+        schema:
+          type: boolean
+      - in: query
+        name: assignee
+        schema:
+          type: string
+      - in: query
+        name: attention
+        schema:
+          type: boolean
+      - in: query
+        name: contact
+        schema:
+          type: integer
+      - in: query
+        name: engineer
+        schema:
+          type: string
+      - in: query
+        name: kind
+        schema:
+          type: string
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: رقم الصفحة ضمن النتائج المقسمة.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: عدد النتائج التي يجب إرجاعها في كل صفحة.
+        schema:
+          type: integer
+      - in: query
+        name: pipeline
+        schema:
+          type: string
+      - in: query
+        name: property
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+      - in: query
+        name: stage
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+      - in: query
+        name: tag
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDealList'
+          description: ''
+    post:
+      operationId: v1_deals_create
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DealRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DealRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DealRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deal'
+          description: ''
+  /api/v1/deals/{id}/:
+    get:
+      operationId: v1_deals_retrieve
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا deal.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deal'
+          description: ''
+    patch:
+      operationId: v1_deals_partial_update
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا deal.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDealRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDealRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDealRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deal'
+          description: ''
+    delete:
+      operationId: v1_deals_destroy
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا deal.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/deals/{id}/convert-to-finishing/:
+    post:
+      operationId: v1_deals_convert_to_finishing_create
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا deal.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deal'
+          description: ''
+  /api/v1/deals/{id}/match/:
+    post:
+      operationId: v1_deals_match_create
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا deal.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MatchUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MatchUpdateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/deals/{id}/matches/:
+    get:
+      operationId: v1_deals_matches_list
+      description: Available properties fitting this buy/rent demand + what the client
+        said about each.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا deal.
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: رقم الصفحة ضمن النتائج المقسمة.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: عدد النتائج التي يجب إرجاعها في كل صفحة.
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPropertyMatchList'
+          description: ''
+  /api/v1/deals/stage-counts/:
+    get:
+      operationId: v1_deals_stage_counts_list
+      description: How many requests are in each stage under the current filters (the
+        numbers on the stage filter).
+      parameters:
+      - in: query
+        name: archived
+        schema:
+          type: boolean
+      - in: query
+        name: assignee
+        schema:
+          type: string
+      - in: query
+        name: attention
+        schema:
+          type: boolean
+      - in: query
+        name: kind
+        schema:
+          type: string
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: رقم الصفحة ضمن النتائج المقسمة.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: عدد النتائج التي يجب إرجاعها في كل صفحة.
+        schema:
+          type: integer
+      - in: query
+        name: pipeline
+        schema:
+          type: string
+      - in: query
+        name: search
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedStageCountList'
+          description: ''
   /api/v1/documents/:
     get:
       operationId: v1_documents_list
-      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
-        true}.'
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
       parameters:
-      - in: query
-        name: apartment
-        schema:
-          type: integer
       - in: query
         name: archived
         schema:
@@ -435,7 +2150,11 @@ paths:
         schema:
           type: string
       - in: query
-        name: client
+        name: contact
+        schema:
+          type: integer
+      - in: query
+        name: deal
         schema:
           type: integer
       - name: ordering
@@ -457,7 +2176,11 @@ paths:
         schema:
           type: integer
       - in: query
-        name: request
+        name: property
+        schema:
+          type: integer
+      - in: query
+        name: quote
         schema:
           type: integer
       tags:
@@ -473,8 +2196,8 @@ paths:
           description: ''
     post:
       operationId: v1_documents_create
-      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
-        true}.'
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
       tags:
       - v1
       requestBody:
@@ -501,8 +2224,8 @@ paths:
   /api/v1/documents/{id}/:
     get:
       operationId: v1_documents_retrieve
-      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
-        true}.'
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
       parameters:
       - in: path
         name: id
@@ -523,8 +2246,8 @@ paths:
           description: ''
     patch:
       operationId: v1_documents_partial_update
-      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
-        true}.'
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
       parameters:
       - in: path
         name: id
@@ -554,12 +2277,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/Document'
           description: ''
+    delete:
+      operationId: v1_documents_destroy
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا document.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/v1/documents/{id}/file/:
     get:
       operationId: v1_documents_file_retrieve
-      description: |-
-        Auth is checked here; the bytes are sent by nginx (X-Accel-Redirect) in production.
-        FileResponse under ASGI would read the whole file through Python.
+      description: Auth checked here; bytes sent by nginx (X-Accel-Redirect) in production.
       parameters:
       - in: path
         name: id
@@ -578,6 +2317,49 @@ paths:
               schema:
                 type: string
                 format: binary
+          description: ''
+  /api/v1/notification-preferences/:
+    get:
+      operationId: v1_notification_preferences_list
+      description: Each user mutes the kinds they don't want.
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Preference'
+          description: ''
+    post:
+      operationId: v1_notification_preferences_create
+      description: Each user mutes the kinds they don't want.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreferenceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PreferenceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PreferenceRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Preference'
           description: ''
   /api/v1/notifications/:
     get:
@@ -658,16 +2440,142 @@ paths:
       responses:
         '204':
           description: No response body
-  /api/v1/requests/:
+  /api/v1/payments/:
     get:
-      operationId: v1_requests_list
-      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
-        true}.'
+      operationId: v1_payments_list
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
       parameters:
       - in: query
-        name: apartment
+        name: deal
         schema:
           type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payment'
+          description: ''
+    post:
+      operationId: v1_payments_create
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+          description: ''
+  /api/v1/payments/{id}/:
+    get:
+      operationId: v1_payments_retrieve
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا payment.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+          description: ''
+    patch:
+      operationId: v1_payments_partial_update
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا payment.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPaymentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPaymentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPaymentRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+          description: ''
+    delete:
+      operationId: v1_payments_destroy
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا payment.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/properties/:
+    get:
+      operationId: v1_properties_list
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
       - in: query
         name: archived
         schema:
@@ -676,9 +2584,12 @@ paths:
         name: assignee
         schema:
           type: string
-        description: user id or 'me'
       - in: query
-        name: client
+        name: listing
+        schema:
+          type: string
+      - in: query
+        name: location
         schema:
           type: integer
       - name: ordering
@@ -688,9 +2599,9 @@ paths:
         schema:
           type: string
       - in: query
-        name: overdue
+        name: owner
         schema:
-          type: boolean
+          type: integer
       - name: page
         required: false
         in: query
@@ -704,17 +2615,21 @@ paths:
         schema:
           type: integer
       - in: query
-        name: stage
+        name: property_type
         schema:
           type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
       - in: query
         name: status
         schema:
           type: string
-          enum:
-          - LOST
-          - OPEN
-          - WON
+      - in: query
+        name: tag
+        schema:
+          type: integer
       tags:
       - v1
       security:
@@ -724,25 +2639,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedRequestList'
+                $ref: '#/components/schemas/PaginatedPropertyList'
           description: ''
     post:
-      operationId: v1_requests_create
-      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
-        true}.'
+      operationId: v1_properties_create
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
       tags:
       - v1
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RequestRequest'
+              $ref: '#/components/schemas/PropertyRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/RequestRequest'
+              $ref: '#/components/schemas/PropertyRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/RequestRequest'
+              $ref: '#/components/schemas/PropertyRequest'
         required: true
       security:
       - cookieAuth: []
@@ -751,19 +2666,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Request'
+                $ref: '#/components/schemas/Property'
           description: ''
-  /api/v1/requests/{id}/:
+  /api/v1/properties/{id}/:
     get:
-      operationId: v1_requests_retrieve
-      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
-        true}.'
+      operationId: v1_properties_retrieve
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
       parameters:
       - in: path
         name: id
         schema:
           type: integer
-        description: نوع رقم صحيح فريد يحدد هذا request.
+        description: نوع رقم صحيح فريد يحدد هذا property.
         required: true
       tags:
       - v1
@@ -774,18 +2689,18 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Request'
+                $ref: '#/components/schemas/Property'
           description: ''
     patch:
-      operationId: v1_requests_partial_update
-      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
-        true}.'
+      operationId: v1_properties_partial_update
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
       parameters:
       - in: path
         name: id
         schema:
           type: integer
-        description: نوع رقم صحيح فريد يحدد هذا request.
+        description: نوع رقم صحيح فريد يحدد هذا property.
         required: true
       tags:
       - v1
@@ -793,13 +2708,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedRequestRequest'
+              $ref: '#/components/schemas/PatchedPropertyRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedRequestRequest'
+              $ref: '#/components/schemas/PatchedPropertyRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedRequestRequest'
+              $ref: '#/components/schemas/PatchedPropertyRequest'
       security:
       - cookieAuth: []
       responses:
@@ -807,7 +2722,199 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Request'
+                $ref: '#/components/schemas/Property'
+          description: ''
+    delete:
+      operationId: v1_properties_destroy
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا property.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/properties/{id}/demands/:
+    get:
+      operationId: v1_properties_demands_retrieve
+      description: Open buy/rent requests this property fits (matching, other direction).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا property.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Property'
+          description: ''
+  /api/v1/quotes/:
+    get:
+      operationId: v1_quotes_list
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
+      - in: query
+        name: deal
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Quote'
+          description: ''
+    post:
+      operationId: v1_quotes_create
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/QuoteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/QuoteRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+          description: ''
+  /api/v1/quotes/{id}/:
+    get:
+      operationId: v1_quotes_retrieve
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا quote.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+          description: ''
+    patch:
+      operationId: v1_quotes_partial_update
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا quote.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedQuoteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedQuoteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedQuoteRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+          description: ''
+    delete:
+      operationId: v1_quotes_destroy
+      description: Archive (PATCH is_archived) for everyone; DELETE only with the
+        delete permission.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا quote.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/reports/:
+    get:
+      operationId: v1_reports_retrieve
+      description: 'Simple counts for the weekly report / reports page: by source,
+        by stage, lost reasons.'
+      parameters:
+      - in: query
+        name: days
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
           description: ''
   /api/v1/search/:
     get:
@@ -833,9 +2940,6 @@ paths:
   /api/v1/stages/:
     get:
       operationId: v1_stages_list
-      description: |-
-        DELETE works only for a stage that was never used (PROTECT -> 409); otherwise
-        PATCH {"is_active": false}.
       parameters:
       - in: query
         name: include_inactive
@@ -845,6 +2949,10 @@ paths:
         required: false
         in: query
         description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      - in: query
+        name: pipeline
         schema:
           type: string
       tags:
@@ -862,9 +2970,6 @@ paths:
           description: ''
     post:
       operationId: v1_stages_create
-      description: |-
-        DELETE works only for a stage that was never used (PROTECT -> 409); otherwise
-        PATCH {"is_active": false}.
       tags:
       - v1
       requestBody:
@@ -891,9 +2996,6 @@ paths:
   /api/v1/stages/{id}/:
     get:
       operationId: v1_stages_retrieve
-      description: |-
-        DELETE works only for a stage that was never used (PROTECT -> 409); otherwise
-        PATCH {"is_active": false}.
       parameters:
       - in: path
         name: id
@@ -912,11 +3014,40 @@ paths:
               schema:
                 $ref: '#/components/schemas/Stage'
           description: ''
+    put:
+      operationId: v1_stages_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا stage.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StageRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StageRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StageRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stage'
+          description: ''
     patch:
       operationId: v1_stages_partial_update
-      description: |-
-        DELETE works only for a stage that was never used (PROTECT -> 409); otherwise
-        PATCH {"is_active": false}.
       parameters:
       - in: path
         name: id
@@ -948,9 +3079,6 @@ paths:
           description: ''
     delete:
       operationId: v1_stages_destroy
-      description: |-
-        DELETE works only for a stage that was never used (PROTECT -> 409); otherwise
-        PATCH {"is_active": false}.
       parameters:
       - in: path
         name: id
@@ -965,169 +3093,22 @@ paths:
       responses:
         '204':
           description: No response body
-  /api/v1/tasks/:
-    get:
-      operationId: v1_tasks_list
-      parameters:
-      - in: query
-        name: assignee
-        schema:
-          type: string
-        description: user id or 'me'
-      - in: query
-        name: client
-        schema:
-          type: integer
-      - in: query
-        name: done
-        schema:
-          type: boolean
-      - in: query
-        name: due
-        schema:
-          type: string
-          enum:
-          - overdue
-          - today
-          - week
-      - name: ordering
-        required: false
-        in: query
-        description: أي حقل يجب استخدامه عند ترتيب النتائج.
-        schema:
-          type: string
-      - name: page
-        required: false
-        in: query
-        description: رقم الصفحة ضمن النتائج المقسمة.
-        schema:
-          type: integer
-      - name: page_size
-        required: false
-        in: query
-        description: عدد النتائج التي يجب إرجاعها في كل صفحة.
-        schema:
-          type: integer
-      - in: query
-        name: request
-        schema:
-          type: integer
-      tags:
-      - v1
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedTaskList'
-          description: ''
-    post:
-      operationId: v1_tasks_create
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TaskRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/TaskRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/TaskRequest'
-        required: true
-      security:
-      - cookieAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Task'
-          description: ''
-  /api/v1/tasks/{id}/:
-    get:
-      operationId: v1_tasks_retrieve
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: نوع رقم صحيح فريد يحدد هذا task.
-        required: true
-      tags:
-      - v1
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Task'
-          description: ''
-    patch:
-      operationId: v1_tasks_partial_update
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: نوع رقم صحيح فريد يحدد هذا task.
-        required: true
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedTaskRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedTaskRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedTaskRequest'
-      security:
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Task'
-          description: ''
-    delete:
-      operationId: v1_tasks_destroy
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: نوع رقم صحيح فريد يحدد هذا task.
-        required: true
-      tags:
-      - v1
-      security:
-      - cookieAuth: []
-      responses:
-        '204':
-          description: No response body
   /api/v1/timeline/:
     get:
       operationId: v1_timeline_retrieve
-      description: Activities + stage changes + uploaded files for one client or one
-        request, newest first.
+      description: Activities (done + planned + system) and uploaded files for a contact,
+        deal or property.
       parameters:
       - in: query
-        name: client
+        name: contact
         schema:
           type: integer
       - in: query
-        name: request
+        name: deal
+        schema:
+          type: integer
+      - in: query
+        name: property
         schema:
           type: integer
       tags:
@@ -1175,166 +3156,192 @@ components:
           type: integer
           readOnly: true
         type:
-          $ref: '#/components/schemas/TypeEnum'
-        body:
+          $ref: '#/components/schemas/ActivityTypeEnum'
+        subject:
           type: string
-        client_id:
-          type: integer
-        request_id:
-          type: integer
+          maxLength: 200
+        notes:
+          type: string
+        outcome:
+          type: string
+        contact:
+          allOf:
+          - $ref: '#/components/schemas/ContactRef'
+          readOnly: true
+        deal:
+          allOf:
+          - $ref: '#/components/schemas/DealMini'
+          readOnly: true
           nullable: true
-        by:
+        due_at:
+          type: string
+          format: date-time
+          nullable: true
+        done_at:
+          type: string
+          format: date-time
+          nullable: true
+        interest:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        assignee:
           allOf:
           - $ref: '#/components/schemas/UserRef'
           readOnly: true
           nullable: true
-        at:
+        created_by:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          readOnly: true
+          nullable: true
+        created_at:
           type: string
           format: date-time
+          readOnly: true
       required:
-      - by
-      - client_id
+      - assignee
+      - contact
+      - created_at
+      - created_by
+      - deal
       - id
       - type
     ActivityRequest:
       type: object
       properties:
         type:
-          $ref: '#/components/schemas/TypeEnum'
-        body:
-          type: string
-        client_id:
-          type: integer
-        request_id:
-          type: integer
-          nullable: true
-        at:
-          type: string
-          format: date-time
-      required:
-      - client_id
-      - type
-    Apartment:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        client:
-          allOf:
-          - $ref: '#/components/schemas/ClientRef'
-          readOnly: true
-        title:
+          $ref: '#/components/schemas/ActivityTypeEnum'
+        subject:
           type: string
           maxLength: 200
-        address:
-          type: string
-          maxLength: 300
-        floor:
-          type: string
-          maxLength: 20
-        area_m2:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
-          nullable: true
-        rooms:
-          type: integer
-          maximum: 32767
-          minimum: 0
-          nullable: true
         notes:
           type: string
-        is_archived:
-          type: boolean
-        created_at:
+        outcome:
           type: string
-          format: date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-      required:
-      - client
-      - created_at
-      - id
-      - title
-      - updated_at
-    ApartmentRef:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        title:
-          type: string
-          maxLength: 200
-      required:
-      - id
-      - title
-    ApartmentRefRequest:
-      type: object
-      properties:
-        title:
-          type: string
-          minLength: 1
-          maxLength: 200
-      required:
-      - title
-    ApartmentRequest:
-      type: object
-      properties:
-        client_id:
+        contact_id:
           type: integer
           writeOnly: true
-        title:
-          type: string
-          minLength: 1
-          maxLength: 200
-        address:
-          type: string
-          maxLength: 300
-        floor:
-          type: string
-          maxLength: 20
-        area_m2:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+        deal_id:
+          type: integer
+          writeOnly: true
           nullable: true
-        rooms:
+        property_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        due_at:
+          type: string
+          format: date-time
+          nullable: true
+        done_at:
+          type: string
+          format: date-time
+          nullable: true
+        interest:
           type: integer
           maximum: 32767
           minimum: 0
           nullable: true
-        notes:
-          type: string
-        is_archived:
+        assignee_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        is_done:
           type: boolean
+          writeOnly: true
+        next_due:
+          type: string
+          format: date-time
+          writeOnly: true
+          nullable: true
+        next_type:
+          allOf:
+          - $ref: '#/components/schemas/ActivityTypeEnum'
+          writeOnly: true
+        next_subject:
+          type: string
+          writeOnly: true
       required:
-      - client_id
-      - title
+      - contact_id
+      - type
+    ActivityTypeEnum:
+      enum:
+      - CALL
+      - WHATSAPP
+      - MEETING
+      - SITE_VISIT
+      - VIEWING
+      - TASK
+      - NOTE
+      - SYSTEM
+      type: string
+      description: |-
+        * `CALL` - مكالمة
+        * `WHATSAPP` - واتساب
+        * `MEETING` - اجتماع / جلسة اتفاق
+        * `SITE_VISIT` - معاينة
+        * `VIEWING` - جولة على عقار
+        * `TASK` - مهمة
+        * `NOTE` - ملاحظة
+        * `SYSTEM` - النظام
+    AppliesToEnum:
+      enum:
+      - ALL
+      - FINISHING
+      - BROKERAGE
+      type: string
+      description: |-
+        * `ALL` - الكل
+        * `FINISHING` - الإكساء
+        * `BROKERAGE` - الوساطة
     BlankEnum:
       enum:
       - ''
+    BuildingStateEnum:
+      enum:
+      - UNDER_CONSTRUCTION
+      - NEW
+      - USED
+      type: string
+      description: |-
+        * `UNDER_CONSTRUCTION` - قيد الإنشاء
+        * `NEW` - جديد
+        * `USED` - مستخدم
     CategoryEnum:
       enum:
-      - CONTRACT
-      - QUOTE
-      - PLAN
-      - INVOICE
       - PHOTO
+      - PLAN
+      - QUOTE
+      - CONTRACT
+      - INVOICE
+      - OWNERSHIP
       - OTHER
       type: string
       description: |-
-        * `CONTRACT` - عقد
-        * `QUOTE` - عرض سعر
-        * `PLAN` - مخطط
-        * `INVOICE` - فاتورة
         * `PHOTO` - صور
+        * `PLAN` - مخطط
+        * `QUOTE` - دراسة / عرض سعر
+        * `CONTRACT` - عقد
+        * `INVOICE` - فاتورة / إيصال
+        * `OWNERSHIP` - أوراق ملكية
         * `OTHER` - أخرى
-    Client:
+    CompleteActivityRequest:
+      type: object
+      properties:
+        outcome:
+          type: string
+          minLength: 1
+        interest:
+          type: integer
+        next_due:
+          type: string
+          format: date-time
+        next_type:
+          type: string
+          minLength: 1
+    Contact:
       type: object
       properties:
         id:
@@ -1343,13 +3350,26 @@ components:
         name:
           type: string
           maxLength: 200
-        phone:
+        display_name:
           type: string
+          readOnly: true
+        phones:
+          type: array
+          items:
+            $ref: '#/components/schemas/Phone'
+        source:
+          allOf:
+          - $ref: '#/components/schemas/SourceRef'
+          readOnly: true
           nullable: true
-          maxLength: 30
-        whatsapp:
+        referred_by:
           type: string
-          maxLength: 30
+          maxLength: 200
+        assignee:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          readOnly: true
+          nullable: true
         email:
           oneOf:
           - type: string
@@ -1357,32 +3377,34 @@ components:
             maxLength: 254
           - type: string
             maxLength: 0
-        city:
+        notes:
           type: string
-          maxLength: 100
-        source:
-          type: string
-          maxLength: 50
         tags:
           type: array
           items:
-            type: string
-            maxLength: 40
-        notes:
-          type: string
+            $ref: '#/components/schemas/TagRef'
+          readOnly: true
         last_contact_at:
           type: string
           format: date-time
           readOnly: true
           nullable: true
-        open_requests:
+        open_deals:
           type: integer
           readOnly: true
           default: 0
-        has_overdue:
+        properties_count:
+          type: integer
+          readOnly: true
+          default: 0
+        needs_attention:
           type: boolean
           readOnly: true
           default: false
+        merged_into:
+          type: integer
+          readOnly: true
+          nullable: true
         is_archived:
           type: boolean
         created_at:
@@ -1394,14 +3416,19 @@ components:
           format: date-time
           readOnly: true
       required:
+      - assignee
       - created_at
-      - has_overdue
+      - display_name
       - id
       - last_contact_at
-      - name
-      - open_requests
+      - merged_into
+      - needs_attention
+      - open_deals
+      - properties_count
+      - source
+      - tags
       - updated_at
-    ClientRef:
+    ContactRef:
       type: object
       properties:
         id:
@@ -1409,33 +3436,31 @@ components:
           readOnly: true
         name:
           type: string
-          maxLength: 200
+          readOnly: true
       required:
       - id
       - name
-    ClientRefRequest:
+    ContactRequest:
       type: object
       properties:
         name:
           type: string
-          minLength: 1
           maxLength: 200
-      required:
-      - name
-    ClientRequest:
-      type: object
-      properties:
-        name:
-          type: string
-          minLength: 1
-          maxLength: 200
-        phone:
-          type: string
+        phones:
+          type: array
+          items:
+            $ref: '#/components/schemas/PhoneRequest'
+        source_id:
+          type: integer
+          writeOnly: true
           nullable: true
-          maxLength: 30
-        whatsapp:
+        referred_by:
           type: string
-          maxLength: 30
+          maxLength: 200
+        assignee_id:
+          type: integer
+          writeOnly: true
+          nullable: true
         email:
           oneOf:
           - type: string
@@ -1443,32 +3468,446 @@ components:
             maxLength: 254
           - type: string
             maxLength: 0
-        city:
+        notes:
           type: string
-          maxLength: 100
+        tag_ids:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
+        is_archived:
+          type: boolean
+    Deal:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/DealKindEnum'
+        pipeline:
+          allOf:
+          - $ref: '#/components/schemas/PipelineEnum'
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        contact:
+          allOf:
+          - $ref: '#/components/schemas/ContactRef'
+          readOnly: true
+        stage:
+          allOf:
+          - $ref: '#/components/schemas/StageRef'
+          readOnly: true
+        status:
+          type: string
+          readOnly: true
+        stage_entered_at:
+          type: string
+          format: date-time
+          readOnly: true
+        days_in_stage:
+          type: integer
+          readOnly: true
+        temperature:
+          oneOf:
+          - $ref: '#/components/schemas/TemperatureEnum'
+          - $ref: '#/components/schemas/BlankEnum'
         source:
+          allOf:
+          - $ref: '#/components/schemas/SourceRef'
+          readOnly: true
+          nullable: true
+        assignee:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          readOnly: true
+          nullable: true
+        engineer:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          readOnly: true
+          nullable: true
+        property:
+          allOf:
+          - $ref: '#/components/schemas/PropertyRef'
+          readOnly: true
+          nullable: true
+        location:
+          allOf:
+          - $ref: '#/components/schemas/LocationRef'
+          readOnly: true
+          nullable: true
+        address:
           type: string
-          maxLength: 50
-        tags:
+          maxLength: 300
+        expected_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        contract_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        commission_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        paid_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        currency:
+          type: string
+          maxLength: 3
+        lost_reason:
+          allOf:
+          - $ref: '#/components/schemas/LostReasonRef'
+          readOnly: true
+          nullable: true
+        lost_notes:
+          type: string
+        closed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        expected_close:
+          type: string
+          format: date
+          nullable: true
+        execution_started_at:
+          type: string
+          format: date
+          nullable: true
+        handover_expected:
+          type: string
+          format: date
+          nullable: true
+        last_contact_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        next_step_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        needs_attention:
+          type: boolean
+          readOnly: true
+        attention_reasons:
           type: array
           items:
             type: string
-            minLength: 1
-            maxLength: 40
-        notes:
+          readOnly: true
+        finishing:
+          allOf:
+          - $ref: '#/components/schemas/Finishing'
+          nullable: true
+        demand:
+          allOf:
+          - $ref: '#/components/schemas/Demand'
+          nullable: true
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/TagRef'
+          readOnly: true
+        is_archived:
+          type: boolean
+        created_at:
           type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - assignee
+      - attention_reasons
+      - closed_at
+      - contact
+      - created_at
+      - days_in_stage
+      - engineer
+      - id
+      - kind
+      - last_contact_at
+      - location
+      - lost_reason
+      - needs_attention
+      - next_step_at
+      - paid_amount
+      - pipeline
+      - property
+      - source
+      - stage
+      - stage_entered_at
+      - status
+      - tags
+      - updated_at
+    DealKindEnum:
+      enum:
+      - FINISHING
+      - BUY
+      - RENT
+      - SELL
+      - LEASE
+      type: string
+      description: |-
+        * `FINISHING` - إكساء
+        * `BUY` - شراء
+        * `RENT` - استئجار
+        * `SELL` - بيع عقار
+        * `LEASE` - تأجير عقار
+    DealMini:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        kind:
+          $ref: '#/components/schemas/DealKindEnum'
+      required:
+      - id
+      - kind
+    DealMiniRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        kind:
+          $ref: '#/components/schemas/DealKindEnum'
+      required:
+      - kind
+    DealRequest:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/DealKindEnum'
+        title:
+          type: string
+          maxLength: 200
+        contact_id:
+          type: integer
+          writeOnly: true
+        stage_id:
+          type: integer
+          writeOnly: true
+        temperature:
+          oneOf:
+          - $ref: '#/components/schemas/TemperatureEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        source_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        assignee_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        engineer_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        property_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        location_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        address:
+          type: string
+          maxLength: 300
+        expected_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        contract_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        commission_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        currency:
+          type: string
+          minLength: 1
+          maxLength: 3
+        lost_reason_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        lost_notes:
+          type: string
+        expected_close:
+          type: string
+          format: date
+          nullable: true
+        execution_started_at:
+          type: string
+          format: date
+          nullable: true
+        handover_expected:
+          type: string
+          format: date
+          nullable: true
+        finishing:
+          allOf:
+          - $ref: '#/components/schemas/FinishingRequest'
+          nullable: true
+        demand:
+          allOf:
+          - $ref: '#/components/schemas/DemandRequest'
+          nullable: true
+        tag_ids:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
         is_archived:
           type: boolean
       required:
-      - name
-    ClosesAsEnum:
-      enum:
-      - WON
-      - LOST
-      type: string
-      description: |-
-        * `WON` - تم
-        * `LOST` - ملغي
+      - contact_id
+      - kind
+    Demand:
+      type: object
+      properties:
+        property_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/PropertyTypeRef'
+          readOnly: true
+        locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocationRef'
+          readOnly: true
+        budget_min:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        budget_max:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        area_min:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        area_max:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        rooms_min:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        floor_min:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+          nullable: true
+        floor_max:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+          nullable: true
+        finish_levels:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinishLevelRef'
+          readOnly: true
+        notes:
+          type: string
+      required:
+      - finish_levels
+      - locations
+      - property_types
+    DemandRequest:
+      type: object
+      properties:
+        property_type_ids:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
+        location_ids:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
+        budget_min:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        budget_max:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        area_min:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        area_max:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        rooms_min:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        floor_min:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+          nullable: true
+        floor_max:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+          nullable: true
+        finish_level_ids:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
+        notes:
+          type: string
     Document:
       type: object
       properties:
@@ -1489,15 +3928,6 @@ components:
           readOnly: true
         category:
           $ref: '#/components/schemas/CategoryEnum'
-        client_id:
-          type: integer
-          nullable: true
-        apartment_id:
-          type: integer
-          nullable: true
-        request_id:
-          type: integer
-          nullable: true
         uploaded_by:
           allOf:
           - $ref: '#/components/schemas/UserRef'
@@ -1526,29 +3956,323 @@ components:
           writeOnly: true
         category:
           $ref: '#/components/schemas/CategoryEnum'
-        client_id:
+        contact_id:
           type: integer
+          writeOnly: true
           nullable: true
-        apartment_id:
+        deal_id:
           type: integer
+          writeOnly: true
           nullable: true
-        request_id:
+        property_id:
           type: integer
+          writeOnly: true
+          nullable: true
+        quote_id:
+          type: integer
+          writeOnly: true
           nullable: true
         is_archived:
           type: boolean
       required:
       - file
-    KindEnum:
+    DuplicatePair:
+      type: object
+      properties:
+        a:
+          type: object
+          additionalProperties: {}
+        b:
+          type: object
+          additionalProperties: {}
+        score:
+          type: number
+          format: double
+      required:
+      - a
+      - b
+      - score
+    Feature:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+      required:
+      - id
+      - name
+    FeatureRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+      required:
+      - id
+      - name
+    FeatureRefRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+      required:
+      - name
+    FeatureRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+      required:
+      - name
+    FinishLevel:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+      required:
+      - id
+      - name
+    FinishLevelRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+      required:
+      - id
+      - name
+    FinishLevelRefRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+      required:
+      - name
+    FinishLevelRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+      required:
+      - name
+    Finishing:
+      type: object
+      properties:
+        service_type:
+          allOf:
+          - $ref: '#/components/schemas/ServiceTypeRef'
+          readOnly: true
+          nullable: true
+        target_level:
+          allOf:
+          - $ref: '#/components/schemas/FinishLevelRef'
+          readOnly: true
+          nullable: true
+        current_level:
+          allOf:
+          - $ref: '#/components/schemas/FinishLevelRef'
+          readOnly: true
+          nullable: true
+        property_type:
+          allOf:
+          - $ref: '#/components/schemas/PropertyTypeRef'
+          readOnly: true
+          nullable: true
+        area_m2:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        budget_min:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        budget_max:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        property_note:
+          type: string
+          maxLength: 300
+      required:
+      - current_level
+      - property_type
+      - service_type
+      - target_level
+    FinishingRequest:
+      type: object
+      properties:
+        service_type_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        target_level_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        current_level_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        property_type_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        area_m2:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        budget_min:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        budget_max:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        property_note:
+          type: string
+          maxLength: 300
+    HandOverRequest:
+      type: object
+      properties:
+        from_user_id:
+          type: integer
+        to_user_id:
+          type: integer
+      required:
+      - from_user_id
+      - to_user_id
+    HandOverResult:
+      type: object
+      properties:
+        deals:
+          type: integer
+        activities:
+          type: integer
+        contacts:
+          type: integer
+        properties:
+          type: integer
+      required:
+      - activities
+      - contacts
+      - deals
+      - properties
+    ListingEnum:
       enum:
-      - REQUEST_OVERDUE
-      - TASK_DUE
-      - TASK_ASSIGNED
+      - SALE
+      - RENT
+      - BOTH
       type: string
       description: |-
-        * `REQUEST_OVERDUE` - Request Overdue
-        * `TASK_DUE` - Task Due
-        * `TASK_ASSIGNED` - Task Assigned
+        * `SALE` - بيع
+        * `RENT` - إيجار
+        * `BOTH` - بيع أو إيجار
+    Location:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+      required:
+      - id
+      - name
+    LocationRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+      required:
+      - id
+      - name
+    LocationRefRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+      required:
+      - name
+    LocationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+      required:
+      - name
     LoginRequest:
       type: object
       properties:
@@ -1561,6 +4285,91 @@ components:
       required:
       - password
       - username
+    LostReason:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+        applies_to:
+          $ref: '#/components/schemas/AppliesToEnum'
+      required:
+      - id
+      - name
+    LostReasonRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+      required:
+      - id
+      - name
+    LostReasonRefRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+      required:
+      - name
+    LostReasonRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+        applies_to:
+          $ref: '#/components/schemas/AppliesToEnum'
+      required:
+      - name
+    MatchUpdateRequest:
+      type: object
+      properties:
+        property_id:
+          type: integer
+        status:
+          $ref: '#/components/schemas/MatchUpdateStatusEnum'
+        note:
+          type: string
+          minLength: 1
+      required:
+      - property_id
+      - status
+    MatchUpdateStatusEnum:
+      enum:
+      - SUGGESTED
+      - SENT
+      - VIEWED
+      - INTERESTED
+      - REJECTED
+      type: string
+      description: |-
+        * `SUGGESTED` - مقترح
+        * `SENT` - أُرسل
+        * `VIEWED` - عاينه
+        * `INTERESTED` - مهتم
+        * `REJECTED` - رفض
     Me:
       type: object
       properties:
@@ -1572,11 +4381,21 @@ components:
           type: string
         is_admin:
           type: boolean
+        can_delete:
+          type: boolean
       required:
+      - can_delete
       - id
       - is_admin
       - name
       - username
+    MergeRequestRequest:
+      type: object
+      properties:
+        other_id:
+          type: integer
+      required:
+      - other_id
     Notification:
       type: object
       properties:
@@ -1585,19 +4404,17 @@ components:
           readOnly: true
         kind:
           allOf:
-          - $ref: '#/components/schemas/KindEnum'
+          - $ref: '#/components/schemas/NotificationKindEnum'
           readOnly: true
         message:
           type: string
           readOnly: true
-        request:
-          allOf:
-          - $ref: '#/components/schemas/RequestRef'
+        deal_id:
+          type: integer
           readOnly: true
           nullable: true
-        task:
-          allOf:
-          - $ref: '#/components/schemas/TaskRef'
+        activity_id:
+          type: integer
           readOnly: true
           nullable: true
         is_read:
@@ -1607,23 +4424,95 @@ components:
           format: date-time
           readOnly: true
       required:
+      - activity_id
       - created_at
+      - deal_id
       - id
       - is_read
       - kind
       - message
-      - request
-      - task
-    OverdueReasonsEnum:
+    NotificationKindEnum:
       enum:
-      - FOLLOWUP_DUE
-      - STAGE_SLA
-      - NO_CONTACT
+      - ACTIVITY_DUE
+      - ACTIVITY_OVERDUE
+      - NO_NEXT_STEP
+      - DEAL_STUCK
+      - ASSIGNED
+      - DIGEST
       type: string
       description: |-
-        * `FOLLOWUP_DUE` - FOLLOWUP_DUE
-        * `STAGE_SLA` - STAGE_SLA
-        * `NO_CONTACT` - NO_CONTACT
+        * `ACTIVITY_DUE` - موعد قريب
+        * `ACTIVITY_OVERDUE` - متابعة متأخرة
+        * `NO_NEXT_STEP` - طلب بلا خطوة جاية
+        * `DEAL_STUCK` - طلب واقف بمرحلته
+        * `ASSIGNED` - انسندلك
+        * `DIGEST` - ملخص اليوم
+    OwnerRoleEnum:
+      enum:
+      - OWNER
+      - AGENT
+      - BROKER
+      - RELATIVE
+      type: string
+      description: |-
+        * `OWNER` - مالك
+        * `AGENT` - وكيل
+        * `BROKER` - وسيط
+        * `RELATIVE` - قريب المالك
+    OwnershipType:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+      required:
+      - id
+      - name
+    OwnershipTypeRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+      required:
+      - id
+      - name
+    OwnershipTypeRefRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+      required:
+      - name
+    OwnershipTypeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+      required:
+      - name
     PaginatedActivityList:
       type: object
       required:
@@ -1647,7 +4536,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Activity'
-    PaginatedApartmentList:
+    PaginatedContactList:
       type: object
       required:
       - count
@@ -1669,8 +4558,8 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/Apartment'
-    PaginatedClientList:
+            $ref: '#/components/schemas/Contact'
+    PaginatedDealList:
       type: object
       required:
       - count
@@ -1692,7 +4581,7 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/Client'
+            $ref: '#/components/schemas/Deal'
     PaginatedDocumentList:
       type: object
       required:
@@ -1716,6 +4605,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Document'
+    PaginatedDuplicatePairList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DuplicatePair'
     PaginatedNotificationList:
       type: object
       required:
@@ -1739,7 +4651,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Notification'
-    PaginatedRequestList:
+    PaginatedPropertyList:
       type: object
       required:
       - count
@@ -1761,8 +4673,8 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/Request'
-    PaginatedTaskList:
+            $ref: '#/components/schemas/Property'
+    PaginatedPropertyMatchList:
       type: object
       required:
       - count
@@ -1784,51 +4696,106 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/Task'
-    PatchedApartmentRequest:
+            $ref: '#/components/schemas/PropertyMatch'
+    PaginatedStageCountList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StageCount'
+    PatchedActivityRequest:
       type: object
       properties:
-        client_id:
+        type:
+          $ref: '#/components/schemas/ActivityTypeEnum'
+        subject:
+          type: string
+          maxLength: 200
+        notes:
+          type: string
+        outcome:
+          type: string
+        contact_id:
           type: integer
           writeOnly: true
-        title:
-          type: string
-          minLength: 1
-          maxLength: 200
-        address:
-          type: string
-          maxLength: 300
-        floor:
-          type: string
-          maxLength: 20
-        area_m2:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+        deal_id:
+          type: integer
+          writeOnly: true
           nullable: true
-        rooms:
+        property_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        due_at:
+          type: string
+          format: date-time
+          nullable: true
+        done_at:
+          type: string
+          format: date-time
+          nullable: true
+        interest:
           type: integer
           maximum: 32767
           minimum: 0
           nullable: true
-        notes:
-          type: string
-        is_archived:
+        assignee_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        is_done:
           type: boolean
-    PatchedClientRequest:
+          writeOnly: true
+        next_due:
+          type: string
+          format: date-time
+          writeOnly: true
+          nullable: true
+        next_type:
+          allOf:
+          - $ref: '#/components/schemas/ActivityTypeEnum'
+          writeOnly: true
+        next_subject:
+          type: string
+          writeOnly: true
+    PatchedContactRequest:
       type: object
       properties:
         name:
           type: string
-          minLength: 1
           maxLength: 200
-        phone:
-          type: string
+        phones:
+          type: array
+          items:
+            $ref: '#/components/schemas/PhoneRequest'
+        source_id:
+          type: integer
+          writeOnly: true
           nullable: true
-          maxLength: 30
-        whatsapp:
+        referred_by:
           type: string
-          maxLength: 30
+          maxLength: 200
+        assignee_id:
+          type: integer
+          writeOnly: true
+          nullable: true
         email:
           oneOf:
           - type: string
@@ -1836,20 +4803,108 @@ components:
             maxLength: 254
           - type: string
             maxLength: 0
-        city:
-          type: string
-          maxLength: 100
-        source:
-          type: string
-          maxLength: 50
-        tags:
-          type: array
-          items:
-            type: string
-            minLength: 1
-            maxLength: 40
         notes:
           type: string
+        tag_ids:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
+        is_archived:
+          type: boolean
+    PatchedDealRequest:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/DealKindEnum'
+        title:
+          type: string
+          maxLength: 200
+        contact_id:
+          type: integer
+          writeOnly: true
+        stage_id:
+          type: integer
+          writeOnly: true
+        temperature:
+          oneOf:
+          - $ref: '#/components/schemas/TemperatureEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        source_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        assignee_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        engineer_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        property_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        location_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        address:
+          type: string
+          maxLength: 300
+        expected_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        contract_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        commission_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        currency:
+          type: string
+          minLength: 1
+          maxLength: 3
+        lost_reason_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        lost_notes:
+          type: string
+        expected_close:
+          type: string
+          format: date
+          nullable: true
+        execution_started_at:
+          type: string
+          format: date
+          nullable: true
+        handover_expected:
+          type: string
+          format: date
+          nullable: true
+        finishing:
+          allOf:
+          - $ref: '#/components/schemas/FinishingRequest'
+          nullable: true
+        demand:
+          allOf:
+          - $ref: '#/components/schemas/DemandRequest'
+          nullable: true
+        tag_ids:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
         is_archived:
           type: boolean
     PatchedDocumentRequest:
@@ -1861,181 +4916,650 @@ components:
           writeOnly: true
         category:
           $ref: '#/components/schemas/CategoryEnum'
-        client_id:
+        contact_id:
           type: integer
+          writeOnly: true
           nullable: true
-        apartment_id:
+        deal_id:
           type: integer
+          writeOnly: true
           nullable: true
-        request_id:
+        property_id:
           type: integer
+          writeOnly: true
+          nullable: true
+        quote_id:
+          type: integer
+          writeOnly: true
           nullable: true
         is_archived:
           type: boolean
-    PatchedNotificationRequest:
-      type: object
-      properties:
-        is_read:
-          type: boolean
-    PatchedRequestRequest:
-      type: object
-      properties:
-        title:
-          type: string
-          minLength: 1
-          maxLength: 200
-        description:
-          type: string
-        budget:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
-          nullable: true
-        priority:
-          $ref: '#/components/schemas/PriorityEnum'
-        client_id:
-          type: integer
-          writeOnly: true
-        apartment_id:
-          type: integer
-          writeOnly: true
-          nullable: true
-        stage_id:
-          type: integer
-          writeOnly: true
-        assignee_id:
-          type: integer
-          writeOnly: true
-          nullable: true
-        next_follow_up_at:
-          type: string
-          format: date-time
-          nullable: true
-        is_archived:
-          type: boolean
-    PatchedStageRequest:
+    PatchedFeatureRequest:
       type: object
       properties:
         name:
           type: string
           minLength: 1
-          maxLength: 80
-        color:
-          type: string
-          minLength: 1
-          maxLength: 7
+          maxLength: 100
         order:
           type: integer
           maximum: 32767
           minimum: 0
-        sla_days:
+        is_active:
+          type: boolean
+    PatchedFinishLevelRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+    PatchedLocationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+    PatchedLostReasonRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+        applies_to:
+          $ref: '#/components/schemas/AppliesToEnum'
+    PatchedNotificationRequest:
+      type: object
+      properties:
+        is_read:
+          type: boolean
+    PatchedOwnershipTypeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+    PatchedPaymentRequest:
+      type: object
+      properties:
+        deal_id:
+          type: integer
+          writeOnly: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        currency:
+          type: string
+          minLength: 1
+          maxLength: 3
+        paid_at:
+          type: string
+          format: date
+        note:
+          type: string
+          maxLength: 300
+    PatchedPropertyRequest:
+      type: object
+      properties:
+        legacy_code:
+          type: string
+          maxLength: 30
+        owner_id:
+          type: integer
+          writeOnly: true
+        owner_role:
+          $ref: '#/components/schemas/OwnerRoleEnum'
+        property_type_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        listing:
+          $ref: '#/components/schemas/ListingEnum'
+        status:
+          $ref: '#/components/schemas/PropertyStatusEnum'
+        location_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        address:
+          type: string
+          maxLength: 300
+        area_m2:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        area_note:
+          type: string
+          maxLength: 200
+        rooms:
           type: integer
           maximum: 32767
           minimum: 0
           nullable: true
-        requires_follow_up:
-          type: boolean
-        closes_as:
+        bathrooms:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        floor:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+          nullable: true
+        floor_note:
+          type: string
+          maxLength: 100
+        layout_note:
+          type: string
+          maxLength: 200
+        building_state:
           oneOf:
-          - $ref: '#/components/schemas/ClosesAsEnum'
+          - $ref: '#/components/schemas/BuildingStateEnum'
           - $ref: '#/components/schemas/BlankEnum'
-        is_active:
-          type: boolean
-    PatchedTaskRequest:
-      type: object
-      properties:
-        title:
+        finish_level_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        feature_ids:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
+        ownership_type_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        rent_monthly:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        currency:
           type: string
           minLength: 1
-          maxLength: 200
-        due_at:
+          maxLength: 3
+        price_note:
           type: string
-          format: date-time
-        is_done:
-          type: boolean
-        client_id:
-          type: integer
+          maxLength: 200
+        commission_pct:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
           nullable: true
-        request_id:
-          type: integer
-          nullable: true
+        description:
+          type: string
         assignee_id:
           type: integer
           writeOnly: true
           nullable: true
-    PriorityEnum:
-      enum:
-      - LOW
-      - NORMAL
-      - HIGH
-      type: string
-      description: |-
-        * `LOW` - Low
-        * `NORMAL` - Normal
-        * `HIGH` - High
-    Request:
+        listed_at:
+          type: string
+          format: date
+          nullable: true
+        tag_ids:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
+        is_archived:
+          type: boolean
+    PatchedPropertyTypeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+        has_rooms:
+          type: boolean
+    PatchedQuoteRequest:
+      type: object
+      properties:
+        deal_id:
+          type: integer
+          writeOnly: true
+        status:
+          $ref: '#/components/schemas/QuoteStatusEnum'
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        currency:
+          type: string
+          minLength: 1
+          maxLength: 3
+        sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        valid_until:
+          type: string
+          format: date
+          nullable: true
+        notes:
+          type: string
+    PatchedServiceTypeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+    PatchedSiteSettingsRequest:
+      type: object
+      properties:
+        smtp_password:
+          type: string
+          writeOnly: true
+        email_enabled:
+          type: boolean
+        smtp_host:
+          type: string
+          minLength: 1
+          maxLength: 200
+        smtp_port:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        smtp_use_tls:
+          type: boolean
+        smtp_username:
+          type: string
+          maxLength: 200
+        from_email:
+          type: string
+          maxLength: 200
+        digest_hour:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        quiet_start_hour:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        quiet_end_hour:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        weekly_report_recipients:
+          type: string
+    PatchedSourceRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+        opens_whatsapp:
+          type: boolean
+    PatchedStageRequest:
+      type: object
+      properties:
+        pipeline:
+          $ref: '#/components/schemas/PipelineEnum'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        color:
+          type: string
+          minLength: 1
+          maxLength: 7
+        type:
+          $ref: '#/components/schemas/StageTypeEnum'
+        rotting_days:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        is_active:
+          type: boolean
+    PatchedTagRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+        color:
+          type: string
+          minLength: 1
+          maxLength: 7
+    PatchedUserAdminRequest:
+      type: object
+      description: 'Everyone has the same rights, plus two switches the admin sets:
+        admin area, and hard delete.'
+      properties:
+        username:
+          type: string
+          minLength: 1
+          title: اسم المستخدم
+          description: مطلوب. 150 رمزاً أو أقل، مكونة من حروف وأرقام و @/./+/-/_ فقط
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        name:
+          type: string
+        email:
+          title: عنوان بريد إلكتروني
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        is_active:
+          type: boolean
+          title: نشط
+          description: يحدد ما إذا كان المستخدم سيُعامل على أنّه نشط. أزل تحديد هذا
+            الحقل بدلاً من حذف الحسابات.
+        is_admin:
+          type: boolean
+        can_delete_input:
+          type: boolean
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+    Payment:
       type: object
       properties:
         id:
           type: integer
           readOnly: true
-        title:
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        currency:
+          type: string
+          maxLength: 3
+        paid_at:
+          type: string
+          format: date
+        note:
+          type: string
+          maxLength: 300
+      required:
+      - amount
+      - id
+      - paid_at
+    PaymentRequest:
+      type: object
+      properties:
+        deal_id:
+          type: integer
+          writeOnly: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        currency:
+          type: string
+          minLength: 1
+          maxLength: 3
+        paid_at:
+          type: string
+          format: date
+        note:
+          type: string
+          maxLength: 300
+      required:
+      - amount
+      - deal_id
+      - paid_at
+    Phone:
+      type: object
+      properties:
+        number:
+          type: string
+          maxLength: 20
+        has_whatsapp:
+          type: boolean
+        label:
+          type: string
+          maxLength: 40
+      required:
+      - number
+    PhoneCheck:
+      type: object
+      properties:
+        number:
+          type: string
+          nullable: true
+        contact:
+          type: object
+          additionalProperties: {}
+          nullable: true
+      required:
+      - contact
+      - number
+    PhoneRequest:
+      type: object
+      properties:
+        number:
+          type: string
+          minLength: 1
+          maxLength: 20
+        has_whatsapp:
+          type: boolean
+        label:
+          type: string
+          maxLength: 40
+      required:
+      - number
+    PipelineEnum:
+      enum:
+      - FINISHING
+      - BROKERAGE
+      type: string
+      description: |-
+        * `FINISHING` - الإكساء
+        * `BROKERAGE` - الوساطة العقارية
+    Preference:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/NotificationKindEnum'
+        muted:
+          type: boolean
+      required:
+      - kind
+      - muted
+    PreferenceRequest:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/NotificationKindEnum'
+        muted:
+          type: boolean
+      required:
+      - kind
+      - muted
+    Property:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          readOnly: true
+        legacy_code:
+          type: string
+          maxLength: 30
+        owner:
+          allOf:
+          - $ref: '#/components/schemas/ContactRef'
+          readOnly: true
+        owner_role:
+          $ref: '#/components/schemas/OwnerRoleEnum'
+        property_type:
+          allOf:
+          - $ref: '#/components/schemas/PropertyTypeRef'
+          readOnly: true
+          nullable: true
+        listing:
+          $ref: '#/components/schemas/ListingEnum'
+        status:
+          $ref: '#/components/schemas/PropertyStatusEnum'
+        location:
+          allOf:
+          - $ref: '#/components/schemas/LocationRef'
+          readOnly: true
+          nullable: true
+        address:
+          type: string
+          maxLength: 300
+        area_m2:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        area_note:
           type: string
           maxLength: 200
-        description:
+        rooms:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        bathrooms:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        floor:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+          nullable: true
+        floor_note:
           type: string
-        budget:
+          maxLength: 100
+        layout_note:
+          type: string
+          maxLength: 200
+        building_state:
+          oneOf:
+          - $ref: '#/components/schemas/BuildingStateEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        finish_level:
+          allOf:
+          - $ref: '#/components/schemas/FinishLevelRef'
+          readOnly: true
+          nullable: true
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureRef'
+          readOnly: true
+        ownership_type:
+          allOf:
+          - $ref: '#/components/schemas/OwnershipTypeRef'
+          readOnly: true
+          nullable: true
+        price:
           type: string
           format: decimal
           pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
           nullable: true
-        priority:
-          $ref: '#/components/schemas/PriorityEnum'
-        status:
-          allOf:
-          - $ref: '#/components/schemas/StatusEnum'
-          readOnly: true
-        client:
-          allOf:
-          - $ref: '#/components/schemas/ClientRef'
-          readOnly: true
-        apartment:
-          allOf:
-          - $ref: '#/components/schemas/ApartmentRef'
-          readOnly: true
+        rent_monthly:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
           nullable: true
-        stage:
-          allOf:
-          - $ref: '#/components/schemas/StageRef'
-          readOnly: true
+        currency:
+          type: string
+          maxLength: 3
+        price_note:
+          type: string
+          maxLength: 200
+        commission_pct:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+        description:
+          type: string
         assignee:
           allOf:
           - $ref: '#/components/schemas/UserRef'
           readOnly: true
           nullable: true
-        next_follow_up_at:
+        listed_at:
           type: string
-          format: date-time
+          format: date
           nullable: true
-        last_contact_at:
-          type: string
-          format: date-time
-          readOnly: true
-          nullable: true
-        stage_entered_at:
-          type: string
-          format: date-time
-          readOnly: true
-        days_in_stage:
-          type: integer
-          readOnly: true
-        is_overdue:
-          type: boolean
-          readOnly: true
-        overdue_reasons:
+        tags:
           type: array
           items:
-            $ref: '#/components/schemas/OverdueReasonsEnum'
+            $ref: '#/components/schemas/TagRef'
           readOnly: true
         is_archived:
           type: boolean
@@ -2048,81 +5572,183 @@ components:
           format: date-time
           readOnly: true
       required:
-      - apartment
       - assignee
-      - client
+      - code
       - created_at
-      - days_in_stage
+      - features
+      - finish_level
       - id
-      - is_overdue
-      - last_contact_at
-      - overdue_reasons
-      - stage
-      - stage_entered_at
-      - status
-      - title
+      - location
+      - owner
+      - ownership_type
+      - property_type
+      - tags
       - updated_at
-    RequestRef:
+    PropertyMatch:
+      type: object
+      properties:
+        property:
+          type: object
+          additionalProperties: {}
+        status:
+          type: string
+          nullable: true
+      required:
+      - property
+      - status
+    PropertyRef:
       type: object
       properties:
         id:
           type: integer
           readOnly: true
-        title:
+        code:
           type: string
-          maxLength: 200
+          maxLength: 20
+        address:
+          type: string
+          maxLength: 300
       required:
       - id
-      - title
-    RequestRefRequest:
+    PropertyRefRequest:
       type: object
       properties:
-        title:
+        code:
           type: string
-          minLength: 1
-          maxLength: 200
-      required:
-      - title
-    RequestRequest:
+          maxLength: 20
+        address:
+          type: string
+          maxLength: 300
+    PropertyRequest:
       type: object
       properties:
-        title:
+        legacy_code:
           type: string
-          minLength: 1
+          maxLength: 30
+        owner_id:
+          type: integer
+          writeOnly: true
+        owner_role:
+          $ref: '#/components/schemas/OwnerRoleEnum'
+        property_type_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        listing:
+          $ref: '#/components/schemas/ListingEnum'
+        status:
+          $ref: '#/components/schemas/PropertyStatusEnum'
+        location_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        address:
+          type: string
+          maxLength: 300
+        area_m2:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        area_note:
+          type: string
           maxLength: 200
-        description:
+        rooms:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        bathrooms:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        floor:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+          nullable: true
+        floor_note:
           type: string
-        budget:
+          maxLength: 100
+        layout_note:
+          type: string
+          maxLength: 200
+        building_state:
+          oneOf:
+          - $ref: '#/components/schemas/BuildingStateEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        finish_level_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        feature_ids:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
+        ownership_type_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        price:
           type: string
           format: decimal
           pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
           nullable: true
-        priority:
-          $ref: '#/components/schemas/PriorityEnum'
-        client_id:
-          type: integer
-          writeOnly: true
-        apartment_id:
-          type: integer
-          writeOnly: true
+        rent_monthly:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
           nullable: true
-        stage_id:
-          type: integer
-          writeOnly: true
+        currency:
+          type: string
+          minLength: 1
+          maxLength: 3
+        price_note:
+          type: string
+          maxLength: 200
+        commission_pct:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+        description:
+          type: string
         assignee_id:
           type: integer
           writeOnly: true
           nullable: true
-        next_follow_up_at:
+        listed_at:
           type: string
-          format: date-time
+          format: date
           nullable: true
+        tag_ids:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
         is_archived:
           type: boolean
       required:
-      - client_id
-      - title
-    Stage:
+      - owner_id
+    PropertyStatusEnum:
+      enum:
+      - AVAILABLE
+      - RESERVED
+      - SOLD
+      - RENTED
+      - WITHDRAWN
+      type: string
+      description: |-
+        * `AVAILABLE` - متاح
+        * `RESERVED` - محجوز
+        * `SOLD` - مباع
+        * `RENTED` - مؤجر
+        * `WITHDRAWN` - مسحوب
+    PropertyType:
       type: object
       properties:
         id:
@@ -2130,31 +5756,346 @@ components:
           readOnly: true
         name:
           type: string
-          maxLength: 80
-        color:
-          type: string
-          maxLength: 7
+          maxLength: 100
         order:
           type: integer
           maximum: 32767
           minimum: 0
-        sla_days:
+        is_active:
+          type: boolean
+        has_rooms:
+          type: boolean
+      required:
+      - id
+      - name
+    PropertyTypeRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        has_rooms:
+          type: boolean
+      required:
+      - id
+      - name
+    PropertyTypeRefRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        has_rooms:
+          type: boolean
+      required:
+      - name
+    PropertyTypeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+        has_rooms:
+          type: boolean
+      required:
+      - name
+    Quote:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        version:
+          type: integer
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/QuoteStatusEnum'
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        currency:
+          type: string
+          maxLength: 3
+        sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        valid_until:
+          type: string
+          format: date
+          nullable: true
+        notes:
+          type: string
+        created_by:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - created_by
+      - id
+      - version
+    QuoteRequest:
+      type: object
+      properties:
+        deal_id:
+          type: integer
+          writeOnly: true
+        status:
+          $ref: '#/components/schemas/QuoteStatusEnum'
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        currency:
+          type: string
+          minLength: 1
+          maxLength: 3
+        sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        valid_until:
+          type: string
+          format: date
+          nullable: true
+        notes:
+          type: string
+      required:
+      - deal_id
+    QuoteStatusEnum:
+      enum:
+      - DRAFT
+      - SENT
+      - ACCEPTED
+      - REJECTED
+      - EXPIRED
+      - CANCELLED
+      type: string
+      description: |-
+        * `DRAFT` - مسودة
+        * `SENT` - مُرسلة
+        * `ACCEPTED` - مقبولة
+        * `REJECTED` - مرفوضة
+        * `EXPIRED` - منتهية
+        * `CANCELLED` - ملغاة
+    ServiceType:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+      required:
+      - id
+      - name
+    ServiceTypeRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+      required:
+      - id
+      - name
+    ServiceTypeRefRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+      required:
+      - name
+    ServiceTypeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+      required:
+      - name
+    SiteSettings:
+      type: object
+      properties:
+        smtp_password_set:
+          type: boolean
+          readOnly: true
+        email_enabled:
+          type: boolean
+        smtp_host:
+          type: string
+          maxLength: 200
+        smtp_port:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        smtp_use_tls:
+          type: boolean
+        smtp_username:
+          type: string
+          maxLength: 200
+        from_email:
+          type: string
+          maxLength: 200
+        digest_hour:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        quiet_start_hour:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        quiet_end_hour:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        weekly_report_recipients:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - smtp_password_set
+      - updated_at
+    Source:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+        opens_whatsapp:
+          type: boolean
+      required:
+      - id
+      - name
+    SourceRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+      required:
+      - id
+      - name
+    SourceRefRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+      required:
+      - name
+    SourceRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
+          type: boolean
+        opens_whatsapp:
+          type: boolean
+      required:
+      - name
+    Stage:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        pipeline:
+          $ref: '#/components/schemas/PipelineEnum'
+        name:
+          type: string
+          maxLength: 80
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        color:
+          type: string
+          maxLength: 7
+        type:
+          $ref: '#/components/schemas/StageTypeEnum'
+        rotting_days:
           type: integer
           maximum: 32767
           minimum: 0
           nullable: true
-        requires_follow_up:
-          type: boolean
-        closes_as:
-          oneOf:
-          - $ref: '#/components/schemas/ClosesAsEnum'
-          - $ref: '#/components/schemas/BlankEnum'
         is_active:
           type: boolean
       required:
       - id
       - name
       - order
+      - pipeline
+    StageCount:
+      type: object
+      properties:
+        stage:
+          type: integer
+        count:
+          type: integer
+      required:
+      - count
+      - stage
     StageRef:
       type: object
       properties:
@@ -2167,6 +6108,8 @@ components:
         color:
           type: string
           maxLength: 7
+        type:
+          $ref: '#/components/schemas/StageTypeEnum'
       required:
       - id
       - name
@@ -2181,148 +6124,211 @@ components:
           type: string
           minLength: 1
           maxLength: 7
+        type:
+          $ref: '#/components/schemas/StageTypeEnum'
       required:
       - name
     StageRequest:
       type: object
       properties:
+        pipeline:
+          $ref: '#/components/schemas/PipelineEnum'
         name:
           type: string
           minLength: 1
           maxLength: 80
-        color:
-          type: string
-          minLength: 1
-          maxLength: 7
         order:
           type: integer
           maximum: 32767
           minimum: 0
-        sla_days:
+        color:
+          type: string
+          minLength: 1
+          maxLength: 7
+        type:
+          $ref: '#/components/schemas/StageTypeEnum'
+        rotting_days:
           type: integer
           maximum: 32767
           minimum: 0
           nullable: true
-        requires_follow_up:
-          type: boolean
-        closes_as:
-          oneOf:
-          - $ref: '#/components/schemas/ClosesAsEnum'
-          - $ref: '#/components/schemas/BlankEnum'
         is_active:
           type: boolean
       required:
       - name
       - order
-    StatusEnum:
+      - pipeline
+    StageTypeEnum:
       enum:
       - OPEN
       - WON
       - LOST
       type: string
       description: |-
-        * `OPEN` - Open
-        * `WON` - Won
-        * `LOST` - Lost
-    Task:
+        * `OPEN` - مفتوحة
+        * `WON` - رابحة
+        * `LOST` - خاسرة
+    Tag:
       type: object
       properties:
         id:
           type: integer
           readOnly: true
-        title:
+        name:
           type: string
-          maxLength: 200
-        due_at:
-          type: string
-          format: date-time
-        is_done:
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
           type: boolean
-        done_at:
+        color:
           type: string
-          format: date-time
-          readOnly: true
-          nullable: true
-        client_id:
-          type: integer
-          nullable: true
-        request_id:
-          type: integer
-          nullable: true
-        assignee:
-          allOf:
-          - $ref: '#/components/schemas/UserRef'
-          readOnly: true
-          nullable: true
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
+          maxLength: 7
       required:
-      - assignee
-      - created_at
-      - done_at
-      - due_at
       - id
-      - title
-    TaskRef:
+      - name
+    TagRef:
       type: object
       properties:
         id:
           type: integer
           readOnly: true
-        title:
+        name:
           type: string
-          maxLength: 200
+          maxLength: 100
+        color:
+          type: string
+          maxLength: 7
       required:
       - id
-      - title
-    TaskRefRequest:
+      - name
+    TagRefRequest:
       type: object
       properties:
-        title:
+        name:
           type: string
           minLength: 1
-          maxLength: 200
+          maxLength: 100
+        color:
+          type: string
+          minLength: 1
+          maxLength: 7
       required:
-      - title
-    TaskRequest:
+      - name
+    TagRequest:
       type: object
       properties:
-        title:
+        name:
           type: string
           minLength: 1
-          maxLength: 200
-        due_at:
-          type: string
-          format: date-time
-        is_done:
+          maxLength: 100
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        is_active:
           type: boolean
-        client_id:
-          type: integer
-          nullable: true
-        request_id:
-          type: integer
-          nullable: true
-        assignee_id:
-          type: integer
-          writeOnly: true
-          nullable: true
+        color:
+          type: string
+          minLength: 1
+          maxLength: 7
       required:
-      - due_at
-      - title
-    TypeEnum:
+      - name
+    TemperatureEnum:
       enum:
-      - CALL
-      - WHATSAPP
-      - VISIT
-      - NOTE
+      - HOT
+      - WARM
+      - COLD
       type: string
       description: |-
-        * `CALL` - مكالمة
-        * `WHATSAPP` - واتساب
-        * `VISIT` - زيارة
-        * `NOTE` - ملاحظة
+        * `HOT` - ساخن
+        * `WARM` - دافئ
+        * `COLD` - بارد
+    UserAdmin:
+      type: object
+      description: 'Everyone has the same rights, plus two switches the admin sets:
+        admin area, and hard delete.'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          title: اسم المستخدم
+          description: مطلوب. 150 رمزاً أو أقل، مكونة من حروف وأرقام و @/./+/-/_ فقط
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        name:
+          type: string
+        email:
+          title: عنوان بريد إلكتروني
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        is_active:
+          type: boolean
+          title: نشط
+          description: يحدد ما إذا كان المستخدم سيُعامل على أنّه نشط. أزل تحديد هذا
+            الحقل بدلاً من حذف الحسابات.
+        is_admin:
+          type: boolean
+        can_delete:
+          type: boolean
+          readOnly: true
+        last_login:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          title: آخر دخول
+      required:
+      - can_delete
+      - id
+      - last_login
+      - username
+    UserAdminRequest:
+      type: object
+      description: 'Everyone has the same rights, plus two switches the admin sets:
+        admin area, and hard delete.'
+      properties:
+        username:
+          type: string
+          minLength: 1
+          title: اسم المستخدم
+          description: مطلوب. 150 رمزاً أو أقل، مكونة من حروف وأرقام و @/./+/-/_ فقط
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        name:
+          type: string
+        email:
+          title: عنوان بريد إلكتروني
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        is_active:
+          type: boolean
+          title: نشط
+          description: يحدد ما إذا كان المستخدم سيُعامل على أنّه نشط. أزل تحديد هذا
+            الحقل بدلاً من حذف الحسابات.
+        is_admin:
+          type: boolean
+        can_delete_input:
+          type: boolean
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+      required:
+      - username
     UserRef:
       type: object
       properties:

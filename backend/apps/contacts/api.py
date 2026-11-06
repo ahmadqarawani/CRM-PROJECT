@@ -91,7 +91,8 @@ class ContactViewSet(BaseViewSet):
                         needs_attention=Exists(attention))
               .order_by("-created_at"))
         if self.action == "list":
-            qs = self.mine(self.archived_filter(qs))
+            # merged cards are archived too, but they are gone for good: keep them out of every list
+            qs = self.mine(self.archived_filter(qs)).filter(merged_into__isnull=True)
             p = self.request.query_params
             if q := p.get("search"):
                 qs = qs.filter(services.search_q(q)).distinct()

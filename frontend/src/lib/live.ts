@@ -2,14 +2,14 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { K } from '../api/hooks'
 
-/** SSE events are signals (type + ids); data always comes back through the REST API. */
+/** SSE events are signals; data always comes back through the REST API. */
 const INVALIDATE: Record<string, (readonly unknown[])[]> = {
   'notification.created': [K.notifications, K.dashboard],
-  'request.changed': [K.requests, K.clients, K.dashboard, K.timeline],
-  'client.changed': [K.clients, K.apartments],
-  'activity.created': [K.timeline, K.requests, K.clients, K.dashboard],
+  'request.changed': [K.deals, K.contacts, K.dashboard, K.timeline, K.properties],
+  'client.changed': [K.contacts, K.properties, K.duplicates],
+  'activity.created': [K.timeline, K.activities, K.deals, K.contacts, K.dashboard],
   'document.created': [K.documents, K.timeline],
-  'task.changed': [K.tasks, K.dashboard],
+  'task.changed': [K.activities, K.dashboard, K.deals, K.timeline],
 }
 
 export function useLiveEvents(onNotification?: () => void) {
@@ -19,7 +19,7 @@ export function useLiveEvents(onNotification?: () => void) {
     let opened = false
     const resync = () => qc.invalidateQueries()
     es.onopen = () => {
-      if (opened) resync() // reconnected: we may have missed events
+      if (opened) resync()
       opened = true
     }
     es.addEventListener('resync', resync)

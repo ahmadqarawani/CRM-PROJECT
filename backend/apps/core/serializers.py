@@ -1,4 +1,4 @@
-from functools import lru_cache
+from functools import cache
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
@@ -17,7 +17,7 @@ class UserRefSerializer(serializers.ModelSerializer):
         return obj.get_full_name() or obj.get_username()
 
 
-@lru_cache(maxsize=None)
+@cache
 def _ref_class(model, fields: tuple):
     return type(f"{model.__name__}RefSerializer", (serializers.ModelSerializer,),
                 {"Meta": type("Meta", (), {"model": model, "fields": list(fields)})})
@@ -32,7 +32,7 @@ def fk(model, source, queryset=None, **kw):
     """Write side of a relation: `<name>_id`."""
     kw.setdefault("required", False)
     kw.setdefault("allow_null", True)
-    return serializers.PrimaryKeyRelatedField(source=source, queryset=queryset or model.objects.all(),
+    return serializers.PrimaryKeyRelatedField(source=source, queryset=queryset if queryset is not None else model.objects.all(),
                                               write_only=True, **kw)
 
 
