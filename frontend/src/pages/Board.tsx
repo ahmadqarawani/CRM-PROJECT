@@ -111,7 +111,7 @@ export function Board({ pipeline }: { pipeline: Pipeline }) {
 function StageChip({ on, onClick, label, count, color }: { on: boolean; onClick: () => void; label: string; count: number; color?: string | null }) {
   return (
     <button onClick={onClick}
-      className={cx('btn inline-flex h-7.5 flex-none items-center gap-1.5 rounded-[9px] border px-2.5 text-[13px] whitespace-nowrap',
+      className={cx('btn inline-flex h-7.5 flex-none items-center gap-1.5 rounded-[calc(var(--r-ctl)-3px)] border px-2.5 text-[13px] whitespace-nowrap',
         on ? 'btn-primary border-transparent text-white' : 'chip border-white/70 text-ink')}>
       {color && <Dot color={color} />}{label}
       <span className={cx('num text-[12px]', on ? 'text-white/80' : 'text-faint')}>{count}</span>

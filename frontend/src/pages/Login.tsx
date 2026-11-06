@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router'
 import { api, ensureCsrf, unwrap } from '../api/client'
 import { K } from '../api/hooks'
-import { LogoMark } from '../components/Logo'
+import { BrandSquare, SectionBackdrop } from '../components/Brand'
 import { Button, Field, FormError, Input } from '../components/ui'
 import { applyServerErrors } from '../lib/forms'
 
@@ -17,6 +17,7 @@ export function Login() {
 
   useEffect(() => {
     ensureCsrf()
+    document.documentElement.dataset.theme = 'brand' // not whatever section you logged out from
   }, [])
 
   const onSubmit = handleSubmit(async (v) => {
@@ -32,13 +33,12 @@ export function Login() {
 
   return (
     <div className="grid min-h-full place-items-center px-4">
-      <form onSubmit={onSubmit} className="glass w-full max-w-[380px] rounded-[20px] p-8">
-        <div className="mb-6 flex items-center gap-3">
-          <LogoMark size={40} />
-          <div>
-            <div className="text-[17px] font-semibold text-navy">إدارة العملاء</div>
-            <div className="text-[13px] text-faint" dir="ltr">BGI Real Estate</div>
-          </div>
+      <SectionBackdrop />
+      <form onSubmit={onSubmit} className="glass w-full max-w-[380px] rounded-[var(--r-lg)] p-8">
+        <BrandSquare className="mx-auto mb-5 w-44" />
+        <div className="mb-6 text-center">
+          <div className="text-[17px] font-semibold text-navy">إدارة العملاء</div>
+          <div className="text-[13px] text-faint" dir="ltr">Bahri Group Investment</div>
         </div>
         <div className="flex flex-col gap-3.5">
           <Field label="اسم المستخدم" error={formState.errors.username?.message}>

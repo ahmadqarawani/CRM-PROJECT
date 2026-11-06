@@ -73,10 +73,15 @@ class Property(TimeStamped, Archivable):
     def __str__(self):
         return self.code or f"#{self.pk}"
 
+    def build_search_text(self) -> str:
+        return normalize_ar(" ".join(filter(None, [self.code, self.legacy_code, self.address,
+                                                   self.location.name if self.location_id else ""])))
+
     def save(self, *args, **kwargs):
-        self.search_text = normalize_ar(" ".join(filter(None, [self.code, self.legacy_code, self.address,
-                                                               self.location.name if self.location_id else ""])))
+        self.search_text = self.build_search_text()
         super().save(*args, **kwargs)
         if not self.code:
+            # the code needs the pk, so it exists only after the first save: index it too, or P-0012 finds nothing
             self.code = f"P-{self.pk:04d}"
-            Property.objects.filter(pk=self.pk).update(code=self.code)
+            self.search_text = self.build_search_text()
+            Property.objects.filter(pk=self.pk).update(code=self.code, search_text=self.search_text)

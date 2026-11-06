@@ -1,13 +1,14 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { api, unwrap, type Me } from '../api/client'
-import { useDashboard, useMarkNotification, useNotifications, useReadAll, useSearch } from '../api/hooks'
+import { useDashboard, useMarkNotification, useNotifications, useReadAll } from '../api/hooks'
 import { ago } from '../lib/format'
 import { useLiveEvents } from '../lib/live'
 import { useAccess } from '../lib/access'
 import { ErrorBoundary } from './ErrorBoundary'
-import { Logo } from './Logo'
+import { BrandMark, SectionBackdrop, useSectionTheme } from './Brand'
+import { SearchPalette } from './SearchPalette'
 import { Avatar, cx } from './ui'
 
 const I = {
@@ -31,7 +32,7 @@ function NavItem({ to, icon, label, count, hot }: { to: string; icon: ReactNode;
     <NavLink
       to={to}
       end={to === '/'}
-      className={({ isActive }) => cx('nav-item flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 no-underline',
+      className={({ isActive }) => cx('nav-item flex items-center gap-2.5 rounded-[var(--r-ctl)] px-2.5 py-2 no-underline',
         isActive ? 'active font-medium text-navy' : 'text-muted hover:text-ink')}
     >
       <Icon d={icon} />
@@ -53,6 +54,7 @@ export function Shell({ me }: { me: Me }) {
   const qc = useQueryClient()
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const section = useSectionTheme()
 
   const onNotification = useCallback(() => setToast('وصلك إشعار جديد'), [])
   useLiveEvents(onNotification)
@@ -83,11 +85,12 @@ export function Shell({ me }: { me: Me }) {
 
   return (
     <div className="grid h-full grid-cols-1 md:grid-cols-[244px_1fr]">
-      <aside className="glass-strong z-10 hidden flex-col border-e border-white/70 px-3 py-4 shadow-[1px_0_0_rgb(11_46_74/0.05),8px_0_30px_-20px_rgb(11_46_74/0.25)] md:flex">
-        <Logo />
+      <SectionBackdrop />
+      <aside className="glass-strong z-10 hidden flex-col overflow-y-auto border-e border-white/70 px-3 py-4 shadow-[1px_0_0_rgb(11_46_74/0.05),8px_0_30px_-20px_rgb(11_46_74/0.25)] md:flex">
+        <div className="mb-4"><BrandMark section={section} /></div>
         <button
           onClick={() => setSearchOpen(true)}
-          className="btn btn-glass mb-4 flex h-9 items-center gap-2 rounded-[10px] border border-white/80 px-2.5 text-[13px] text-faint hover:text-ink"
+          className="btn btn-glass mb-4 flex h-9 items-center gap-2 rounded-[var(--r-ctl)] border border-white/80 px-2.5 text-[13px] text-faint hover:text-ink"
         >
           <Icon d={I.search} size={15} />بحث
           <span className="num ms-auto rounded border border-line px-1 text-[10.5px]">Ctrl K</span>
@@ -105,7 +108,7 @@ export function Shell({ me }: { me: Me }) {
           <NavItem to="/archive" icon={I.archive} label="الأرشيف" />
           {me.is_admin && <NavItem to="/settings" icon={I.settings} label="الإعدادات" />}
         </nav>
-        <div className="mt-auto flex items-center gap-2.5 rounded-[12px] border border-white/80 bg-white/60 px-2.5 py-2.5 shadow-[0_6px_18px_-12px_rgb(11_46_74/0.35)]">
+        <div className="mt-auto flex items-center gap-2.5 rounded-card border border-white/80 bg-white/60 px-2.5 py-2.5 shadow-[0_6px_18px_-12px_rgb(11_46_74/0.35)]">
           <Avatar name={me.name} size={32} />
           <div className="min-w-0 flex-1">
             <div className="truncate font-medium">{me.name}</div>
@@ -122,12 +125,12 @@ export function Shell({ me }: { me: Me }) {
 
       <nav className="glass-strong fixed inset-x-0 bottom-0 z-20 flex border-t border-white/80 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_-16px_rgb(11_46_74/0.3)] md:hidden">
         {([['/', I.today, 'اليوم', true], ['/finishing', I.board, 'الإكساء', can('deals.view')], ['/real-estate', I.home, 'العقارات', can('deals.view')], ['/contacts', I.clients, 'العملاء', can('contacts.view')]] as const).filter((x) => x[3]).map(([to, icon, label]) => (
-          <NavLink key={to as string} to={to as string} end={to === '/'} className={({ isActive }) => cx('my-1 flex flex-1 flex-col items-center gap-0.5 rounded-[12px] py-1.5 text-[11.5px] no-underline transition', isActive ? 'bg-white font-medium text-primary shadow-[0_4px_14px_-8px_rgb(11_46_74/0.4)]' : 'text-muted')}>
+          <NavLink key={to as string} to={to as string} end={to === '/'} className={({ isActive }) => cx('my-1 flex flex-1 flex-col items-center gap-0.5 rounded-card py-1.5 text-[11.5px] no-underline transition', isActive ? 'bg-white font-medium text-primary shadow-[0_4px_14px_-8px_rgb(11_46_74/0.4)]' : 'text-muted')}>
             <Icon d={icon} size={20} />{label as string}
           </NavLink>
         ))}
-        <button onClick={() => setSearchOpen(true)} className="my-1 flex flex-1 flex-col items-center gap-0.5 rounded-[12px] py-1.5 text-[11.5px] text-muted"><Icon d={I.search} size={20} />بحث</button>
-        <button onClick={() => setMoreOpen(true)} className="relative my-1 flex flex-1 flex-col items-center gap-0.5 rounded-[12px] py-1.5 text-[11.5px] text-muted">
+        <button onClick={() => setSearchOpen(true)} className="my-1 flex flex-1 flex-col items-center gap-0.5 rounded-card py-1.5 text-[11.5px] text-muted"><Icon d={I.search} size={20} />بحث</button>
+        <button onClick={() => setMoreOpen(true)} className="relative my-1 flex flex-1 flex-col items-center gap-0.5 rounded-card py-1.5 text-[11.5px] text-muted">
           <Icon d={I.more} size={20} />المزيد
           {unread > 0 && <span className="absolute top-1.5 left-[calc(50%-14px)] size-2 rounded-full bg-accent" />}
         </button>
@@ -135,7 +138,7 @@ export function Shell({ me }: { me: Me }) {
       {moreOpen && <MoreSheet me={me} unread={unread} onLogout={logout} onClose={() => setMoreOpen(false)} />}
       {searchOpen && <SearchPalette onClose={() => setSearchOpen(false)} />}
       {toast && (
-        <div className="fixed bottom-20 left-4 z-50 rounded-[12px] border border-white/20 bg-navy/90 px-4 py-2.5 text-[13px] text-white shadow-[0_14px_30px_-12px_rgb(11_46_74/0.6)] backdrop-blur-md md:bottom-5 md:left-5">{toast}</div>
+        <div className="fixed bottom-20 left-4 z-50 rounded-card border border-white/20 bg-navy/90 px-4 py-2.5 text-[13px] text-white shadow-[0_14px_30px_-12px_rgb(11_46_74/0.6)] backdrop-blur-md md:bottom-5 md:left-5">{toast}</div>
       )}
     </div>
   )
@@ -246,66 +249,6 @@ function Bell({ unread }: { unread: number }) {
           <NotificationList onPicked={() => setOpen(false)} />
         </div>
       )}
-    </div>
-  )
-}
-
-function SearchPalette({ onClose }: { onClose: () => void }) {
-  const [q, setQ] = useState('')
-  const res = useSearch(q)
-  const navigate = useNavigate()
-  const go = (to: string) => {
-    onClose()
-    navigate(to)
-  }
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
-
-  const groups = res.data && q.trim().length >= 2
-    ? [
-        { label: 'عملاء', items: res.data.contacts.map((c) => ({ key: `c${c.id}`, text: c.name, sub: c.phone, to: `/contacts/${c.id}` })) },
-        { label: 'طلبات', items: res.data.deals.map((d) => ({ key: `d${d.id}`, text: d.title || `#${d.id}`, sub: `#${d.id}`, to: `/${d.kind === 'FINISHING' ? 'finishing' : 'real-estate'}?open=${d.id}` })) },
-        { label: 'عقارات', items: res.data.properties.map((p) => ({ key: `p${p.id}`, text: p.code, sub: p.address, to: `/properties/${p.id}` })) },
-      ].filter((g) => g.items.length)
-    : []
-
-  return (
-    <div className="fixed inset-0 z-50 bg-navy/20 pt-[12vh] backdrop-blur-[4px]" onMouseDown={onClose}>
-      <div className="dialog-glass mx-auto w-[min(560px,92vw)] overflow-hidden rounded-[18px] border border-white/70 bg-white/85 shadow-[0_30px_70px_-20px_rgb(11_46_74/0.45)] backdrop-blur-xl" onMouseDown={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-2 border-b border-line px-4">
-          <span className="text-faint"><Icon d={I.search} /></span>
-          <input
-            autoFocus
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="اسم، رقم بأي شكل، كود عقار…"
-            className="h-12 flex-1 bg-transparent text-[15px] outline-none placeholder:text-faint"
-          />
-        </div>
-        <div className="max-h-[50dvh] overflow-auto py-1.5">
-          {q.trim().length < 2 && <div className="px-4 py-5 text-center text-[13px] text-faint">اكتب حرفين على الأقل</div>}
-          {q.trim().length >= 2 && groups.length === 0 && !res.isFetching && (
-            <div className="px-4 py-5 text-center text-[13px] text-faint">ما لقينا شي</div>
-          )}
-          {groups.map((g) => (
-            <div key={g.label}>
-              <div className="px-4 pt-2 pb-1 text-[11.5px] text-faint">{g.label}</div>
-              {g.items.map((it) => (
-                <button key={it.key} onClick={() => go(it.to)} className="flex w-full items-center gap-2 px-4 py-2 text-start hover:bg-bg">
-                  <span className="min-w-0 truncate">{it.text}</span>
-                  {it.sub && <span className="num ms-auto max-w-[45%] flex-none truncate text-faint">{it.sub}</span>}
-                </button>
-              ))}
-            </div>
-          ))}
-        </div>
-        <div className="border-t border-line px-4 py-2 text-[12px] text-faint">
-          <Link to="/contacts" onClick={onClose} className="text-primary">كل العملاء</Link>
-        </div>
-      </div>
     </div>
   )
 }

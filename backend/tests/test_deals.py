@@ -156,3 +156,15 @@ def test_stage_counts_follow_the_list_filters(api, contact, user, admin, stage):
     assert mine == {new.pk: 1, catalog.pk: 1}
     # same numbers the list gives for each stage
     assert api.get("/api/v1/deals/", {"pipeline": "FINISHING", "stage": new.pk}).json()["count"] == 2
+
+
+def test_property_found_by_its_code(api, contact):
+    from apps.properties.models import Property
+
+    p = Property.objects.create(owner=contact, address="المزة")
+    assert p.code.startswith("P-")
+    found = api.get("/api/v1/search/", {"q": p.code}).json()["properties"]
+    assert [x["id"] for x in found] == [p.pk]
+    # a code is not a phone fragment: no clients whose numbers happen to contain the digits
+    assert api.get("/api/v1/search/", {"q": p.code}).json()["contacts"] == []
+    assert api.get("/api/v1/properties/", {"search": p.code.lower()}).json()["count"] == 1

@@ -16,7 +16,7 @@ export const Button = forwardRef<HTMLButtonElement, BtnProps>(function Button(
       {...p}
       className={cx(
         'btn inline-flex items-center justify-center gap-1.5 border font-medium whitespace-nowrap disabled:pointer-events-none disabled:opacity-45',
-        size === 'md' ? 'h-9 rounded-[10px] px-4 text-sm' : 'h-7.5 rounded-[8px] px-2.5 text-[13px]',
+        size === 'md' ? 'h-9 rounded-[var(--r-ctl)] px-4 text-sm' : 'h-7.5 rounded-[calc(var(--r-ctl)-3px)] px-2.5 text-[13px]',
         variant === 'primary' && 'btn-primary border-transparent text-white',
         variant === 'default' && 'btn-glass border-white/70 text-ink',
         variant === 'ghost' && 'border-transparent text-muted hover:bg-white/60 hover:text-ink',
@@ -28,22 +28,24 @@ export const Button = forwardRef<HTMLButtonElement, BtnProps>(function Button(
 })
 
 /* ---------- Inputs ---------- */
-const field = 'field w-full rounded-[10px] border border-line bg-white/75 px-3 text-sm text-ink placeholder:text-faint hover:border-line-strong focus:border-primary/60 focus:outline-none disabled:opacity-60'
+/** full width unless the caller sets a width (w-44, sm:w-56, w-auto…): two width classes would fight */
+const width = (className?: string) => (/(^|\s)([a-z0-9]+:)*(w-|flex-1)/.test(className ?? '') ? false : 'w-full')
+const field = 'field rounded-[var(--r-ctl)] border border-line bg-white/75 px-3 text-sm text-ink placeholder:text-faint hover:border-line-strong focus:border-primary/60 focus:outline-none disabled:opacity-60'
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(function Input({ className, ...p }, ref) {
-  return <input ref={ref} {...p} className={cx(field, 'h-9', className)} />
+  return <input ref={ref} {...p} className={cx(field, width(className), 'h-9', className)} />
 })
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(function Textarea(
   { className, ...p }, ref,
 ) {
-  return <textarea ref={ref} rows={3} {...p} className={cx(field, 'py-2 leading-relaxed', className)} />
+  return <textarea ref={ref} rows={3} {...p} className={cx(field, width(className), 'py-2 leading-relaxed', className)} />
 })
 
 export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(function Select(
   { className, ...p }, ref,
 ) {
-  return <select ref={ref} {...p} className={cx(field, 'h-9 pe-2', className)} />
+  return <select ref={ref} {...p} className={cx(field, width(className), 'h-9 pe-2', className)} />
 })
 
 export function Field({ label, error, hint, children, className }: {
@@ -85,7 +87,7 @@ export function Dialog({ open, onClose, title, children, footer, wide }: {
       ref={ref}
       onClose={onClose}
       onClick={(e) => e.target === ref.current && onClose()}
-      className={cx('dialog-glass m-auto rounded-[18px] border border-white/70 p-0 text-ink',
+      className={cx('dialog-glass m-auto rounded-[var(--r-lg)] border border-white/70 p-0 text-ink',
         wide ? 'w-[min(720px,94vw)]' : 'w-[min(480px,94vw)]')}
     >
       {open && (
@@ -196,10 +198,10 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
   value: T; options: [T, string][]; onChange: (v: T) => void; label?: string
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className="inline-flex rounded-[10px] border border-line bg-subtle/80 p-0.5">
+    <div role="radiogroup" aria-label={label} className="inline-flex rounded-[var(--r-ctl)] border border-line bg-subtle/80 p-0.5">
       {options.map(([k, text]) => (
         <button key={k} type="button" role="radio" aria-checked={value === k} onClick={() => onChange(k)}
-          className={cx('h-7 rounded-[8px] px-2.5 text-[12.5px] transition',
+          className={cx('h-7 rounded-[calc(var(--r-ctl)-3px)] px-2.5 text-[12.5px] transition',
             value === k ? (k === 'none' ? 'bg-white text-muted shadow-sm' : 'bg-white font-medium text-primary shadow-[0_1px_4px_rgb(11_46_74/0.12)]')
               : 'text-faint hover:text-ink')}>
           {text}
@@ -240,7 +242,7 @@ export function Pager({ page, count, pageSize = PAGE_SIZE, onChange, className }
       {pageWindow(page, pages).map((p, i) => p === '…'
         ? <span key={`gap${i}`} className="px-1 text-faint">…</span>
         : <button key={p} onClick={() => go(p)} aria-current={p === page ? 'page' : undefined}
-            className={cx('num h-7.5 min-w-7.5 rounded-[8px] px-1.5 transition', p === page ? 'btn-primary text-white' : 'text-muted hover:bg-white/80 hover:text-ink')}>{p}</button>)}
+            className={cx('num h-7.5 min-w-7.5 rounded-[calc(var(--r-ctl)-3px)] px-1.5 transition', p === page ? 'btn-primary text-white' : 'text-muted hover:bg-white/80 hover:text-ink')}>{p}</button>)}
       <Button size="sm" disabled={page >= pages} onClick={() => go(page + 1)}>التالي</Button>
     </nav>
   )

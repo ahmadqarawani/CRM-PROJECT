@@ -82,7 +82,7 @@ export function ContactPicker({ value, onChange, disabled }: { value: { id: numb
     <div className="relative">
       <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="اكتب الاسم أو الرقم…" />
       {q.length >= 2 && (
-        <div className="absolute inset-x-0 top-full z-10 mt-1 max-h-56 overflow-auto glass rounded-[12px]">
+        <div className="absolute inset-x-0 top-full z-10 mt-1 max-h-56 overflow-auto glass rounded-card">
           {res.data?.results.map((c) => (
             <button type="button" key={c.id} onClick={() => onChange({ id: c.id, name: c.display_name })} className="block w-full px-3 py-2 text-start hover:bg-bg">
               {c.display_name} <span className="num text-[12px] text-faint">{c.phones?.[0]?.number}</span>
@@ -126,7 +126,7 @@ function PropertyPicker({ value, label, owner, onChange }: {
       <Input value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => setFocused(true)}
         onBlur={() => setTimeout(() => setFocused(false), 150)} placeholder={owner ? 'اختار من عقاراته أو دوّر…' : 'كود أو عنوان…'} />
       {show && (
-        <div className="absolute inset-x-0 top-full z-10 mt-1 max-h-56 overflow-auto glass rounded-[12px]">
+        <div className="absolute inset-x-0 top-full z-10 mt-1 max-h-56 overflow-auto glass rounded-card">
           {res.data?.results.map((p) => (
             <button type="button" key={p.id} onMouseDown={(e) => e.preventDefault()}
               onClick={() => { setQ(''); onChange(p.id, p.code ?? '') }} className="block w-full px-3 py-2 text-start hover:bg-bg">

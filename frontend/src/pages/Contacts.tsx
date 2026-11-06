@@ -25,9 +25,9 @@ export function Contacts() {
     <div className="pb-24 md:pb-6" data-section="clients">
       <PageHeader title="العملاء" sub={data && <><span className="num">{data.count}</span> عميل</>}
         actions={<>{can('contacts.merge') && <Link to="/contacts/duplicates" className="text-[13px] text-primary">مكررات محتملة</Link>}{can('contacts.create') && <Button variant="primary" onClick={() => setAdding(true)}>+ عميل</Button>}</>} />
-      <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 pb-3.5 md:px-6">
-        <Input value={search} onChange={(e) => { setSearch(e.target.value); set('q', e.target.value || null) }} placeholder="اسم أو رقم بأي شكل…" className="w-full sm:w-64" />
-        <Select className="w-auto min-w-36 flex-1 sm:flex-none" value={source ?? ''} onChange={(e) => set('source', e.target.value || null)}>
+      <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 pb-3.5 md:flex-nowrap md:px-6">
+        <Input value={search} onChange={(e) => { setSearch(e.target.value); set('q', e.target.value || null) }} placeholder="اسم أو رقم بأي شكل…" className="w-full md:w-64 md:flex-none" />
+        <Select className="min-w-0 flex-1 md:w-44 md:flex-none" value={source ?? ''} onChange={(e) => set('source', e.target.value || null)}>
           <option value="">كل المصادر</option>{sources.data?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </Select>
         <Chip on={attention} onClick={() => set('attention', attention ? null : '1')}><Dot color="var(--color-accent)" />عنده طلب بده انتباه</Chip>
@@ -36,7 +36,7 @@ export function Contacts() {
         {contacts.isLoading ? <Spinner /> : !data?.results.length ? <Empty title="ما في نتائج" action={can('contacts.create') && <Button variant="primary" onClick={() => setAdding(true)}>+ عميل</Button>} /> : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(min(250px,100%),1fr))] gap-3">
             {data.results.map((c) => (
-              <Link key={c.id} to={`/contacts/${c.id}`} className="card lift flex flex-col rounded-[12px] p-3.5 text-ink no-underline">
+              <Link key={c.id} to={`/contacts/${c.id}`} className="card lift flex flex-col rounded-card p-3.5 text-ink no-underline">
                 <div className="flex items-start gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-medium">{c.name || <span className="num">{phoneLabel(c.display_name)}</span>}</div>

@@ -35,8 +35,8 @@ export function NextStep({ d }: { d: Deal }) {
 export function DealCard({ d, selected, onClick, showStage }: { d: Deal; selected?: boolean; onClick?: () => void; showStage?: boolean }) {
   return (
     <article onClick={onClick}
-      className={cx('card lift cursor-pointer overflow-hidden rounded-[12px]',
-        selected && 'border-primary! shadow-[0_0_0_3px_rgb(10_90_156/0.14)]!')}>
+      className={cx('card lift cursor-pointer overflow-hidden rounded-card',
+        selected && 'border-primary! shadow-[0_0_0_3px_rgb(var(--brand-rgb)/0.14)]!')}>
       <div className="px-3 pt-2.5 pb-2.5">
         <h3 className="m-0 truncate text-[14px] font-medium">{d.contact.name}</h3>
         <div className="truncate text-[13px] text-muted">{d.title || KIND_LABEL[d.kind]}</div>
@@ -65,12 +65,12 @@ export function PhoneActions({ c, onAfterContact }: { c: Pick<Contact, 'phones'>
   return (
     <span className="inline-flex gap-1.5">
       <a href={`tel:${p.number}`} onClick={() => onAfterContact?.('CALL')}
-        className="btn btn-glass inline-flex h-8 items-center gap-1 rounded-[10px] border border-white/80 px-2.5 text-[13px] text-ink no-underline">
+        className="btn btn-glass inline-flex h-8 items-center gap-1 rounded-[var(--r-ctl)] border border-white/80 px-2.5 text-[13px] text-ink no-underline">
         ☎ <span className="num">{phoneLabel(p.number)}</span>
       </a>
       {p.has_whatsapp && (
         <a href={waLink(p.number)} target="_blank" rel="noreferrer" onClick={() => onAfterContact?.('WHATSAPP')}
-          className="btn inline-flex h-8 items-center rounded-[10px] border border-[#bfe5d6] bg-mint-soft/90 px-2.5 text-[13px] text-mint-ink no-underline hover:-translate-y-px hover:bg-mint-soft hover:shadow-[0_6px_14px_-8px_rgb(47_111_99/0.5)]">
+          className="btn inline-flex h-8 items-center rounded-[var(--r-ctl)] border border-[#bfe5d6] bg-mint-soft/90 px-2.5 text-[13px] text-mint-ink no-underline hover:-translate-y-px hover:bg-mint-soft hover:shadow-[0_6px_14px_-8px_rgb(47_111_99/0.5)]">
           واتساب
         </a>
       )}
@@ -154,7 +154,7 @@ export function DocumentList({ docs }: { docs: Doc[] }) {
     <>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(min(220px,100%),1fr))] gap-2.5">
         {docs.map((d) => (
-          <div key={d.id} className="card lift group flex items-center gap-2.5 rounded-[12px] p-2.5">
+          <div key={d.id} className="card lift group flex items-center gap-2.5 rounded-card p-2.5">
             <button onClick={() => setPreview(d)} className="flex min-w-0 flex-1 items-center gap-2.5 text-start">
               {d.content_type.startsWith('image/')
                 ? <img src={d.url} alt="" className="size-[34px] flex-none rounded object-cover" loading="lazy" />

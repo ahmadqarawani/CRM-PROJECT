@@ -139,8 +139,8 @@ export function Roles() {
       <div className="flex flex-col gap-1.5">
         {roles.data.map((r) => (
           <button key={r.id} onClick={() => setSelected(r.id)}
-            className={cx('lift rounded-[12px] border px-3 py-2.5 text-start',
-              r.id === role.id ? 'border-primary/35 bg-primary-soft shadow-[0_0_0_3px_rgb(10_90_156/0.08)]' : 'glass border-transparent')}>
+            className={cx('lift rounded-card border px-3 py-2.5 text-start',
+              r.id === role.id ? 'border-primary/35 bg-primary-soft shadow-[0_0_0_3px_rgb(var(--brand-rgb)/0.08)]' : 'glass border-transparent')}>
             <div className="flex items-center gap-2">
               <b className="font-medium text-navy">{r.name}</b>
               <span className="num ms-auto rounded-full bg-surface/80 px-1.5 text-[11.5px] text-faint" title="عدد المستخدمين">{r.members}</span>
@@ -176,7 +176,7 @@ export function Roles() {
             })}
           </Card>
         ))}
-        <div className="glass sticky bottom-20 z-10 flex flex-wrap items-center gap-2 rounded-[14px] px-3 py-2.5 md:bottom-3">
+        <div className="glass sticky bottom-20 z-10 flex flex-wrap items-center gap-2 rounded-[var(--r-lg)] px-3 py-2.5 md:bottom-3">
           <Button variant="primary" disabled={!dirty} onClick={save}>حفظ الدور</Button>
           {dirty && <Button variant="ghost" onClick={() => setDraft({ ...original, permissions: { ...role.permissions } })}>تراجع</Button>}
           {msg && <span className={msg.ok ? 'text-mint-ink' : 'text-danger'}>{msg.text}</span>}

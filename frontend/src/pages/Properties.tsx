@@ -30,17 +30,20 @@ export function Properties() {
     <div className="pb-24 md:pb-6" data-section="realestate">
       <PageHeader title="العقارات المعروضة" sub={props.data && <><span className="num">{props.data.count}</span> عقار</>}
         actions={can('properties.create') && <Button variant="primary" onClick={() => setAdding(true)}>+ عقار</Button>} />
-      <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 pb-3.5 md:px-6">
-        <Input value={search} onChange={(e) => { setSearch(e.target.value); f.set('q', e.target.value) }} placeholder="كود أو عنوان…" className="w-full sm:w-52" />
-        <Select className="w-auto min-w-32 flex-1 sm:flex-none" value={ptype ?? ''} onChange={(e) => f.set('type', e.target.value)}>
+      {/* one row from tablet up; wraps only on phones */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 pb-3.5 md:flex-nowrap md:px-6">
+        <Input value={search} onChange={(e) => { setSearch(e.target.value); f.set('q', e.target.value) }} placeholder="كود أو عنوان…" className="w-full md:w-56 md:flex-none" />
+        <Select className="min-w-0 flex-1 md:w-40 md:flex-none" value={ptype ?? ''} onChange={(e) => f.set('type', e.target.value)} aria-label="نوع العقار">
           <option value="">كل الأنواع</option>{types.data?.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
         </Select>
-        <Select className="w-auto min-w-32 flex-1 sm:flex-none" value={loc ?? ''} onChange={(e) => f.set('location', e.target.value)}>
+        <Select className="min-w-0 flex-1 md:w-44 md:flex-none" value={loc ?? ''} onChange={(e) => f.set('location', e.target.value)} aria-label="المنطقة">
           <option value="">كل المناطق</option>{locations.data?.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
         </Select>
-        {STATUSES.map((s) => (
-          <Chip key={s} on={status === s} onClick={() => f.set('status', s === 'AVAILABLE' ? null : s)}>{s === 'all' ? 'الكل' : PSTATUS_LABEL[s]}</Chip>
-        ))}
+        <div className="flex flex-none flex-wrap items-center gap-1.5 md:ms-auto md:flex-nowrap">
+          {STATUSES.map((s) => (
+            <Chip key={s} on={status === s} onClick={() => f.set('status', s === 'AVAILABLE' ? null : s)}>{s === 'all' ? 'الكل' : PSTATUS_LABEL[s]}</Chip>
+          ))}
+        </div>
       </div>
       <div className="px-4 py-4 md:px-6">
         {props.isLoading ? <Spinner /> : !rows.length ? <Empty title="ما في عقارات" /> : (<>
@@ -48,7 +51,7 @@ export function Properties() {
           <div className="flex flex-col gap-2 md:hidden">
             {rows.map((p) => <PropertyCard key={p.id} p={p} />)}
           </div>
-          <div className="card hidden overflow-hidden rounded-[12px] md:block">
+          <div className="card hidden overflow-hidden rounded-card md:block">
             <table className="w-full table-fixed border-collapse">
               <colgroup>
                 <col className="w-[13%]" /><col className="w-[12%]" /><col className="w-[15%]" /><col className="w-[9%]" />
@@ -85,7 +88,7 @@ const roomsFloor = (p: Property) => [p.rooms && `${p.rooms} غرف`, floorLabel(
 
 function PropertyCard({ p }: { p: Property }) {
   return (
-    <Link to={`/properties/${p.id}`} className="card lift block rounded-[12px] p-3 text-ink no-underline">
+    <Link to={`/properties/${p.id}`} className="card lift block rounded-card p-3 text-ink no-underline">
       <div className="flex items-center gap-2">
         <b className="num font-medium text-primary">{p.code}</b>
         <span className="min-w-0 flex-1 truncate">{[p.property_type?.name, p.location?.name].filter(Boolean).join(' — ')}</span>

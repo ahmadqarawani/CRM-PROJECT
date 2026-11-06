@@ -77,7 +77,7 @@ export function ContactDetail() {
           </div>
         </div>
         {!!c.tags.length && <div className="mt-2 flex flex-wrap gap-1.5">{c.tags.map((t) => <Badge key={t.id}>{t.name}</Badge>)}</div>}
-        {c.notes && <p className="mt-3 mb-0 max-w-3xl whitespace-pre-wrap card rounded-[12px] p-3 text-[13px] text-muted">{c.notes}</p>}
+        {c.notes && <p className="mt-3 mb-0 max-w-3xl whitespace-pre-wrap card rounded-card p-3 text-[13px] text-muted">{c.notes}</p>}
 
         <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[1fr_300px]">
           <div className="min-w-0">

@@ -1,5 +1,6 @@
 """Read-only aggregates: dashboard ("Today"), global search, timeline, audit log, reports."""
 
+import re
 from datetime import timedelta
 
 from auditlog.models import LogEntry
@@ -69,6 +70,9 @@ class DashboardView(APIView):
         })
 
 
+PROPERTY_CODE = re.compile(r"^[pP]\s*-?\s*\d+$")
+
+
 class SearchView(APIView):
     @extend_schema(parameters=[OpenApiParameter("q", str, required=True)], responses=OpenApiTypes.OBJECT)
     def get(self, request):
@@ -76,14 +80,17 @@ class SearchView(APIView):
         if len(q) < 2:
             return Response({"contacts": [], "deals": [], "properties": []})
         u = request.user
+        props = list(scoped(Property.objects.active(), u, "properties").filter(search_text__icontains=normalize_ar(q))
+                     .values("id", "code", "address", "owner_id")[:10])
+        if PROPERTY_CODE.match(q):  # "P-0168": a listing code, not part of someone's phone number
+            return Response({"contacts": [], "deals": [], "properties": props})
         contacts = scoped(Contact.objects.active(), u, "contacts").filter(search_q(q)).distinct().prefetch_related("phones")[:10]
         return Response({
             "contacts": [{"id": c.pk, "name": c.display_name, "phone": next((p.number for p in c.phones.all()), None)}
                          for c in contacts],
             "deals": list(scoped(Deal.objects.active(), u, "deals").filter(Q(title__icontains=q) | Q(contact__in=contacts))
                           .values("id", "title", "kind", "contact_id")[:10]),
-            "properties": list(scoped(Property.objects.active(), u, "properties").filter(search_text__icontains=normalize_ar(q))
-                               .values("id", "code", "address", "owner_id")[:10]),
+            "properties": props,
         })
 
 

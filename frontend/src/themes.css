@@ -1,0 +1,166 @@
+/* ---------- sections: each part of the company has its own feel ----------
+   html[data-theme] is set from the route (see Shell). Colours, glow and corner radii are variables,
+   so every button, card and field follows the section without per-page styles.
+   brand    — everything else: the logo's navy / blue / mint, medium corners
+   unlocked — الإكساء (BGI Unlocked): the logo's orange, warm light, soft round corners
+   estate   — العقارات (BGI Real Estate): navy-blue, cool light + a faint blueprint grid, crisp corners */
+
+:root {
+  --brand-rgb: 10 90 156;
+  --btn-top: #1268b0;
+  --btn-bottom: #084b83;
+  --r-ctl: 10px;
+  --r-card: 12px;
+  --r-lg: 18px;
+  --radius-card: var(--r-card);
+}
+
+:root[data-theme="unlocked"] {
+  --color-primary: #e2620f;
+  --color-primary-hover: #c4510a;
+  --color-primary-soft: #fdeee3;
+  --color-navy: #3a2414;
+  /* orange is the brand here, so "needs attention" moves to raspberry to stay distinct */
+  --color-accent: #d23f5b;
+  --color-accent-ink: #9b1c38;
+  --color-accent-soft: #fce8ec;
+  --color-accent-line: #f5c9d2;
+  --color-bg: #f8f5f2;
+  --brand-rgb: 226 98 15;
+  --btn-top: #f58a2e;
+  --btn-bottom: #d1520b;
+  --r-ctl: 14px;
+  --r-card: 18px;
+  --r-lg: 24px;
+}
+
+:root[data-theme="estate"] {
+  --color-primary: #0e4f8c;
+  --color-primary-hover: #0b2e4a;
+  --color-primary-soft: #e6eef6;
+  --color-bg: #f2f5f8;
+  --brand-rgb: 14 79 140;
+  --btn-top: #1a5f9e;
+  --btn-bottom: #0b2e4a;
+  --r-ctl: 6px;
+  --r-card: 8px;
+  --r-lg: 12px;
+}
+
+/* the section's light: fixed layers that cross-fade when you move between sections */
+.app-bg,
+.app-bg > span {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+.app-bg {
+  z-index: -1;
+}
+.app-bg > span {
+  opacity: 0;
+  transition: opacity 0.6s var(--ease);
+}
+.app-bg .bg-brand {
+  background:
+    radial-gradient(1100px 620px at 100% -8%, rgb(124 201 188 / 0.24), transparent 62%),
+    radial-gradient(900px 560px at -8% 108%, rgb(10 90 156 / 0.15), transparent 60%),
+    radial-gradient(620px 420px at 55% 48%, rgb(242 107 29 / 0.05), transparent 70%);
+}
+.app-bg .bg-unlocked {
+  background:
+    radial-gradient(1000px 600px at 100% -10%, rgb(242 107 29 / 0.2), transparent 60%),
+    radial-gradient(900px 560px at -10% 110%, rgb(124 201 188 / 0.2), transparent 60%),
+    radial-gradient(700px 460px at 50% 50%, rgb(255 196 140 / 0.12), transparent 70%);
+}
+.app-bg .bg-estate {
+  background:
+    radial-gradient(1100px 620px at 100% -8%, rgb(14 79 140 / 0.18), transparent 62%),
+    radial-gradient(900px 560px at -8% 108%, rgb(18 181 203 / 0.12), transparent 60%),
+    linear-gradient(rgb(14 79 140 / 0.035) 1px, transparent 1px) 0 0 / 28px 28px,
+    linear-gradient(90deg, rgb(14 79 140 / 0.035) 1px, transparent 1px) 0 0 / 28px 28px;
+}
+:root:not([data-theme]) .app-bg .bg-brand,
+:root[data-theme="brand"] .app-bg .bg-brand,
+:root[data-theme="unlocked"] .app-bg .bg-unlocked,
+:root[data-theme="estate"] .app-bg .bg-estate {
+  opacity: 1;
+}
+
+/* corners and colours ease into the new section instead of jumping */
+@layer components {
+  /* html prefix: wins over the plain .btn / .card transitions declared later in index.css */
+  html .card,
+  html .btn,
+  html .field,
+  html .chip,
+  html .nav-item {
+    transition-property: transform, box-shadow, border-color, background-color, color, filter, border-radius;
+    transition-duration: 0.18s, 0.18s, 0.3s, 0.3s, 0.3s, 0.15s, 0.35s;
+    transition-timing-function: var(--ease);
+  }
+}
+
+/* ---------- brand mark: both logos in a square, split by its diagonal ---------- */
+.brand-square {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--r-card);
+  border: 1px solid rgb(255 255 255 / 0.85);
+  /* 135deg runs top-left → bottom-right, so the 50% edge is the rising diagonal: warm half above, cool half below */
+  background: linear-gradient(135deg, #fff6ef 0%, #fffaf6 49.6%, rgb(242 107 29 / 0.55) 49.8%, rgb(10 90 156 / 0.55) 50.2%, #f6f9fc 50.4%, #eef4fa 100%);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.9) inset, 0 10px 28px -16px rgb(11 46 74 / 0.4);
+}
+.brand-square > a {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 84%;
+  transition: transform 0.25s var(--ease), filter 0.25s;
+}
+.brand-square > a img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* each logo lies along the diagonal: the top one nudged up-left, the bottom one down-right */
+.brand-square > a.top {
+  transform: translate(-50%, -50%) rotate(-45deg) translateY(-72%);
+}
+.brand-square > a.bottom {
+  transform: translate(-50%, -50%) rotate(-45deg) translateY(72%);
+}
+.brand-square > a.top:hover {
+  transform: translate(-50%, -50%) rotate(-45deg) translateY(-72%) scale(1.04);
+}
+.brand-square > a.bottom:hover {
+  transform: translate(-50%, -50%) rotate(-45deg) translateY(72%) scale(1.04);
+}
+.brand-square > a:hover {
+  filter: drop-shadow(0 4px 8px rgb(11 46 74 / 0.18));
+}
+
+.brand-single {
+  border-radius: var(--r-card);
+  background: rgb(255 255 255 / 0.75);
+  border: 1px solid rgb(255 255 255 / 0.9);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.9) inset, 0 10px 26px -16px rgb(var(--brand-rgb) / 0.55);
+  animation: brand-in 0.35s var(--ease);
+}
+@keyframes brand-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-bg > span,
+  .brand-square > a {
+    transition: none;
+  }
+  .brand-single {
+    animation: none;
+  }
+}
