@@ -1,6 +1,7 @@
 import { Fragment, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { useDeals, useDocuments, useMe, useProperty, usePropertyDemands, useRemove, useSaveProperty } from '../api/hooks'
+import { useDeals, useDocuments, useProperty, usePropertyDemands, useRemove, useSaveProperty } from '../api/hooks'
+import { accessOf, useAccess } from '../lib/access'
 import { AuditList, DealCard, DocumentList, Tabs, Timeline } from '../components/bits'
 import { DealDialog, LogDialog, PropertyDialog, UploadDialog } from '../components/forms'
 import { Badge, Button, Card, Empty, Spinner } from '../components/ui'
@@ -10,7 +11,7 @@ type Tab = 'photos' | 'details' | 'demands' | 'activity' | 'audit'
 
 export function PropertyDetail() {
   const id = Number(useParams().id)
-  const me = useMe()
+  const { can } = useAccess()
   const prop = useProperty(id)
   const docs = useDocuments({ property: id })
   const demands = usePropertyDemands(id)
@@ -23,6 +24,7 @@ export function PropertyDetail() {
   if (prop.isLoading) return <Spinner />
   if (!prop.data) return <div className="p-6"><Empty title="العقار مش موجود" /></div>
   const p = prop.data
+  const a = accessOf(p)
   const photos = docs.data?.results.filter((d) => d.content_type.startsWith('image/')) ?? []
   const facts: [string, React.ReactNode][] = [
     ['النوع', p.property_type?.name], ['العرض', LISTING_LABEL[p.listing ?? 'SALE']], ['المنطقة', p.location?.name], ['العنوان', p.address],
@@ -44,24 +46,24 @@ export function PropertyDetail() {
           {!!p.tags.length && <div className="mt-2 flex flex-wrap gap-1.5">{p.tags.map((t) => <Badge key={t.id} tone="accent">{t.name}</Badge>)}</div>}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="primary" onClick={() => setDialog('upload')}>رفع صور / مخططات</Button>
-          <Button onClick={() => setDialog('log')}>سجّل تواصل مع المالك</Button>
-          <Button onClick={() => setDialog('sell')}>+ صفقة بيع</Button>
-          <Button variant="ghost" onClick={() => setDialog('edit')}>تعديل</Button>
-          <Button variant="ghost" onClick={() => save.mutate({ id: p.id, body: { is_archived: !p.is_archived } })}>{p.is_archived ? 'استرجاع' : 'أرشفة'}</Button>
-          {me.data?.can_delete && <Button variant="danger" onClick={async () => { if (confirm('حذف العقار نهائياً؟')) { await remove.mutateAsync(`/api/v1/properties/${p.id}/`); navigate('/properties') } }}>حذف</Button>}
+          {can('documents.upload') && <Button variant="primary" onClick={() => setDialog('upload')}>رفع صور / مخططات</Button>}
+          {can('activities.create') && <Button onClick={() => setDialog('log')}>سجّل تواصل مع المالك</Button>}
+          {can('deals.create') && <Button onClick={() => setDialog('sell')}>+ صفقة بيع</Button>}
+          {a.edit && <Button variant="ghost" onClick={() => setDialog('edit')}>تعديل</Button>}
+          {a.edit && <Button variant="ghost" onClick={() => save.mutate({ id: p.id, body: { is_archived: !p.is_archived } })}>{p.is_archived ? 'استرجاع' : 'أرشفة'}</Button>}
+          {a.delete && <Button variant="danger" onClick={async () => { if (confirm('حذف العقار نهائياً؟')) { await remove.mutateAsync(`/api/v1/properties/${p.id}/`); navigate('/properties') } }}>حذف</Button>}
         </div>
       </div>
 
       <div className="mt-5">
-        <Tabs value={tab} onChange={setTab} items={[['photos', 'الصور والملفات', docs.data?.count], ['details', 'التفاصيل'], ['demands', 'زبائن مناسبين', demands.data?.length], ['activity', 'النشاط'], ['audit', 'سجل التعديلات']]} />
+        <Tabs value={tab} onChange={setTab} items={[['photos', 'الصور والملفات', docs.data?.count], ['details', 'التفاصيل'], ['demands', 'زبائن مناسبين', demands.data?.length], ['activity', 'النشاط'], ['audit', 'سجل التعديلات']].filter(([k]) => k !== 'audit' || can('audit.view')) as never} />
         {tab === 'photos' && (<>
           {photos.length > 0 && (
             <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
               {photos.map((ph) => <a key={ph.id} href={ph.url} target="_blank" rel="noreferrer"><img src={ph.url} alt={ph.original_name} loading="lazy" className="aspect-[4/3] w-full rounded-card object-cover" /></a>)}
             </div>
           )}
-          <DocumentList docs={docs.data?.results ?? []} canDelete={me.data?.can_delete} />
+          <DocumentList docs={docs.data?.results ?? []} />
         </>)}
         {tab === 'details' && (
           <Card className="p-4">

@@ -6,6 +6,7 @@ import { DealPanel } from '../components/DealPanel'
 import { DealDialog } from '../components/forms'
 import { Button, Chip, Dot, Empty, Input, PageHeader, Pager, Select, Spinner, cx } from '../components/ui'
 import { KIND_LABEL, longDate } from '../lib/format'
+import { useAccess } from '../lib/access'
 import { useUrlFilters } from '../lib/url'
 
 const TITLES: Record<Pipeline, string> = { FINISHING: 'الإكساء', BROKERAGE: 'طلبات العقارات' }
@@ -27,6 +28,7 @@ export function Board({ pipeline }: { pipeline: Pipeline }) {
   const sort = f.get('sort') ?? SORTS[0][0]
   const [search, setSearch] = useState(f.get('q') ?? '')
   const stages = useStages(pipeline)
+  const { can } = useAccess()
 
   // everything except stage/page: shared by the list and the per-stage counts
   const filters = {
@@ -54,7 +56,7 @@ export function Board({ pipeline }: { pipeline: Pipeline }) {
       <div data-scroll className="min-w-0 flex-1 overflow-y-auto pb-24 md:pb-8">
         <PageHeader title={TITLES[pipeline]}
           sub={<>{longDate()}{late > 0 && <> · <button onClick={() => f.set('f', 'attention')} className="text-accent hover:underline"><span className="num">{late}</span> بدها انتباه</button></>}</>}
-          actions={<Button variant="primary" onClick={() => setAdding(true)}>+ طلب جديد</Button>} />
+          actions={can('deals.create') && <Button variant="primary" onClick={() => setAdding(true)}>+ طلب جديد</Button>} />
 
         {/* filters */}
         <div className="flex flex-col gap-2.5 border-b border-line px-4 pb-3.5 md:px-6">
@@ -67,7 +69,7 @@ export function Board({ pipeline }: { pipeline: Pipeline }) {
               <Chip key={k} on={kind === k} onClick={() => f.set('kind', kind === k ? null : k)}>{KIND_LABEL[k]}</Chip>
             ))}
             <div className="flex items-center gap-2 sm:ms-auto">
-              <div className="flex rounded-full border border-line bg-surface p-0.5">
+              <div className="flex rounded-full border border-white/70 bg-white/60 p-0.5 backdrop-blur">
                 {STATUS.map(([k, label]) => (
                   <button key={k} onClick={() => f.setMany({ status: k === 'open' ? null : k, stage: null })}
                     className={cx('h-6 rounded-full px-2.5 text-[12.5px]', status === k ? 'bg-primary-soft text-primary' : 'text-muted hover:text-ink')}>{label}</button>
@@ -109,8 +111,8 @@ export function Board({ pipeline }: { pipeline: Pipeline }) {
 function StageChip({ on, onClick, label, count, color }: { on: boolean; onClick: () => void; label: string; count: number; color?: string | null }) {
   return (
     <button onClick={onClick}
-      className={cx('inline-flex h-7 flex-none items-center gap-1.5 rounded-md border px-2.5 text-[13px] whitespace-nowrap',
-        on ? 'border-primary bg-primary text-white' : 'border-line bg-surface text-ink hover:border-line-strong')}>
+      className={cx('btn inline-flex h-7.5 flex-none items-center gap-1.5 rounded-[9px] border px-2.5 text-[13px] whitespace-nowrap',
+        on ? 'btn-primary border-transparent text-white' : 'chip border-white/70 text-ink')}>
       {color && <Dot color={color} />}{label}
       <span className={cx('num text-[12px]', on ? 'text-white/80' : 'text-faint')}>{count}</span>
     </button>

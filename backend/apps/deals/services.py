@@ -29,8 +29,10 @@ def create_deal(*, kind: str, contact, by=None, finishing: dict | None = None, d
     stage = fields.pop("stage", None) or default_stage(pipeline)
     if stage.pipeline != pipeline:
         raise ValidationError({"stage_id": ["المرحلة مش من خط هالطلب"]})
-    fields.setdefault("source", contact.source)
-    fields.setdefault("assignee", contact.assignee or by)
+    if fields.get("source") is None:
+        fields["source"] = contact.source
+    if fields.get("assignee") is None:  # owner = whoever opens it (like HubSpot/Pipedrive), else the client's
+        fields["assignee"] = by or contact.assignee
     deal = Deal.objects.create(kind=kind, contact=contact, stage=stage, **fields)
     if kind == Deal.Kind.FINISHING:
         FinishingSpec.objects.create(deal=deal, **_plain(finishing))

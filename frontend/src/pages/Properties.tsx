@@ -5,6 +5,7 @@ import { useCatalog, useProperties } from '../api/hooks'
 import { PropertyDialog } from '../components/forms'
 import { Badge, Button, Chip, Empty, Input, PAGE_SIZE, PageHeader, Pager, Select, Spinner } from '../components/ui'
 import { LISTING_LABEL, PSTATUS_LABEL, floorLabel, money } from '../lib/format'
+import { useAccess } from '../lib/access'
 import { useUrlFilters } from '../lib/url'
 
 const STATUSES = ['AVAILABLE', 'RESERVED', 'SOLD', 'all'] as const
@@ -16,6 +17,7 @@ export function Properties() {
   const ptype = f.num('type')
   const loc = f.num('location')
   const types = useCatalog('property-types')
+  const { can } = useAccess()
   const locations = useCatalog('locations')
   const props = useProperties({
     search: f.get('q') || undefined, status: status === 'all' ? undefined : status, property_type: ptype, location: loc,
@@ -27,7 +29,7 @@ export function Properties() {
   return (
     <div className="pb-24 md:pb-6" data-section="realestate">
       <PageHeader title="العقارات المعروضة" sub={props.data && <><span className="num">{props.data.count}</span> عقار</>}
-        actions={<Button variant="primary" onClick={() => setAdding(true)}>+ عقار</Button>} />
+        actions={can('properties.create') && <Button variant="primary" onClick={() => setAdding(true)}>+ عقار</Button>} />
       <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 pb-3.5 md:px-6">
         <Input value={search} onChange={(e) => { setSearch(e.target.value); f.set('q', e.target.value) }} placeholder="كود أو عنوان…" className="w-full sm:w-52" />
         <Select className="w-auto min-w-32 flex-1 sm:flex-none" value={ptype ?? ''} onChange={(e) => f.set('type', e.target.value)}>
@@ -46,18 +48,18 @@ export function Properties() {
           <div className="flex flex-col gap-2 md:hidden">
             {rows.map((p) => <PropertyCard key={p.id} p={p} />)}
           </div>
-          <div className="hidden overflow-hidden rounded-card border border-line bg-surface md:block">
+          <div className="card hidden overflow-hidden rounded-[12px] md:block">
             <table className="w-full table-fixed border-collapse">
               <colgroup>
                 <col className="w-[13%]" /><col className="w-[12%]" /><col className="w-[15%]" /><col className="w-[9%]" />
                 <col className="w-[12%]" /><col className="w-[14%]" /><col className="w-[15%]" /><col className="w-[10%]" />
               </colgroup>
-              <thead><tr className="border-b border-line bg-bg text-[12.5px] text-muted">
+              <thead><tr className="border-b border-line bg-bg/70 text-[12.5px] text-muted">
                 {['الكود', 'النوع', 'المنطقة', 'المساحة', 'الغرف / الطابق', 'السعر', 'المالك', 'الحالة'].map((h) => <th key={h} className="px-3 py-2 text-start font-medium">{h}</th>)}
               </tr></thead>
               <tbody>
                 {rows.map((p) => (
-                  <tr key={p.id} onClick={() => navigate(`/properties/${p.id}`)} className="cursor-pointer border-b border-line last:border-0 hover:bg-bg">
+                  <tr key={p.id} onClick={() => navigate(`/properties/${p.id}`)} className="cursor-pointer border-b border-line/80 transition-colors last:border-0 hover:bg-primary-soft/50">
                     <td className="truncate px-3 py-2.5"><Link to={`/properties/${p.id}`} className="num font-medium">{p.code}</Link>{p.legacy_code && <div className="num truncate text-[11.5px] text-faint">{p.legacy_code}</div>}</td>
                     <td className="truncate px-3 py-2.5">{p.property_type?.name ?? '—'}<div className="text-[12px] text-faint">{LISTING_LABEL[p.listing ?? 'SALE']}</div></td>
                     <td className="truncate px-3 py-2.5">{p.location?.name ?? '—'}</td>
@@ -83,7 +85,7 @@ const roomsFloor = (p: Property) => [p.rooms && `${p.rooms} غرف`, floorLabel(
 
 function PropertyCard({ p }: { p: Property }) {
   return (
-    <Link to={`/properties/${p.id}`} className="block rounded-card border border-line bg-surface p-3 text-ink no-underline hover:border-line-strong">
+    <Link to={`/properties/${p.id}`} className="card lift block rounded-[12px] p-3 text-ink no-underline">
       <div className="flex items-center gap-2">
         <b className="num font-medium text-primary">{p.code}</b>
         <span className="min-w-0 flex-1 truncate">{[p.property_type?.name, p.location?.name].filter(Boolean).join(' — ')}</span>

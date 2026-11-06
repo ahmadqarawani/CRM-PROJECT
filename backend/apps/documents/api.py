@@ -11,7 +11,7 @@ from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 
 from apps.contacts.models import Contact
-from apps.core.serializers import ArchiveFieldMixin, UserRefSerializer, fk
+from apps.core.serializers import AccessMixin, ArchiveFieldMixin, UserRefSerializer, fk
 from apps.core.views import BaseViewSet
 from apps.deals.models import Deal, Quote
 from apps.properties.models import Property
@@ -20,7 +20,8 @@ from .models import Document
 from .services import upload_document
 
 
-class DocumentSerializer(ArchiveFieldMixin, serializers.ModelSerializer):
+class DocumentSerializer(AccessMixin, ArchiveFieldMixin, serializers.ModelSerializer):
+    access_resource = "documents"
     file = serializers.FileField(write_only=True)
     contact_id = fk(Contact, "contact")
     deal_id = fk(Deal, "deal")
@@ -31,7 +32,7 @@ class DocumentSerializer(ArchiveFieldMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Document
-        fields = ["id", "file", "url", "original_name", "content_type", "size_bytes", "category", "contact_id",
+        fields = ["id", "access", "file", "url", "original_name", "content_type", "size_bytes", "category", "contact_id",
                   "deal_id", "property_id", "quote_id", "uploaded_by", "is_archived", "created_at"]
         read_only_fields = ["original_name", "content_type", "size_bytes", "created_at"]
 
@@ -65,6 +66,10 @@ class DocumentSerializer(ArchiveFieldMixin, serializers.ModelSerializer):
 ]))
 class DocumentViewSet(BaseViewSet):
     serializer_class = DocumentSerializer
+    resource = "documents"
+    # archiving a file counts as removing it
+    action_permissions = {"create": "documents.upload", "update": "documents.delete", "partial_update": "documents.delete",
+                          "file": None}
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):

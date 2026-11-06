@@ -5,6 +5,7 @@ import { api, unwrap, type Me } from '../api/client'
 import { useDashboard, useMarkNotification, useNotifications, useReadAll, useSearch } from '../api/hooks'
 import { ago } from '../lib/format'
 import { useLiveEvents } from '../lib/live'
+import { useAccess } from '../lib/access'
 import { ErrorBoundary } from './ErrorBoundary'
 import { Logo } from './Logo'
 import { Avatar, cx } from './ui'
@@ -30,8 +31,8 @@ function NavItem({ to, icon, label, count, hot }: { to: string; icon: ReactNode;
     <NavLink
       to={to}
       end={to === '/'}
-      className={({ isActive }) => cx('flex items-center gap-2.5 rounded-md px-2.5 py-[7px] no-underline',
-        isActive ? 'bg-primary-soft font-medium text-navy' : 'text-muted hover:bg-subtle hover:text-ink')}
+      className={({ isActive }) => cx('nav-item flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 no-underline',
+        isActive ? 'active font-medium text-navy' : 'text-muted hover:text-ink')}
     >
       <Icon d={icon} />
       {label}
@@ -48,6 +49,7 @@ export function Shell({ me }: { me: Me }) {
   const [moreOpen, setMoreOpen] = useState(false)
   const dash = useDashboard()
   const unread = dash.data?.unread_notifications ?? 0
+  const { can } = useAccess()
   const qc = useQueryClient()
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -80,31 +82,34 @@ export function Shell({ me }: { me: Me }) {
   }
 
   return (
-    <div className="grid h-full grid-cols-1 md:grid-cols-[232px_1fr]">
-      <aside className="hidden flex-col border-e border-line bg-surface px-3 py-4 md:flex">
+    <div className="grid h-full grid-cols-1 md:grid-cols-[244px_1fr]">
+      <aside className="glass-strong z-10 hidden flex-col border-e border-white/70 px-3 py-4 shadow-[1px_0_0_rgb(11_46_74/0.05),8px_0_30px_-20px_rgb(11_46_74/0.25)] md:flex">
         <Logo />
         <button
           onClick={() => setSearchOpen(true)}
-          className="mb-3 flex h-[34px] items-center gap-2 rounded-md border border-line bg-bg px-2.5 text-[13px] text-faint hover:border-line-strong"
+          className="btn btn-glass mb-4 flex h-9 items-center gap-2 rounded-[10px] border border-white/80 px-2.5 text-[13px] text-faint hover:text-ink"
         >
           <Icon d={I.search} size={15} />بحث
           <span className="num ms-auto rounded border border-line px-1 text-[10.5px]">Ctrl K</span>
         </button>
         <nav className="flex flex-col gap-0.5">
           <NavItem to="/" icon={I.today} label="اليوم" count={dash.data?.overdue_count} hot />
-          <NavItem to="/finishing" icon={I.board} label="الإكساء" />
-          <NavItem to="/real-estate" icon={I.board} label="طلبات العقارات" />
-          <NavItem to="/properties" icon={I.home} label="العقارات المعروضة" />
-          <NavItem to="/contacts" icon={I.clients} label="العملاء" />
+          {can('deals.view') && <>
+            <NavItem to="/finishing" icon={I.board} label="الإكساء" />
+            <NavItem to="/real-estate" icon={I.board} label="طلبات العقارات" />
+          </>}
+          {can('properties.view') && <NavItem to="/properties" icon={I.home} label="العقارات المعروضة" />}
+          {can('contacts.view') && <NavItem to="/contacts" icon={I.clients} label="العملاء" />}
           <div className="px-2.5 pt-5 pb-1.5 text-[11.5px] text-faint">أخرى</div>
-          <NavItem to="/contacts/duplicates" icon={I.clients} label="مكررات محتملة" />
+          {can('contacts.merge') && <NavItem to="/contacts/duplicates" icon={I.clients} label="مكررات محتملة" />}
           <NavItem to="/archive" icon={I.archive} label="الأرشيف" />
           {me.is_admin && <NavItem to="/settings" icon={I.settings} label="الإعدادات" />}
         </nav>
-        <div className="mt-auto flex items-center gap-2.5 border-t border-line px-2 pt-3">
-          <Avatar name={me.name} />
+        <div className="mt-auto flex items-center gap-2.5 rounded-[12px] border border-white/80 bg-white/60 px-2.5 py-2.5 shadow-[0_6px_18px_-12px_rgb(11_46_74/0.35)]">
+          <Avatar name={me.name} size={32} />
           <div className="min-w-0 flex-1">
-            <div className="truncate">{me.name}</div>
+            <div className="truncate font-medium">{me.name}</div>
+            {me.role && <div className="truncate text-[11.5px] text-faint">{(me.role as { name: string }).name}</div>}
             <button onClick={logout} className="text-[12px] text-faint hover:text-ink">تسجيل خروج</button>
           </div>
           <Bell unread={unread} />
@@ -115,14 +120,14 @@ export function Shell({ me }: { me: Me }) {
         <ErrorBoundary key={pathname}><Outlet /></ErrorBoundary>
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-20 flex border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden">
-        {[['/', I.today, 'اليوم'], ['/finishing', I.board, 'الإكساء'], ['/real-estate', I.home, 'العقارات'], ['/contacts', I.clients, 'العملاء']].map(([to, icon, label]) => (
-          <NavLink key={to as string} to={to as string} end={to === '/'} className={({ isActive }) => cx('flex flex-1 flex-col items-center gap-0.5 py-2 text-[11.5px] no-underline', isActive ? 'text-primary' : 'text-muted')}>
+      <nav className="glass-strong fixed inset-x-0 bottom-0 z-20 flex border-t border-white/80 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_-16px_rgb(11_46_74/0.3)] md:hidden">
+        {([['/', I.today, 'اليوم', true], ['/finishing', I.board, 'الإكساء', can('deals.view')], ['/real-estate', I.home, 'العقارات', can('deals.view')], ['/contacts', I.clients, 'العملاء', can('contacts.view')]] as const).filter((x) => x[3]).map(([to, icon, label]) => (
+          <NavLink key={to as string} to={to as string} end={to === '/'} className={({ isActive }) => cx('my-1 flex flex-1 flex-col items-center gap-0.5 rounded-[12px] py-1.5 text-[11.5px] no-underline transition', isActive ? 'bg-white font-medium text-primary shadow-[0_4px_14px_-8px_rgb(11_46_74/0.4)]' : 'text-muted')}>
             <Icon d={icon} size={20} />{label as string}
           </NavLink>
         ))}
-        <button onClick={() => setSearchOpen(true)} className="flex flex-1 flex-col items-center gap-0.5 py-2 text-[11.5px] text-muted"><Icon d={I.search} size={20} />بحث</button>
-        <button onClick={() => setMoreOpen(true)} className="relative flex flex-1 flex-col items-center gap-0.5 py-2 text-[11.5px] text-muted">
+        <button onClick={() => setSearchOpen(true)} className="my-1 flex flex-1 flex-col items-center gap-0.5 rounded-[12px] py-1.5 text-[11.5px] text-muted"><Icon d={I.search} size={20} />بحث</button>
+        <button onClick={() => setMoreOpen(true)} className="relative my-1 flex flex-1 flex-col items-center gap-0.5 rounded-[12px] py-1.5 text-[11.5px] text-muted">
           <Icon d={I.more} size={20} />المزيد
           {unread > 0 && <span className="absolute top-1.5 left-[calc(50%-14px)] size-2 rounded-full bg-accent" />}
         </button>
@@ -130,7 +135,7 @@ export function Shell({ me }: { me: Me }) {
       {moreOpen && <MoreSheet me={me} unread={unread} onLogout={logout} onClose={() => setMoreOpen(false)} />}
       {searchOpen && <SearchPalette onClose={() => setSearchOpen(false)} />}
       {toast && (
-        <div className="fixed bottom-20 left-4 z-50 rounded-md border border-line bg-navy px-4 py-2.5 text-[13px] text-white shadow-lg md:bottom-5 md:left-5">{toast}</div>
+        <div className="fixed bottom-20 left-4 z-50 rounded-[12px] border border-white/20 bg-navy/90 px-4 py-2.5 text-[13px] text-white shadow-[0_14px_30px_-12px_rgb(11_46_74/0.6)] backdrop-blur-md md:bottom-5 md:left-5">{toast}</div>
       )}
     </div>
   )
@@ -139,6 +144,7 @@ export function Shell({ me }: { me: Me }) {
 /** Phones: everything the sidebar has that the bottom bar doesn't. */
 function MoreSheet({ me, unread, onLogout, onClose }: { me: Me; unread: number; onLogout: () => void; onClose: () => void }) {
   const [view, setView] = useState<'menu' | 'notifications'>('menu')
+  const { can } = useAccess()
   const { pathname } = useLocation()
   const first = useRef(pathname)
   useEffect(() => { if (pathname !== first.current) onClose() }, [pathname, onClose])
@@ -148,13 +154,15 @@ function MoreSheet({ me, unread, onLogout, onClose }: { me: Me; unread: number; 
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
   const links: [string, ReactNode, string][] = [
-    ['/properties', I.home, 'العقارات المعروضة'], ['/contacts/duplicates', I.clients, 'مكررات محتملة'], ['/archive', I.archive, 'الأرشيف'],
+    ...(can('properties.view') ? [['/properties', I.home, 'العقارات المعروضة'] as [string, ReactNode, string]] : []),
+    ...(can('contacts.merge') ? [['/contacts/duplicates', I.clients, 'مكررات محتملة'] as [string, ReactNode, string]] : []),
+    ['/archive', I.archive, 'الأرشيف'],
     ...(me.is_admin ? [['/settings', I.settings, 'الإعدادات'] as [string, ReactNode, string]] : []),
   ]
   return (
-    <div className="fixed inset-0 z-40 bg-navy/25 md:hidden" onClick={onClose}>
+    <div className="fixed inset-0 z-40 bg-navy/20 backdrop-blur-[3px] md:hidden" onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()}
-        className="absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-auto rounded-t-[14px] bg-surface pb-[calc(env(safe-area-inset-bottom)+8px)] shadow-[0_-8px_30px_rgb(11_46_74/0.15)]">
+        className="glass-strong absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-auto rounded-t-[20px] border-t border-white/80 pb-[calc(env(safe-area-inset-bottom)+8px)] shadow-[0_-12px_40px_rgb(11_46_74/0.2)]">
         <div className="flex items-center gap-2.5 border-b border-line px-4 py-3">
           {view === 'notifications'
             ? <button onClick={() => setView('menu')} className="text-[13px] text-primary">→ رجوع</button>
@@ -234,7 +242,7 @@ function Bell({ unread }: { unread: number }) {
         {unread > 0 && <span className="num absolute -top-0.5 -left-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] text-white">{unread}</span>}
       </button>
       {open && (
-        <div className="absolute bottom-10 right-0 z-40 w-[340px] rounded-[10px] border border-line bg-surface shadow-[0_12px_40px_rgb(11_46_74/0.16)]">
+        <div className="glass absolute bottom-12 right-0 z-40 w-[340px] overflow-hidden rounded-[16px]">
           <NotificationList onPicked={() => setOpen(false)} />
         </div>
       )}
@@ -265,8 +273,8 @@ function SearchPalette({ onClose }: { onClose: () => void }) {
     : []
 
   return (
-    <div className="fixed inset-0 z-50 bg-navy/25 pt-[12vh]" onMouseDown={onClose}>
-      <div className="mx-auto w-[min(560px,92vw)] overflow-hidden rounded-[10px] border border-line bg-surface shadow-[0_12px_40px_rgb(11_46_74/0.2)]" onMouseDown={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 bg-navy/20 pt-[12vh] backdrop-blur-[4px]" onMouseDown={onClose}>
+      <div className="dialog-glass mx-auto w-[min(560px,92vw)] overflow-hidden rounded-[18px] border border-white/70 bg-white/85 shadow-[0_30px_70px_-20px_rgb(11_46_74/0.45)] backdrop-blur-xl" onMouseDown={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-2 border-b border-line px-4">
           <span className="text-faint"><Icon d={I.search} /></span>
           <input

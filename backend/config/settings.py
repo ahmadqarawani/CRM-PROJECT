@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "auditlog",
     "apps.core",
+    "apps.access",
     "apps.accounts",
     "apps.catalog",
     "apps.contacts",

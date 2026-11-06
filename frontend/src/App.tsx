@@ -1,10 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { Navigate, Route, Routes, useNavigate } from 'react-router'
 import { ApiError, setUnauthorizedHandler } from './api/client'
 import { K, useMe } from './api/hooks'
 import { Shell } from './components/Shell'
-import { Spinner } from './components/ui'
+import { Empty, Spinner } from './components/ui'
+import { useAccess } from './lib/access'
 import { Archive } from './pages/Archive'
 import { Board } from './pages/Board'
 import { ContactDetail } from './pages/ContactDetail'
@@ -39,13 +40,13 @@ export default function App() {
       {loggedIn ? (
         <Route element={<Shell me={me.data!} />}>
           <Route index element={<Today />} />
-          <Route path="finishing" element={<Board pipeline="FINISHING" />} />
-          <Route path="real-estate" element={<Board pipeline="BROKERAGE" />} />
-          <Route path="contacts" element={<Contacts />} />
-          <Route path="contacts/duplicates" element={<Duplicates />} />
-          <Route path="contacts/:id" element={<ContactDetail />} />
-          <Route path="properties" element={<Properties />} />
-          <Route path="properties/:id" element={<PropertyDetail />} />
+          <Route path="finishing" element={<Need perm="deals.view"><Board pipeline="FINISHING" /></Need>} />
+          <Route path="real-estate" element={<Need perm="deals.view"><Board pipeline="BROKERAGE" /></Need>} />
+          <Route path="contacts" element={<Need perm="contacts.view"><Contacts /></Need>} />
+          <Route path="contacts/duplicates" element={<Need perm="contacts.merge"><Duplicates /></Need>} />
+          <Route path="contacts/:id" element={<Need perm="contacts.view"><ContactDetail /></Need>} />
+          <Route path="properties" element={<Need perm="properties.view"><Properties /></Need>} />
+          <Route path="properties/:id" element={<Need perm="properties.view"><PropertyDetail /></Need>} />
           <Route path="archive" element={<Archive />} />
           <Route path="settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -55,4 +56,11 @@ export default function App() {
       )}
     </Routes>
   )
+}
+
+/** A page the role can't open: say so instead of showing an empty list. */
+function Need({ perm, children }: { perm: string; children: ReactNode }) {
+  const { can } = useAccess()
+  if (can(perm)) return <>{children}</>
+  return <div className="p-6"><Empty title="ما عندك صلاحية تفتح هالصفحة" hint="إذا لازمتك، اطلبها من مدير النظام (الإعدادات ← الأدوار والصلاحيات)" /></div>
 }

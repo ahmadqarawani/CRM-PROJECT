@@ -2,7 +2,7 @@
 
 from rest_framework import permissions, serializers, viewsets
 
-from apps.core.views import IsAdminOrReadOnly, flag
+from apps.core.views import Perm, flag
 
 from . import models as m
 
@@ -26,7 +26,7 @@ def _make(slug, model, extra):
 
     class ViewSet(viewsets.ModelViewSet):
         serializer_class = ser
-        permission_classes = [permissions.IsAuthenticated, IsAdminOrReadOnly]
+        permission_classes = [permissions.IsAuthenticated, Perm("admin.settings", read_open=True)]
         pagination_class = None
         http_method_names = ["get", "post", "patch", "delete", "head", "options"]
 

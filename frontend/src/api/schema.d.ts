@@ -1483,8 +1483,15 @@ export interface components {
             id: number;
             username: string;
             name: string;
+            role: {
+                [key: string]: unknown;
+            } | null;
+            /** @description key -> "none" | "own" | "all", or true / false */
+            permissions: {
+                [key: string]: unknown;
+            };
+            /** @description may open the settings area */
             is_admin: boolean;
-            can_delete: boolean;
         };
         MergeRequestRequest: {
             other_id: number;

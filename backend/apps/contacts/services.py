@@ -42,6 +42,8 @@ def check_phones_free(numbers: list[str], exclude: Contact | None = None) -> Non
 def create_contact(*, phones: list[str], by=None, **fields) -> Contact:
     numbers = clean_phones(phones)
     check_phones_free(numbers)
+    if fields.get("assignee") is None:
+        fields["assignee"] = by  # every client has an owner: by default whoever adds it
     contact = Contact.objects.create(**fields)
     # WhatsApp button shows for numbers known to use WhatsApp: default from the source, editable per number
     whatsapp_default = bool(contact.source and contact.source.opens_whatsapp)

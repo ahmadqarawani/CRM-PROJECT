@@ -1,36 +1,46 @@
 import smtplib
 
 from django.contrib.auth import authenticate, get_user_model, login, logout
+from django.db import transaction
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, status, viewsets
 from rest_framework.generics import ListAPIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
+from apps.access.models import Role, UserAccess
+from apps.access.permissions import Perm
+from apps.access.registry import DEFAULT_ROLE
+from apps.access.services import perms_for, role_of
 from apps.core.models import SiteSettings
 from apps.core.serializers import UserRefSerializer
-from apps.core.views import IsAdmin, can_delete
+
+ADMIN_KEYS = ("admin.users", "admin.roles", "admin.settings", "admin.handover")
 
 
 class MeSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     username = serializers.CharField()
     name = serializers.CharField()
-    is_admin = serializers.BooleanField()
-    can_delete = serializers.BooleanField()
+    role = serializers.DictField(allow_null=True)
+    permissions = serializers.DictField(help_text='key -> "none" | "own" | "all", or true / false')
+    is_admin = serializers.BooleanField(help_text="may open the settings area")
 
 
 def me_payload(user) -> dict:
+    role = role_of(user)
+    perms = perms_for(user)
     return {
         "id": user.pk,
         "username": user.get_username(),
         "name": user.get_full_name() or user.get_username(),
-        "is_admin": user.is_staff,
-        "can_delete": can_delete(user),
+        "role": {"id": role.pk, "slug": role.slug, "name": role.name} if role else None,
+        "permissions": perms,
+        "is_admin": any(perms[k] for k in ADMIN_KEYS),
     }
 
 
@@ -82,7 +92,6 @@ class MeView(APIView):
         return Response(me_payload(request.user))
 
 
-
 class UserListView(ListAPIView):
     """Active users, for assignee pickers."""
 
@@ -93,30 +102,93 @@ class UserListView(ListAPIView):
         return get_user_model().objects.filter(is_active=True).order_by("first_name", "username")
 
 
+# ---------- admin area: roles ----------
+class RoleSerializer(serializers.ModelSerializer):
+    members = serializers.IntegerField(source="members.count", read_only=True)
+
+    class Meta:
+        model = Role
+        fields = ["id", "slug", "name", "description", "permissions", "is_system", "order", "members"]
+        read_only_fields = ["is_system"]
+
+    def validate_slug(self, value):
+        if self.instance and self.instance.is_system and value != self.instance.slug:
+            raise serializers.ValidationError("ما بينفع تغيّر معرّف دور أساسي")
+        return value
+
+    def validate(self, data):
+        # never lock everyone out: the admin role keeps role management
+        if (self.instance and self.instance.slug == "admin" and "permissions" in data
+                and not data["permissions"].get("admin.roles")):
+            raise serializers.ValidationError({"permissions": ["دور مدير النظام لازم يضل يقدر يدير الأدوار"]})
+        return data
+
+
+class PermissionCatalogSerializer(serializers.Serializer):
+    key = serializers.CharField()
+    group = serializers.CharField()
+    label = serializers.CharField()
+    kind = serializers.ChoiceField(choices=["scope", "bool"])
+
+
+class RoleViewSet(viewsets.ModelViewSet):
+    """Roles and their permission matrix. Built-in roles can be edited but not deleted; a role in use can't be."""
+
+    serializer_class = RoleSerializer
+    permission_classes = [IsAuthenticated, Perm("admin.roles")]
+    pagination_class = None
+    http_method_names = ["get", "post", "patch", "delete", "head", "options"]
+
+    def get_queryset(self):
+        return Role.objects.prefetch_related("members")
+
+    def perform_destroy(self, instance):
+        if instance.is_system:
+            raise serializers.ValidationError({"non_field_errors": ["الأدوار الأساسية ما بتنحذف، بس بتتعدّل"]})
+        if instance.members.exists():
+            raise serializers.ValidationError({"non_field_errors": ["في مستخدمين على هالدور — انقلهم لدور تاني أول"]})
+        instance.delete()
+
+
+class PermissionCatalogView(APIView):
+    """Every permission (key, group, label, kind) — what the roles editor draws as rows."""
+
+    permission_classes = [IsAuthenticated, Perm("admin.roles")]
+
+    @extend_schema(responses=PermissionCatalogSerializer(many=True))
+    def get(self, request):
+        from apps.access.registry import PERMISSIONS
+
+        return Response([{"key": k, "group": g, "label": label, "kind": kind}
+                         for k, (g, label, kind) in PERMISSIONS.items()])
+
+
 # ---------- admin area: users ----------
 class UserAdminSerializer(serializers.ModelSerializer):
-    """Everyone has the same rights, plus two switches the admin sets: admin area, and hard delete."""
+    """Users get a role (what they may do); "active" switches the account off without deleting it."""
 
     name = serializers.CharField(source="first_name", required=False, allow_blank=True)
-    is_admin = serializers.BooleanField(source="is_staff", required=False)
-    can_delete = serializers.SerializerMethodField()
-    can_delete_input = serializers.BooleanField(write_only=True, required=False)
+    role = serializers.SerializerMethodField()
+    role_id = serializers.PrimaryKeyRelatedField(queryset=Role.objects.all(), write_only=True, required=False)
     password = serializers.CharField(write_only=True, required=False, min_length=8, trim_whitespace=False)
 
     class Meta:
         model = get_user_model()
-        fields = ["id", "username", "name", "email", "is_active", "is_admin", "can_delete", "can_delete_input",
-                  "password", "last_login"]
-        read_only_fields = ["last_login"]
+        fields = ["id", "username", "name", "email", "is_active", "is_superuser", "role", "role_id", "password",
+                  "last_login"]
+        read_only_fields = ["last_login", "is_superuser"]
 
-    def get_can_delete(self, obj) -> bool:
-        return can_delete(obj)
+    def get_role(self, obj) -> dict | None:
+        role = role_of(obj)
+        return {"id": role.pk, "slug": role.slug, "name": role.name} if role else None
 
+    @transaction.atomic
     def _apply(self, user, data):
-        from django.contrib.auth.models import Permission
-
-        flag = data.pop("can_delete_input", None)
+        role = data.pop("role_id", None)
         password = data.pop("password", None)
+        me = self.context["request"].user
+        if user.pk == me.pk and data.get("is_active") is False:
+            raise serializers.ValidationError({"is_active": ["ما بتقدر توقّف حسابك"]})
         for k, v in data.items():
             setattr(user, k, v)
         if password:
@@ -125,9 +197,12 @@ class UserAdminSerializer(serializers.ModelSerializer):
             validate_password(password, user)
             user.set_password(password)
         user.save()
-        if flag is not None:
-            perm = Permission.objects.get(codename="delete_records", content_type__app_label="core")
-            (user.user_permissions.add if flag else user.user_permissions.remove)(perm)
+        if role is None and not hasattr(user, "access"):
+            role = Role.objects.filter(slug=DEFAULT_ROLE).first()
+        if role is not None:
+            if user.pk == me.pk and not role.permissions.get("admin.roles") and not me.is_superuser:
+                raise serializers.ValidationError({"role_id": ["ما بتقدر تشيل عن حالك إدارة الأدوار"]})
+            UserAccess.objects.update_or_create(user=user, defaults={"role": role})
         return user
 
     def create(self, data):
@@ -141,12 +216,12 @@ class UserAdminSerializer(serializers.ModelSerializer):
 
 class UserAdminViewSet(viewsets.ModelViewSet):
     serializer_class = UserAdminSerializer
-    permission_classes = [IsAdmin]
+    permission_classes = [IsAuthenticated, Perm("admin.users")]
     pagination_class = None
     http_method_names = ["get", "post", "patch", "head", "options"]  # deactivate, never delete users
 
     def get_queryset(self):
-        return get_user_model().objects.order_by("first_name", "username")
+        return get_user_model().objects.select_related("access__role").order_by("first_name", "username")
 
 
 # ---------- admin area: system settings ----------
@@ -168,7 +243,7 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
 
 
 class SiteSettingsView(APIView):
-    permission_classes = [IsAdmin]
+    permission_classes = [IsAuthenticated, Perm("admin.settings")]
 
     @extend_schema(responses=SiteSettingsSerializer)
     def get(self, request):
@@ -183,7 +258,7 @@ class SiteSettingsView(APIView):
 
 
 class TestEmailView(APIView):
-    permission_classes = [IsAdmin]
+    permission_classes = [IsAuthenticated, Perm("admin.settings")]
 
     @extend_schema(request=None, responses={204: None})
     def post(self, request):

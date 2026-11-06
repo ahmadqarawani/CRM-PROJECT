@@ -47,3 +47,18 @@ class ArchiveFieldMixin(serializers.Serializer):
         if archived is not None and archived != instance.is_archived:
             instance.archived_at = timezone.now() if archived else None
         return validated_data
+
+
+class AccessMixin(serializers.Serializer):
+    """Adds `access: {edit, delete}` — what the current user may do with this record (role + own/all scope)."""
+
+    access_resource = ""
+    access = serializers.SerializerMethodField()
+
+    def get_access(self, obj) -> dict:
+        from apps.access.services import access_of
+
+        request = self.context.get("request")
+        if request is None:
+            return {"edit": False, "delete": False}
+        return access_of(request.user, self.access_resource, obj)

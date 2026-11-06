@@ -8,6 +8,7 @@ import { K, useCatalog, useContacts, usePhoneCheck, useProperties, useSaveActivi
   useSavePayment, useSaveProperty, useSaveQuote, useStages, useUsers, type CatalogSlug } from '../api/hooks'
 import { ACTIVITY_LABEL, BUILDING_LABEL, CATEGORY_LABEL, KIND_LABEL, LISTING_LABEL, OWNER_ROLE_LABEL, PSTATUS_LABEL,
   QUOTE_LABEL, TEMP_LABEL, fromLocalInput, inDays, money, toLocalInput } from '../lib/format'
+import { useAccess } from '../lib/access'
 import { applyServerErrors } from '../lib/forms'
 import { Button, Dialog, Field, FormError, Input, Select, Textarea, cx } from './ui'
 
@@ -81,7 +82,7 @@ export function ContactPicker({ value, onChange, disabled }: { value: { id: numb
     <div className="relative">
       <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="اكتب الاسم أو الرقم…" />
       {q.length >= 2 && (
-        <div className="absolute inset-x-0 top-full z-10 mt-1 max-h-56 overflow-auto rounded-md border border-line bg-surface shadow-lg">
+        <div className="absolute inset-x-0 top-full z-10 mt-1 max-h-56 overflow-auto glass rounded-[12px]">
           {res.data?.results.map((c) => (
             <button type="button" key={c.id} onClick={() => onChange({ id: c.id, name: c.display_name })} className="block w-full px-3 py-2 text-start hover:bg-bg">
               {c.display_name} <span className="num text-[12px] text-faint">{c.phones?.[0]?.number}</span>
@@ -125,7 +126,7 @@ function PropertyPicker({ value, label, owner, onChange }: {
       <Input value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => setFocused(true)}
         onBlur={() => setTimeout(() => setFocused(false), 150)} placeholder={owner ? 'اختار من عقاراته أو دوّر…' : 'كود أو عنوان…'} />
       {show && (
-        <div className="absolute inset-x-0 top-full z-10 mt-1 max-h-56 overflow-auto rounded-md border border-line bg-surface shadow-lg">
+        <div className="absolute inset-x-0 top-full z-10 mt-1 max-h-56 overflow-auto glass rounded-[12px]">
           {res.data?.results.map((p) => (
             <button type="button" key={p.id} onMouseDown={(e) => e.preventDefault()}
               onClick={() => { setQ(''); onChange(p.id, p.code ?? '') }} className="block w-full px-3 py-2 text-start hover:bg-bg">
@@ -281,6 +282,7 @@ export function DealDialog({ open, onClose, deal, kind, contact, onSaved }: {
   open: boolean; onClose: () => void; deal?: Deal; kind?: DealKind; contact?: { id: number; name: string } | null; onSaved?: (d: Deal) => void
 }) {
   const save = useSaveDeal()
+  const { can } = useAccess()
   const [s, setS] = useState<DealState>(() => initialDeal(deal, kind, contact))
   const [error, setError] = useState<Errs>({})
   const pipeline = s.kind === 'FINISHING' ? 'FINISHING' : 'BROKERAGE'
@@ -296,8 +298,9 @@ export function DealDialog({ open, onClose, deal, kind, contact, onSaved }: {
     try {
       const body = {
         ...(deal ? {} : { kind: s.kind, contact_id: s.contact?.id }), title: s.title, temperature: s.temperature,
-        assignee_id: s.assignee_id, location_id: s.location_id, address: s.address, expected_amount: num(s.expected_amount),
-        contract_amount: num(s.contract_amount), property_id: s.property_id, source_id: s.source_id, ...(s.stage_id ? { stage_id: s.stage_id } : {}),
+        assignee_id: s.assignee_id, location_id: s.location_id, address: s.address,
+        ...(can('finance.view') ? { expected_amount: num(s.expected_amount) } : {}),
+        ...(can('finance.manage') ? { contract_amount: num(s.contract_amount) } : {}), property_id: s.property_id, source_id: s.source_id, ...(s.stage_id ? { stage_id: s.stage_id } : {}),
         ...(s.kind === 'FINISHING' ? { engineer_id: s.engineer_id, finishing: { ...s.f, area_m2: num(s.f.area_m2), budget_min: num(s.f.budget_min), budget_max: num(s.f.budget_max) } } : {}),
         ...(s.kind === 'BUY' || s.kind === 'RENT' ? { demand: { ...s.d, budget_min: num(s.d.budget_min), budget_max: num(s.d.budget_max), area_min: num(s.d.area_min), area_max: num(s.d.area_max), rooms_min: s.d.rooms_min ? Number(s.d.rooms_min) : null } } : {}),
       }
@@ -345,8 +348,8 @@ export function DealDialog({ open, onClose, deal, kind, contact, onSaved }: {
             </Field>}
         <Field label="المنطقة"><LookupSelect slug="locations" value={s.location_id} onChange={(v) => set({ location_id: v })} /></Field>
         <Field label="العنوان / تفاصيل المكان"><Input value={s.address} onChange={(e) => set({ address: e.target.value })} /></Field>
-        <Field label="القيمة المتوقعة $" error={error.expected_amount?.[0]}><Input dir="ltr" inputMode="decimal" value={s.expected_amount} onChange={(e) => set({ expected_amount: e.target.value })} /></Field>
-        <Field label="قيمة العقد $" hint="بعد الاتفاق"><Input dir="ltr" inputMode="decimal" value={s.contract_amount} onChange={(e) => set({ contract_amount: e.target.value })} /></Field>
+        {can('finance.view') && <Field label="القيمة المتوقعة $" error={error.expected_amount?.[0]}><Input dir="ltr" inputMode="decimal" value={s.expected_amount} onChange={(e) => set({ expected_amount: e.target.value })} /></Field>}
+        {can('finance.manage') && <Field label="قيمة العقد $" hint="بعد الاتفاق" error={error.contract_amount?.[0]}><Input dir="ltr" inputMode="decimal" value={s.contract_amount} onChange={(e) => set({ contract_amount: e.target.value })} /></Field>}
 
         {s.kind === 'FINISHING' && (
           <Section title="تفاصيل الإكساء">

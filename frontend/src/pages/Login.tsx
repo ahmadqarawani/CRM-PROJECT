@@ -31,8 +31,8 @@ export function Login() {
   })
 
   return (
-    <div className="grid min-h-full place-items-center bg-bg px-4">
-      <form onSubmit={onSubmit} className="w-full max-w-[360px] rounded-[10px] border border-line bg-surface p-7">
+    <div className="grid min-h-full place-items-center px-4">
+      <form onSubmit={onSubmit} className="glass w-full max-w-[380px] rounded-[20px] p-8">
         <div className="mb-6 flex items-center gap-3">
           <LogoMark size={40} />
           <div>

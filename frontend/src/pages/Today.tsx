@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router'
 import type { Activity } from '../api/client'
 import { useActivities, useCompleteActivity, useDashboard, useMe } from '../api/hooks'
 import { DealCard } from '../components/bits'
+import { useAccess } from '../lib/access'
 import { Card, Chip, Dot, Empty, PageHeader, Pager, Spinner, cx } from '../components/ui'
 import { ACTIVITY_LABEL, inDays, longDate, time, when } from '../lib/format'
 
@@ -12,6 +13,7 @@ const NO_STEP_SHOWN = 12
 /** "Your day": one sentence, then lists. */
 export function Today() {
   const me = useMe()
+  const { can } = useAccess()
   const [scope, setScope] = useState<'me' | 'all'>('me')
   const [overduePage, setOverduePage] = useState(1)
   const dash = useDashboard(scope)
@@ -35,7 +37,7 @@ export function Today() {
           ? <span className="text-accent"><span className="num">{d.overdue_count}</span> متابعات تأخرت</span>
           : <span className="text-mint-ink">ما في شي متأخر</span>}
           {d.today.length > 0 && <> · {d.today.length} مواعيد اليوم</>}</>}
-        actions={<><Chip on={scope === 'me'} onClick={() => switchScope('me')}>شغلي</Chip><Chip on={scope === 'all'} onClick={() => switchScope('all')}>كل الفريق</Chip></>} />
+        actions={can('reports.team') && <><Chip on={scope === 'me'} onClick={() => switchScope('me')}>شغلي</Chip><Chip on={scope === 'all'} onClick={() => switchScope('all')}>كل الفريق</Chip></>} />
 
       <div className="grid grid-cols-1 gap-5 px-4 md:px-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex min-w-0 flex-col gap-5">
@@ -85,15 +87,16 @@ function AgendaList({ title, items, count, empty, tone, onOpen }: {
   title: string; items: Activity[]; count?: number; empty: string; tone: 'accent' | 'primary'; onOpen: (a: Activity) => void
 }) {
   const complete = useCompleteActivity()
+  const { canOn } = useAccess()
   return (
     <section>
       <h2 className="m-0 mb-2.5 text-[13px] font-medium text-muted">{title} <span className="num">({count ?? items.length})</span></h2>
       {items.length === 0 ? <div className="rounded-card border border-dashed border-line-strong px-4 py-4 text-center text-[13px] text-faint">{empty}</div> : (
         <Card>
           {items.map((a) => (
-            <div key={a.id} className="flex items-center gap-3 border-b border-line px-3.5 py-2.5 last:border-0">
-              <button title="تمت" onClick={() => complete.mutate({ id: a.id, next_due: inDays(3) })}
-                className="grid size-5 flex-none place-items-center rounded border border-line-strong text-[11px] text-transparent hover:border-mint hover:text-mint-ink">✓</button>
+            <div key={a.id} className="flex items-center gap-3 border-b border-line/80 px-3.5 py-2.5 transition-colors last:border-0 hover:bg-white/70">
+              {canOn('activities.edit', [a.assignee?.id, a.created_by?.id]) ? <button title="تمت" onClick={() => complete.mutate({ id: a.id, next_due: inDays(3) })}
+                className="grid size-5 flex-none place-items-center rounded border border-line-strong text-[11px] text-transparent hover:border-mint hover:text-mint-ink">✓</button> : <span className="size-5 flex-none" />}
               <button onClick={() => onOpen(a)} className="min-w-0 flex-1 text-start">
                 <span className="block truncate"><b className="font-medium">{a.contact.name}</b> · {ACTIVITY_LABEL[a.type]}{a.subject && ` — ${a.subject}`}</span>
                 <span className={cx('text-[12.5px]', tone === 'accent' ? 'text-accent-ink' : 'text-primary')}>{tone === 'accent' ? when(a.due_at) : time(a.due_at!)}</span>

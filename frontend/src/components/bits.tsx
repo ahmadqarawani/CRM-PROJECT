@@ -4,6 +4,7 @@ import type { Contact, Deal, Doc } from '../api/client'
 import { useAudit, usePatchDocument, useRemove, useTimeline, type TimelineItem } from '../api/hooks'
 import { ACTIVITY_LABEL, CATEGORY_LABEL, KIND_LABEL, REASON_LABEL, TEMP_LABEL, bytes, phoneLabel, shortDate, when,
   waLink } from '../lib/format'
+import { accessOf } from '../lib/access'
 import { Avatar, Badge, Dialog, Empty, Select, Spinner, cx } from './ui'
 
 /* ---------- next step footer: the heart of "who needs attention" ---------- */
@@ -22,8 +23,8 @@ export function NextStep({ d }: { d: Deal }) {
   return (
     <div className={cx('flex items-center gap-1.5 border-t px-3 py-[7px] text-[12.5px]',
       late ? 'border-accent-line bg-accent-soft text-accent-ink'
-        : none ? 'border-line bg-[#fafbfc] text-accent-ink'
-          : today ? 'border-line bg-[#fafbfc] text-primary' : 'border-line bg-[#fafbfc] text-muted')}>
+        : none ? 'border-line/80 bg-white/50 text-accent-ink'
+          : today ? 'border-line/80 bg-white/50 text-primary' : 'border-line/80 bg-white/50 text-muted')}>
       <span className={cx('size-[7px] flex-none rounded-full', late ? 'bg-accent' : none ? 'bg-accent/60' : today ? 'bg-primary' : 'bg-faint')} />
       {late ? 'متابعة متأخرة' : none ? 'حدد الخطوة الجاية' : 'الخطوة الجاية'}
       <span className="ms-auto text-[11.5px]">{d.next_step_at ? when(d.next_step_at) : d.attention_reasons.includes('STUCK') ? `${d.days_in_stage} يوم بالمرحلة` : ''}</span>
@@ -34,8 +35,8 @@ export function NextStep({ d }: { d: Deal }) {
 export function DealCard({ d, selected, onClick, showStage }: { d: Deal; selected?: boolean; onClick?: () => void; showStage?: boolean }) {
   return (
     <article onClick={onClick}
-      className={cx('cursor-pointer overflow-hidden rounded-card border bg-surface transition-colors',
-        selected ? 'border-primary shadow-[0_0_0_3px_rgb(10_90_156/0.1)]' : 'border-line hover:border-line-strong')}>
+      className={cx('card lift cursor-pointer overflow-hidden rounded-[12px]',
+        selected && 'border-primary! shadow-[0_0_0_3px_rgb(10_90_156/0.14)]!')}>
       <div className="px-3 pt-2.5 pb-2.5">
         <h3 className="m-0 truncate text-[14px] font-medium">{d.contact.name}</h3>
         <div className="truncate text-[13px] text-muted">{d.title || KIND_LABEL[d.kind]}</div>
@@ -64,12 +65,12 @@ export function PhoneActions({ c, onAfterContact }: { c: Pick<Contact, 'phones'>
   return (
     <span className="inline-flex gap-1.5">
       <a href={`tel:${p.number}`} onClick={() => onAfterContact?.('CALL')}
-        className="inline-flex h-8 items-center gap-1 rounded-md border border-line bg-surface px-2.5 text-[13px] text-ink no-underline hover:border-line-strong">
+        className="btn btn-glass inline-flex h-8 items-center gap-1 rounded-[10px] border border-white/80 px-2.5 text-[13px] text-ink no-underline">
         ☎ <span className="num">{phoneLabel(p.number)}</span>
       </a>
       {p.has_whatsapp && (
         <a href={waLink(p.number)} target="_blank" rel="noreferrer" onClick={() => onAfterContact?.('WHATSAPP')}
-          className="inline-flex h-8 items-center rounded-md border border-[#bfe5d6] bg-mint-soft px-2.5 text-[13px] text-mint-ink no-underline">
+          className="btn inline-flex h-8 items-center rounded-[10px] border border-[#bfe5d6] bg-mint-soft/90 px-2.5 text-[13px] text-mint-ink no-underline hover:-translate-y-px hover:bg-mint-soft hover:shadow-[0_6px_14px_-8px_rgb(47_111_99/0.5)]">
           واتساب
         </a>
       )}
@@ -144,7 +145,7 @@ export function AuditList({ model, id }: { model: 'contact' | 'deal' | 'property
 }
 
 /* ---------- documents ---------- */
-export function DocumentList({ docs, canDelete }: { docs: Doc[]; canDelete?: boolean }) {
+export function DocumentList({ docs }: { docs: Doc[] }) {
   const [preview, setPreview] = useState<Doc | null>(null)
   const patch = usePatchDocument()
   const remove = useRemove()
@@ -153,7 +154,7 @@ export function DocumentList({ docs, canDelete }: { docs: Doc[]; canDelete?: boo
     <>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(min(220px,100%),1fr))] gap-2.5">
         {docs.map((d) => (
-          <div key={d.id} className="group flex items-center gap-2.5 rounded-md border border-line bg-surface p-2.5 hover:border-line-strong">
+          <div key={d.id} className="card lift group flex items-center gap-2.5 rounded-[12px] p-2.5">
             <button onClick={() => setPreview(d)} className="flex min-w-0 flex-1 items-center gap-2.5 text-start">
               {d.content_type.startsWith('image/')
                 ? <img src={d.url} alt="" className="size-[34px] flex-none rounded object-cover" loading="lazy" />
@@ -163,9 +164,9 @@ export function DocumentList({ docs, canDelete }: { docs: Doc[]; canDelete?: boo
                 <span className="text-[12px] text-faint">{CATEGORY_LABEL[d.category ?? 'OTHER']} · <span className="num">{bytes(d.size_bytes)}</span></span>
               </span>
             </button>
-            <button title="أرشفة" onClick={() => patch.mutate({ id: d.id, body: { is_archived: true } })}
-              className="rounded p-1 text-faint hover:bg-subtle hover:text-ink [@media(hover:hover)]:invisible [@media(hover:hover)]:group-hover:visible [@media(hover:hover)]:group-focus-within:visible">⌫</button>
-            {canDelete && (
+            {accessOf(d).delete && <button title="أرشفة" onClick={() => patch.mutate({ id: d.id, body: { is_archived: true } })}
+              className="rounded p-1 text-faint hover:bg-subtle hover:text-ink [@media(hover:hover)]:invisible [@media(hover:hover)]:group-hover:visible [@media(hover:hover)]:group-focus-within:visible">⌫</button>}
+            {accessOf(d).delete && (
               <button title="حذف نهائي" onClick={() => confirm(`حذف "${d.original_name}" نهائياً؟`) && remove.mutate(`/api/v1/documents/${d.id}/`)}
                 className="rounded p-1 text-faint hover:text-danger [@media(hover:hover)]:invisible [@media(hover:hover)]:group-hover:visible [@media(hover:hover)]:group-focus-within:visible">✕</button>
             )}
@@ -176,7 +177,7 @@ export function DocumentList({ docs, canDelete }: { docs: Doc[]; canDelete?: boo
         {preview && (
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
-              <Select className="w-48!" value={preview.category}
+              <Select className="w-48!" value={preview.category} disabled={!accessOf(preview).delete}
                 onChange={(e) => {
                   const category = e.target.value as Doc['category']
                   patch.mutate({ id: preview.id, body: { category } })
@@ -205,7 +206,7 @@ export function Tabs<T extends string>({ value, onChange, items }: { value: T; o
     <div className="mb-4 flex gap-4 overflow-x-auto border-b border-line [scrollbar-width:thin] sm:gap-5">
       {items.map(([k, label, n]) => (
         <button key={k} onClick={() => onChange(k)}
-          className={cx('-mb-px flex-none border-b-2 pb-2', value === k ? 'border-navy font-medium text-navy' : 'border-transparent text-muted hover:text-ink')}>
+          className={cx('-mb-px flex-none border-b-2 pb-2 transition-colors', value === k ? 'border-primary font-medium text-navy' : 'border-transparent text-muted hover:border-line-strong hover:text-ink')}>
           {label} {n !== undefined && <span className="num text-faint">{n}</span>}
         </button>
       ))}

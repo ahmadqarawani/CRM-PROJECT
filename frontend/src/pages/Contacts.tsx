@@ -4,6 +4,7 @@ import { useCatalog, useContacts } from '../api/hooks'
 import { ContactDialog } from '../components/forms'
 import { Badge, Button, Chip, Dot, Empty, Freshness, Input, PAGE_SIZE, PageHeader, Pager, Select, Spinner } from '../components/ui'
 import { ago, daysSince, phoneLabel } from '../lib/format'
+import { useAccess } from '../lib/access'
 import { useUrlFilters } from '../lib/url'
 
 export function Contacts() {
@@ -13,6 +14,7 @@ export function Contacts() {
   const source = f.num('source')
   const page = f.page
   const sources = useCatalog('sources')
+  const { can } = useAccess()
   const contacts = useContacts({ search: f.get('q') || undefined, attention: attention || undefined, source, page, page_size: PAGE_SIZE })
   const [adding, setAdding] = useState(false)
   const navigate = useNavigate()
@@ -22,7 +24,7 @@ export function Contacts() {
   return (
     <div className="pb-24 md:pb-6" data-section="clients">
       <PageHeader title="العملاء" sub={data && <><span className="num">{data.count}</span> عميل</>}
-        actions={<><Link to="/contacts/duplicates" className="text-[13px] text-primary">مكررات محتملة</Link><Button variant="primary" onClick={() => setAdding(true)}>+ عميل</Button></>} />
+        actions={<>{can('contacts.merge') && <Link to="/contacts/duplicates" className="text-[13px] text-primary">مكررات محتملة</Link>}{can('contacts.create') && <Button variant="primary" onClick={() => setAdding(true)}>+ عميل</Button>}</>} />
       <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 pb-3.5 md:px-6">
         <Input value={search} onChange={(e) => { setSearch(e.target.value); set('q', e.target.value || null) }} placeholder="اسم أو رقم بأي شكل…" className="w-full sm:w-64" />
         <Select className="w-auto min-w-36 flex-1 sm:flex-none" value={source ?? ''} onChange={(e) => set('source', e.target.value || null)}>
@@ -31,10 +33,10 @@ export function Contacts() {
         <Chip on={attention} onClick={() => set('attention', attention ? null : '1')}><Dot color="var(--color-accent)" />عنده طلب بده انتباه</Chip>
       </div>
       <div className="px-4 py-4 md:px-6">
-        {contacts.isLoading ? <Spinner /> : !data?.results.length ? <Empty title="ما في نتائج" action={<Button variant="primary" onClick={() => setAdding(true)}>+ عميل</Button>} /> : (
+        {contacts.isLoading ? <Spinner /> : !data?.results.length ? <Empty title="ما في نتائج" action={can('contacts.create') && <Button variant="primary" onClick={() => setAdding(true)}>+ عميل</Button>} /> : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(min(250px,100%),1fr))] gap-3">
             {data.results.map((c) => (
-              <Link key={c.id} to={`/contacts/${c.id}`} className="flex flex-col rounded-card border border-line bg-surface p-3.5 text-ink no-underline hover:border-line-strong">
+              <Link key={c.id} to={`/contacts/${c.id}`} className="card lift flex flex-col rounded-[12px] p-3.5 text-ink no-underline">
                 <div className="flex items-start gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-medium">{c.name || <span className="num">{phoneLabel(c.display_name)}</span>}</div>

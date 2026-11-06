@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 from apps.catalog.models import Feature, FinishLevel, Location, OwnershipType, PropertyType, Tag
 from apps.contacts.models import Contact
-from apps.core.serializers import ArchiveFieldMixin, UserRefSerializer, fk, ref
+from apps.core.serializers import AccessMixin, ArchiveFieldMixin, UserRefSerializer, fk, ref
 from apps.core.text import normalize_ar
 from apps.core.views import BaseViewSet
 from apps.realtime.events import Event, publish
@@ -25,7 +25,8 @@ class ContactRefSerializer(serializers.ModelSerializer):
         fields = ["id", "name"]
 
 
-class PropertySerializer(ArchiveFieldMixin, serializers.ModelSerializer):
+class PropertySerializer(AccessMixin, ArchiveFieldMixin, serializers.ModelSerializer):
+    access_resource = "properties"
     owner = ContactRefSerializer(read_only=True)
     owner_id = fk(Contact, "owner", Contact.objects.filter(archived_at__isnull=True), required=True, allow_null=False)
     property_type = ref(PropertyType, ("id", "name", "has_rooms"))(read_only=True, allow_null=True)
@@ -47,7 +48,7 @@ class PropertySerializer(ArchiveFieldMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Property
-        fields = ["id", "code", "legacy_code", "owner", "owner_id", "owner_role", "property_type",
+        fields = ["id", "access", "code", "legacy_code", "owner", "owner_id", "owner_role", "property_type",
                   "property_type_id", "listing", "status", "location", "location_id", "address", "area_m2",
                   "area_note", "rooms", "bathrooms", "floor", "floor_note", "layout_note", "building_state",
                   "finish_level", "finish_level_id", "features", "feature_ids", "ownership_type",
@@ -81,6 +82,8 @@ class PropertySerializer(ArchiveFieldMixin, serializers.ModelSerializer):
 ]))
 class PropertyViewSet(BaseViewSet):
     serializer_class = PropertySerializer
+    resource = "properties"
+    action_permissions = {"demands": None}
     ordering_fields = ["created_at", "price", "area_m2", "listed_at"]
 
     def get_queryset(self):

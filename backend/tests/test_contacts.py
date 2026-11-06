@@ -89,16 +89,16 @@ def test_audit_log_records_changes(api, contact):
     assert entries[-1]["action"] == "أنشأ" and entries[-1]["changes"] == []
 
 
-def test_audit_log_is_readable_for_links_and_tags(api, contact, user):
+def test_audit_log_is_readable_for_links_and_tags(api, admin_api, contact, admin):
     from apps.catalog.models import Tag
 
     tag = Tag.objects.create(name="VIP")
-    api.patch(f"/api/v1/contacts/{contact.pk}/", {"assignee_id": user.pk, "tag_ids": [tag.pk]}, format="json")
+    admin_api.patch(f"/api/v1/contacts/{contact.pk}/", {"assignee_id": admin.pk, "tag_ids": [tag.pk]}, format="json")
     changes = [c for e in api.get("/api/v1/audit/", {"model": "contact", "id": contact.pk}).json()
                for c in e["changes"]]
     assert {"field": "الوسوم", "old": "", "new": "+ VIP"} in changes
     assignee = next(c for c in changes if c["field"] == "المسؤول")
-    assert assignee["new"] == str(user)  # a name, not a pk
+    assert assignee["new"] == str(admin)  # a name, not a pk
 
 
 def test_backfill_last_contact_from_imported_history(contact):

@@ -6,8 +6,9 @@ paths:
   /api/v1/activities/:
     get:
       operationId: v1_activities_list
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: query
         name: assignee
@@ -72,8 +73,9 @@ paths:
           description: ''
     post:
       operationId: v1_activities_create
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       tags:
       - v1
       requestBody:
@@ -100,8 +102,9 @@ paths:
   /api/v1/activities/{id}/:
     get:
       operationId: v1_activities_retrieve
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -122,8 +125,9 @@ paths:
           description: ''
     patch:
       operationId: v1_activities_partial_update
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -155,8 +159,9 @@ paths:
           description: ''
     delete:
       operationId: v1_activities_destroy
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -231,6 +236,150 @@ paths:
               schema:
                 $ref: '#/components/schemas/HandOverResult'
           description: ''
+  /api/v1/admin/permissions/:
+    get:
+      operationId: v1_admin_permissions_list
+      description: Every permission (key, group, label, kind) — what the roles editor
+        draws as rows.
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PermissionCatalog'
+          description: ''
+  /api/v1/admin/roles/:
+    get:
+      operationId: v1_admin_roles_list
+      description: Roles and their permission matrix. Built-in roles can be edited
+        but not deleted; a role in use can't be.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Role'
+          description: ''
+    post:
+      operationId: v1_admin_roles_create
+      description: Roles and their permission matrix. Built-in roles can be edited
+        but not deleted; a role in use can't be.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RoleRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RoleRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+          description: ''
+  /api/v1/admin/roles/{id}/:
+    get:
+      operationId: v1_admin_roles_retrieve
+      description: Roles and their permission matrix. Built-in roles can be edited
+        but not deleted; a role in use can't be.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا role.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+          description: ''
+    patch:
+      operationId: v1_admin_roles_partial_update
+      description: Roles and their permission matrix. Built-in roles can be edited
+        but not deleted; a role in use can't be.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا role.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRoleRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRoleRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRoleRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+          description: ''
+    delete:
+      operationId: v1_admin_roles_destroy
+      description: Roles and their permission matrix. Built-in roles can be edited
+        but not deleted; a role in use can't be.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا role.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/v1/admin/settings/:
     get:
       operationId: v1_admin_settings_retrieve
@@ -1523,8 +1672,9 @@ paths:
   /api/v1/contacts/:
     get:
       operationId: v1_contacts_list
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: query
         name: archived
@@ -1581,8 +1731,9 @@ paths:
           description: ''
     post:
       operationId: v1_contacts_create
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       tags:
       - v1
       requestBody:
@@ -1608,8 +1759,9 @@ paths:
   /api/v1/contacts/{id}/:
     get:
       operationId: v1_contacts_retrieve
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -1630,8 +1782,9 @@ paths:
           description: ''
     patch:
       operationId: v1_contacts_partial_update
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -1663,8 +1816,9 @@ paths:
           description: ''
     delete:
       operationId: v1_contacts_destroy
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -1682,8 +1836,9 @@ paths:
   /api/v1/contacts/{id}/merge/:
     post:
       operationId: v1_contacts_merge_create
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -1738,8 +1893,9 @@ paths:
   /api/v1/contacts/duplicates/:
     get:
       operationId: v1_contacts_duplicates_list
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - name: ordering
         required: false
@@ -1796,8 +1952,9 @@ paths:
   /api/v1/deals/:
     get:
       operationId: v1_deals_list
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: query
         name: archived
@@ -1878,8 +2035,9 @@ paths:
           description: ''
     post:
       operationId: v1_deals_create
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       tags:
       - v1
       requestBody:
@@ -1906,8 +2064,9 @@ paths:
   /api/v1/deals/{id}/:
     get:
       operationId: v1_deals_retrieve
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -1928,8 +2087,9 @@ paths:
           description: ''
     patch:
       operationId: v1_deals_partial_update
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -1961,8 +2121,9 @@ paths:
           description: ''
     delete:
       operationId: v1_deals_destroy
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -1980,8 +2141,9 @@ paths:
   /api/v1/deals/{id}/convert-to-finishing/:
     post:
       operationId: v1_deals_convert_to_finishing_create
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -2003,8 +2165,9 @@ paths:
   /api/v1/deals/{id}/match/:
     post:
       operationId: v1_deals_match_create
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -2138,8 +2301,9 @@ paths:
   /api/v1/documents/:
     get:
       operationId: v1_documents_list
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: query
         name: archived
@@ -2196,8 +2360,9 @@ paths:
           description: ''
     post:
       operationId: v1_documents_create
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       tags:
       - v1
       requestBody:
@@ -2224,8 +2389,9 @@ paths:
   /api/v1/documents/{id}/:
     get:
       operationId: v1_documents_retrieve
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -2246,8 +2412,9 @@ paths:
           description: ''
     patch:
       operationId: v1_documents_partial_update
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -2279,8 +2446,9 @@ paths:
           description: ''
     delete:
       operationId: v1_documents_destroy
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -2443,8 +2611,9 @@ paths:
   /api/v1/payments/:
     get:
       operationId: v1_payments_list
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: query
         name: deal
@@ -2471,8 +2640,9 @@ paths:
           description: ''
     post:
       operationId: v1_payments_create
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       tags:
       - v1
       requestBody:
@@ -2499,8 +2669,9 @@ paths:
   /api/v1/payments/{id}/:
     get:
       operationId: v1_payments_retrieve
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -2521,8 +2692,9 @@ paths:
           description: ''
     patch:
       operationId: v1_payments_partial_update
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -2554,8 +2726,9 @@ paths:
           description: ''
     delete:
       operationId: v1_payments_destroy
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -2573,8 +2746,9 @@ paths:
   /api/v1/properties/:
     get:
       operationId: v1_properties_list
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: query
         name: archived
@@ -2643,8 +2817,9 @@ paths:
           description: ''
     post:
       operationId: v1_properties_create
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       tags:
       - v1
       requestBody:
@@ -2671,8 +2846,9 @@ paths:
   /api/v1/properties/{id}/:
     get:
       operationId: v1_properties_retrieve
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -2693,8 +2869,9 @@ paths:
           description: ''
     patch:
       operationId: v1_properties_partial_update
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -2726,8 +2903,9 @@ paths:
           description: ''
     delete:
       operationId: v1_properties_destroy
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -2767,8 +2945,9 @@ paths:
   /api/v1/quotes/:
     get:
       operationId: v1_quotes_list
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: query
         name: deal
@@ -2795,8 +2974,9 @@ paths:
           description: ''
     post:
       operationId: v1_quotes_create
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       tags:
       - v1
       requestBody:
@@ -2823,8 +3003,9 @@ paths:
   /api/v1/quotes/{id}/:
     get:
       operationId: v1_quotes_retrieve
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -2845,8 +3026,9 @@ paths:
           description: ''
     patch:
       operationId: v1_quotes_partial_update
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -2878,8 +3060,9 @@ paths:
           description: ''
     delete:
       operationId: v1_quotes_destroy
-      description: Archive (PATCH is_archived) for everyone; DELETE only with the
-        delete permission.
+      description: |-
+        Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+        user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       parameters:
       - in: path
         name: id
@@ -2897,8 +3080,6 @@ paths:
   /api/v1/reports/:
     get:
       operationId: v1_reports_retrieve
-      description: 'Simple counts for the weekly report / reports page: by source,
-        by stage, lost reasons.'
       parameters:
       - in: query
         name: days
@@ -3343,9 +3524,15 @@ components:
           minLength: 1
     Contact:
       type: object
+      description: 'Adds `access: {edit, delete}` — what the current user may do with
+        this record (role + own/all scope).'
       properties:
         id:
           type: integer
+          readOnly: true
+        access:
+          type: object
+          additionalProperties: {}
           readOnly: true
         name:
           type: string
@@ -3416,6 +3603,7 @@ components:
           format: date-time
           readOnly: true
       required:
+      - access
       - assignee
       - created_at
       - display_name
@@ -3442,6 +3630,8 @@ components:
       - name
     ContactRequest:
       type: object
+      description: 'Adds `access: {edit, delete}` — what the current user may do with
+        this record (role + own/all scope).'
       properties:
         name:
           type: string
@@ -3480,9 +3670,15 @@ components:
           type: boolean
     Deal:
       type: object
+      description: 'Adds `access: {edit, delete}` — what the current user may do with
+        this record (role + own/all scope).'
       properties:
         id:
           type: integer
+          readOnly: true
+        access:
+          type: object
+          additionalProperties: {}
           readOnly: true
         kind:
           $ref: '#/components/schemas/DealKindEnum'
@@ -3633,6 +3829,7 @@ components:
           format: date-time
           readOnly: true
       required:
+      - access
       - assignee
       - attention_reasons
       - closed_at
@@ -3696,6 +3893,8 @@ components:
       - kind
     DealRequest:
       type: object
+      description: 'Adds `access: {edit, delete}` — what the current user may do with
+        this record (role + own/all scope).'
       properties:
         kind:
           $ref: '#/components/schemas/DealKindEnum'
@@ -3910,9 +4109,15 @@ components:
           type: string
     Document:
       type: object
+      description: 'Adds `access: {edit, delete}` — what the current user may do with
+        this record (role + own/all scope).'
       properties:
         id:
           type: integer
+          readOnly: true
+        access:
+          type: object
+          additionalProperties: {}
           readOnly: true
         url:
           type: string
@@ -3940,6 +4145,7 @@ components:
           format: date-time
           readOnly: true
       required:
+      - access
       - content_type
       - created_at
       - id
@@ -3949,6 +4155,8 @@ components:
       - url
     DocumentRequest:
       type: object
+      description: 'Adds `access: {edit, delete}` — what the current user may do with
+        this record (role + own/all scope).'
       properties:
         file:
           type: string
@@ -4379,15 +4587,23 @@ components:
           type: string
         name:
           type: string
+        role:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        permissions:
+          type: object
+          additionalProperties: {}
+          description: key -> "none" | "own" | "all", or true / false
         is_admin:
           type: boolean
-        can_delete:
-          type: boolean
+          description: may open the settings area
       required:
-      - can_delete
       - id
       - is_admin
       - name
+      - permissions
+      - role
       - username
     MergeRequestRequest:
       type: object
@@ -4777,6 +4993,8 @@ components:
           writeOnly: true
     PatchedContactRequest:
       type: object
+      description: 'Adds `access: {edit, delete}` — what the current user may do with
+        this record (role + own/all scope).'
       properties:
         name:
           type: string
@@ -4815,6 +5033,8 @@ components:
           type: boolean
     PatchedDealRequest:
       type: object
+      description: 'Adds `access: {edit, delete}` — what the current user may do with
+        this record (role + own/all scope).'
       properties:
         kind:
           $ref: '#/components/schemas/DealKindEnum'
@@ -4909,6 +5129,8 @@ components:
           type: boolean
     PatchedDocumentRequest:
       type: object
+      description: 'Adds `access: {edit, delete}` — what the current user may do with
+        this record (role + own/all scope).'
       properties:
         file:
           type: string
@@ -5028,6 +5250,8 @@ components:
           maxLength: 300
     PatchedPropertyRequest:
       type: object
+      description: 'Adds `access: {edit, delete}` — what the current user may do with
+        this record (role + own/all scope).'
       properties:
         legacy_code:
           type: string
@@ -5181,6 +5405,26 @@ components:
           nullable: true
         notes:
           type: string
+    PatchedRoleRequest:
+      type: object
+      properties:
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        description:
+          type: string
+          maxLength: 300
+        permissions: {}
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
     PatchedServiceTypeRequest:
       type: object
       properties:
@@ -5292,8 +5536,8 @@ components:
           maxLength: 7
     PatchedUserAdminRequest:
       type: object
-      description: 'Everyone has the same rights, plus two switches the admin sets:
-        admin area, and hard delete.'
+      description: Users get a role (what they may do); "active" switches the account
+        off without deleting it.
       properties:
         username:
           type: string
@@ -5317,10 +5561,8 @@ components:
           title: نشط
           description: يحدد ما إذا كان المستخدم سيُعامل على أنّه نشط. أزل تحديد هذا
             الحقل بدلاً من حذف الحسابات.
-        is_admin:
-          type: boolean
-        can_delete_input:
-          type: boolean
+        role_id:
+          type: integer
           writeOnly: true
         password:
           type: string
@@ -5373,6 +5615,30 @@ components:
       - amount
       - deal_id
       - paid_at
+    PermissionCatalog:
+      type: object
+      properties:
+        key:
+          type: string
+        group:
+          type: string
+        label:
+          type: string
+        kind:
+          $ref: '#/components/schemas/PermissionCatalogKindEnum'
+      required:
+      - group
+      - key
+      - kind
+      - label
+    PermissionCatalogKindEnum:
+      enum:
+      - scope
+      - bool
+      type: string
+      description: |-
+        * `scope` - scope
+        * `bool` - bool
     Phone:
       type: object
       properties:
@@ -5443,9 +5709,15 @@ components:
       - muted
     Property:
       type: object
+      description: 'Adds `access: {edit, delete}` — what the current user may do with
+        this record (role + own/all scope).'
       properties:
         id:
           type: integer
+          readOnly: true
+        access:
+          type: object
+          additionalProperties: {}
           readOnly: true
         code:
           type: string
@@ -5572,6 +5844,7 @@ components:
           format: date-time
           readOnly: true
       required:
+      - access
       - assignee
       - code
       - created_at
@@ -5621,6 +5894,8 @@ components:
           maxLength: 300
     PropertyRequest:
       type: object
+      description: 'Adds `access: {edit, delete}` — what the current user may do with
+        this record (role + own/all scope).'
       properties:
         legacy_code:
           type: string
@@ -5898,6 +6173,62 @@ components:
         * `REJECTED` - مرفوضة
         * `EXPIRED` - منتهية
         * `CANCELLED` - ملغاة
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        slug:
+          type: string
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          maxLength: 80
+        description:
+          type: string
+          maxLength: 300
+        permissions: {}
+        is_system:
+          type: boolean
+          readOnly: true
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        members:
+          type: integer
+          readOnly: true
+      required:
+      - id
+      - is_system
+      - members
+      - name
+      - slug
+    RoleRequest:
+      type: object
+      properties:
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        description:
+          type: string
+          maxLength: 300
+        permissions: {}
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+      required:
+      - name
+      - slug
     ServiceType:
       type: object
       properties:
@@ -6248,8 +6579,8 @@ components:
         * `COLD` - بارد
     UserAdmin:
       type: object
-      description: 'Everyone has the same rights, plus two switches the admin sets:
-        admin area, and hard delete.'
+      description: Users get a role (what they may do); "active" switches the account
+        off without deleting it.
       properties:
         id:
           type: integer
@@ -6275,10 +6606,16 @@ components:
           title: نشط
           description: يحدد ما إذا كان المستخدم سيُعامل على أنّه نشط. أزل تحديد هذا
             الحقل بدلاً من حذف الحسابات.
-        is_admin:
+        is_superuser:
           type: boolean
-        can_delete:
-          type: boolean
+          readOnly: true
+          title: حالة المستخدم الفائق
+          description: يقضي بأن هذا المستخدم يمتلك كافة الصلاحيات دون الحاجة لمنحها
+            له تصريحاً.
+        role:
+          type: object
+          additionalProperties: {}
+          nullable: true
           readOnly: true
         last_login:
           type: string
@@ -6287,14 +6624,15 @@ components:
           nullable: true
           title: آخر دخول
       required:
-      - can_delete
       - id
+      - is_superuser
       - last_login
+      - role
       - username
     UserAdminRequest:
       type: object
-      description: 'Everyone has the same rights, plus two switches the admin sets:
-        admin area, and hard delete.'
+      description: Users get a role (what they may do); "active" switches the account
+        off without deleting it.
       properties:
         username:
           type: string
@@ -6318,10 +6656,8 @@ components:
           title: نشط
           description: يحدد ما إذا كان المستخدم سيُعامل على أنّه نشط. أزل تحديد هذا
             الحقل بدلاً من حذف الحسابات.
-        is_admin:
-          type: boolean
-        can_delete_input:
-          type: boolean
+        role_id:
+          type: integer
           writeOnly: true
         password:
           type: string

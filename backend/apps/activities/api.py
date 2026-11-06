@@ -87,6 +87,8 @@ class ActivitySerializer(serializers.ModelSerializer):
 ]))
 class ActivityViewSet(BaseViewSet):
     serializer_class = ActivitySerializer
+    resource = "activities"
+    action_permissions = {"complete": "activities.edit"}
     ordering_fields = ["due_at", "done_at", "created_at"]
 
     def get_queryset(self):

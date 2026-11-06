@@ -117,7 +117,8 @@ def test_won_sale_marks_property_sold_and_convert_to_finishing(api, contact, use
     assert r.status_code == 201 and r.json()["kind"] == "FINISHING" and r.json()["contact"]["id"] == contact.pk
 
 
-def test_quotes_version_and_payments(api, contact):
+def test_quotes_version_and_payments(admin_api, contact):
+    api = admin_api  # quotes & payments need finance.manage
     deal = create_deal(kind="FINISHING", contact=contact)
     q1 = api.post("/api/v1/quotes/", {"deal_id": deal.pk, "amount": "12000", "status": "SENT"}, format="json").json()
     q2 = api.post("/api/v1/quotes/", {"deal_id": deal.pk, "amount": "11000"}, format="json").json()
@@ -144,10 +145,10 @@ def test_dashboard(api, contact, user):
     assert len(body["overdue"]) == 1 and body["open_deals"] == 1
 
 
-def test_stage_counts_follow_the_list_filters(api, contact, user, stage):
+def test_stage_counts_follow_the_list_filters(api, contact, user, admin, stage):
     new, catalog = stage("FINISHING", "جديد"), stage("FINISHING", "إرسال الكتالوج")
     for i, st in enumerate([new, new, catalog]):
-        create_deal(kind="FINISHING", contact=contact, title=f"شقة {i}", stage=st, assignee=user if i else None, by=user)
+        create_deal(kind="FINISHING", contact=contact, title=f"شقة {i}", stage=st, assignee=user if i else admin, by=user)
     counts = {r["stage"]: r["count"] for r in api.get("/api/v1/deals/stage-counts/", {"pipeline": "FINISHING"}).json()}
     assert counts == {new.pk: 2, catalog.pk: 1}
     mine = {r["stage"]: r["count"] for r in

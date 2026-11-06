@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import type { DealKind } from '../api/client'
-import { useActivities, useContact, useDeals, useDocuments, useMe, useProperties, useRemove, useSaveContact } from '../api/hooks'
+import { useActivities, useContact, useDeals, useDocuments, useProperties, useRemove, useSaveContact } from '../api/hooks'
+import { accessOf, useAccess } from '../lib/access'
 import { AuditList, DealCard, DocumentList, PhoneActions, Tabs, Timeline } from '../components/bits'
 import { DealPanel } from '../components/DealPanel'
 import { ContactDialog, DealDialog, LogDialog, PlanDialog, PropertyDialog, UploadDialog } from '../components/forms'
@@ -15,7 +16,7 @@ export function ContactDetail() {
   const [params, setParams] = useSearchParams()
   const tab = (params.get('tab') as Tab) ?? 'activity'
   const openDeal = Number(params.get('deal')) || null
-  const me = useMe()
+  const { can } = useAccess()
   const contact = useContact(id)
   const deals = useDeals({ contact: id, page_size: 100, ordering: '-needs_attention,next_step_at' })
   const props = useProperties({ owner: id, page_size: 100 })
@@ -37,6 +38,7 @@ export function ContactDetail() {
   if (contact.isLoading) return <Spinner />
   if (!contact.data) return <div className="p-6"><Empty title="العميل مش موجود" /></div>
   const c = contact.data
+  const a = accessOf(c)
   if (c.merged_into) return <div className="p-6"><Empty title="هالعميل اندمج مع عميل تاني" action={<Link to={`/contacts/${c.merged_into}`}>افتح الكرت الأساسي</Link>} /></div>
 
   return (
@@ -60,25 +62,27 @@ export function ContactDetail() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="primary" onClick={() => { setLogType('CALL'); setDialog('log') }}>سجّل تواصل</Button>
-            <Button onClick={() => { setDealKind('FINISHING'); setDialog('deal') }}>+ طلب إكساء</Button>
-            <Button onClick={() => { setDealKind('BUY'); setDialog('deal') }}>+ طلب عقار</Button>
-            <Button onClick={() => setDialog('property')}>+ عقار يعرضه</Button>
-            <Button variant="ghost" onClick={() => setDialog('upload')}>رفع ملف</Button>
-            <Button variant="ghost" onClick={() => setDialog('edit')}>تعديل</Button>
-            <Button variant="ghost" onClick={() => save.mutate({ id: c.id, body: { is_archived: !c.is_archived } })}>{c.is_archived ? 'استرجاع' : 'أرشفة'}</Button>
-            {me.data?.can_delete && <Button variant="danger" onClick={async () => {
+            {can('activities.create') && <Button variant="primary" onClick={() => { setLogType('CALL'); setDialog('log') }}>سجّل تواصل</Button>}
+            {can('deals.create') && <>
+              <Button onClick={() => { setDealKind('FINISHING'); setDialog('deal') }}>+ طلب إكساء</Button>
+              <Button onClick={() => { setDealKind('BUY'); setDialog('deal') }}>+ طلب عقار</Button>
+            </>}
+            {can('properties.create') && <Button onClick={() => setDialog('property')}>+ عقار يعرضه</Button>}
+            {can('documents.upload') && <Button variant="ghost" onClick={() => setDialog('upload')}>رفع ملف</Button>}
+            {a.edit && <Button variant="ghost" onClick={() => setDialog('edit')}>تعديل</Button>}
+            {a.edit && <Button variant="ghost" onClick={() => save.mutate({ id: c.id, body: { is_archived: !c.is_archived } })}>{c.is_archived ? 'استرجاع' : 'أرشفة'}</Button>}
+            {a.delete && <Button variant="danger" onClick={async () => {
               if (confirm('حذف العميل نهائياً؟ (ما بيصير إذا عنده طلبات أو عقارات)')) { await remove.mutateAsync(`/api/v1/contacts/${c.id}/`); navigate('/contacts') }
             }}>حذف</Button>}
           </div>
         </div>
         {!!c.tags.length && <div className="mt-2 flex flex-wrap gap-1.5">{c.tags.map((t) => <Badge key={t.id}>{t.name}</Badge>)}</div>}
-        {c.notes && <p className="mt-3 mb-0 max-w-3xl whitespace-pre-wrap rounded-md bg-surface p-3 text-[13px] text-muted ring-1 ring-line">{c.notes}</p>}
+        {c.notes && <p className="mt-3 mb-0 max-w-3xl whitespace-pre-wrap card rounded-[12px] p-3 text-[13px] text-muted">{c.notes}</p>}
 
         <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[1fr_300px]">
           <div className="min-w-0">
             <Tabs value={tab} onChange={(t) => setParam('tab', t)} items={[['activity', 'النشاط'], ['deals', 'الطلبات', deals.data?.count],
-              ['properties', 'عقاراته', props.data?.count], ['files', 'الملفات', docs.data?.count], ['audit', 'سجل التعديلات']]} />
+              ['properties', 'عقاراته', props.data?.count], ['files', 'الملفات', docs.data?.count], ['audit', 'سجل التعديلات']].filter(([k]) => k !== 'audit' || can('audit.view')) as never} />
             {tab === 'activity' && <Timeline scope={{ contact: id }} />}
             {tab === 'deals' && (deals.data?.results.length
               ? <div className="grid grid-cols-[repeat(auto-fill,minmax(min(250px,100%),1fr))] gap-2.5">
@@ -92,7 +96,7 @@ export function ContactDetail() {
                     <span className="ms-auto text-[12.5px]">{money(p.price)} · {PSTATUS_LABEL[p.status ?? 'AVAILABLE']}</span>
                   </Link>))}</Card>
               : <Empty title="ما عنده عقارات معروضة" />)}
-            {tab === 'files' && <DocumentList docs={docs.data?.results ?? []} canDelete={me.data?.can_delete} />}
+            {tab === 'files' && <DocumentList docs={docs.data?.results ?? []} />}
             {tab === 'audit' && <AuditList model="contact" id={id} />}
           </div>
           <aside>

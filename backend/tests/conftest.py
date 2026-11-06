@@ -2,7 +2,6 @@ from datetime import timedelta
 
 import pytest
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
 from django.utils import timezone
 from rest_framework.test import APIClient
 
@@ -26,21 +25,30 @@ def _seed(db):
 
     if not Stage.objects.exists():
         run(apps)
+    from apps.access.seed import seed_roles
+
+    seed_roles()
     from django.core.cache import cache
 
     cache.clear()
 
 
+def with_role(u, slug):
+    from apps.access.models import Role, UserAccess
+
+    UserAccess.objects.update_or_create(user=u, defaults={"role": Role.objects.get(slug=slug)})
+    return u
+
+
 @pytest.fixture
 def user(db):
-    return User.objects.create_user("staff", password="s3cret-pass!", first_name="سامر")
+    """A sales agent: sees everything, edits own records, no delete/merge."""
+    return with_role(User.objects.create_user("staff", password="s3cret-pass!", first_name="سامر"), "agent")
 
 
 @pytest.fixture
 def admin(db):
-    u = User.objects.create_user("boss", password="s3cret-pass!", is_staff=True)
-    u.user_permissions.add(Permission.objects.get(codename="delete_records"))
-    return u
+    return with_role(User.objects.create_user("boss", password="s3cret-pass!"), "admin")
 
 
 def client_for(u):

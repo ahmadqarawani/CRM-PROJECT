@@ -9,6 +9,8 @@ from apps.accounts.views import (
     LoginView,
     LogoutView,
     MeView,
+    PermissionCatalogView,
+    RoleViewSet,
     SiteSettingsView,
     TestEmailView,
     UserAdminViewSet,
@@ -36,6 +38,7 @@ router.register("documents", DocumentViewSet, basename="document")
 router.register("notifications", NotificationViewSet, basename="notification")
 router.register("notification-preferences", PreferenceViewSet, basename="notification-preference")
 router.register("admin/users", UserAdminViewSet, basename="admin-user")
+router.register("admin/roles", RoleViewSet, basename="admin-role")
 router.register("admin/hand-over", HandOverView, basename="hand-over")
 for slug, viewset in CATALOG.items():
     router.register(f"catalog/{slug}", viewset, basename=f"catalog-{slug}")
@@ -46,6 +49,7 @@ api = [
     path("auth/logout/", LogoutView.as_view()),
     path("auth/me/", MeView.as_view()),
     path("users/", UserListView.as_view()),
+    path("admin/permissions/", PermissionCatalogView.as_view()),
     path("admin/settings/", SiteSettingsView.as_view()),
     path("admin/settings/test-email/", TestEmailView.as_view()),
     path("dashboard/", DashboardView.as_view()),

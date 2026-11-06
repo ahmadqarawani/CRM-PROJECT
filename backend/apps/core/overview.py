@@ -9,9 +9,13 @@ from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import serializers
+from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.access.permissions import DENIED, Perm
+from apps.access.services import has, scoped
 from apps.activities.api import ActivitySerializer
 from apps.activities.models import Activity
 from apps.contacts.models import Contact
@@ -34,12 +38,14 @@ class DashboardView(APIView):
     @extend_schema(parameters=[OpenApiParameter("scope", str, enum=["me", "all"])], responses=OpenApiTypes.OBJECT)
     def get(self, request):
         now = timezone.now()
-        mine = request.query_params.get("scope", "me") != "all"
         user = request.user
+        # the whole team"s day needs reports.team; otherwise it is always "my" day
+        mine = request.query_params.get("scope", "me") != "all" or not has(user, "reports.team")
         start = timezone.localtime(now).replace(hour=0, minute=0, second=0, microsecond=0)
         acts = Activity.objects.select_related("contact", "deal", "assignee").filter(done_at__isnull=True,
                                                                                     due_at__isnull=False)
         deals = _deals().filter(stage__type="OPEN", archived_at__isnull=True)
+        acts, deals = scoped(acts, user, "activities"), scoped(deals, user, "deals")
         if mine:
             acts, deals = acts.filter(assignee=user), deals.filter(assignee=user)
         ctx = {"request": request}
@@ -69,15 +75,24 @@ class SearchView(APIView):
         q = request.query_params.get("q", "").strip()
         if len(q) < 2:
             return Response({"contacts": [], "deals": [], "properties": []})
-        contacts = Contact.objects.active().filter(search_q(q)).distinct().prefetch_related("phones")[:10]
+        u = request.user
+        contacts = scoped(Contact.objects.active(), u, "contacts").filter(search_q(q)).distinct().prefetch_related("phones")[:10]
         return Response({
             "contacts": [{"id": c.pk, "name": c.display_name, "phone": next((p.number for p in c.phones.all()), None)}
                          for c in contacts],
-            "deals": list(Deal.objects.active().filter(Q(title__icontains=q) | Q(contact__in=contacts))
+            "deals": list(scoped(Deal.objects.active(), u, "deals").filter(Q(title__icontains=q) | Q(contact__in=contacts))
                           .values("id", "title", "kind", "contact_id")[:10]),
-            "properties": list(Property.objects.active().filter(search_text__icontains=normalize_ar(q))
+            "properties": list(scoped(Property.objects.active(), u, "properties").filter(search_text__icontains=normalize_ar(q))
                                .values("id", "code", "address", "owner_id")[:10]),
         })
+
+
+def _visible_or_404(user, scope: dict):
+    """The record a timeline / audit log belongs to must be one the user may see."""
+    for field, model, resource in (("contact_id", Contact, "contacts"), ("deal_id", Deal, "deals"),
+                                   ("property_id", Property, "properties")):
+        if (pk := scope.get(field)) and not scoped(model.objects.filter(pk=pk), user, resource).exists():
+            raise NotFound()
 
 
 class TimelineView(APIView):
@@ -90,8 +105,9 @@ class TimelineView(APIView):
         scope = {f"{k}_id": p[k] for k in ("contact", "deal", "property") if p.get(k)}
         if not scope:
             raise serializers.ValidationError({"non_field_errors": ["حدد contact أو deal أو property"]})
-        acts = Activity.objects.filter(**scope).select_related("contact", "deal", "assignee", "created_by")[:300]
-        docs = Document.objects.active().filter(**scope).select_related("uploaded_by")[:100]
+        _visible_or_404(request.user, scope)
+        acts = scoped(Activity.objects.filter(**scope), request.user, "activities").select_related("contact", "deal", "assignee", "created_by")[:300]
+        docs = scoped(Document.objects.active().filter(**scope), request.user, "documents").select_related("uploaded_by")[:100]
         items = [{"kind": "activity", "at": (a.done_at or a.due_at or a.created_at),
                   **ActivitySerializer(a, context={"request": request}).data} for a in acts]
         items += [{"kind": "document", "at": d.created_at, "id": d.pk, "name": d.original_name,
@@ -155,6 +171,9 @@ def _audit_changes(model, entry):
     return out
 
 
+MONEY_LABELS = {FIELD_LABELS[k] for k in ("expected_amount", "contract_amount", "commission_amount")}
+
+
 class AuditView(APIView):
     """Who changed what and when (django-auditlog), for one record, in readable Arabic."""
 
@@ -164,13 +183,21 @@ class AuditView(APIView):
         model = AUDITED.get(request.query_params.get("model", ""))
         if model is None:
             raise serializers.ValidationError({"model": ["مش مدعوم"]})
+        if not has(request.user, "audit.view"):
+            raise PermissionDenied(DENIED)
+        key = {Contact: "contact", Deal: "deal", Property: "property"}.get(model)
+        if key:
+            _visible_or_404(request.user, {f"{key}_id": request.query_params.get("id")})
         ct = ContentType.objects.get_for_model(model)
+        money_ok = has(request.user, "finance.view")
         entries = (LogEntry.objects.filter(content_type=ct, object_pk=str(request.query_params.get("id")))
                    .select_related("actor").order_by("-timestamp")[:200])
         actions = {LogEntry.Action.CREATE: "أنشأ", LogEntry.Action.UPDATE: "عدّل", LogEntry.Action.DELETE: "حذف"}
         rows = []
         for e in entries:
             changes = _audit_changes(model, e)
+            if not money_ok:
+                changes = [c for c in changes if c["field"] not in MONEY_LABELS]
             if e.action == LogEntry.Action.UPDATE and not changes:
                 continue  # only hidden fields changed (timestamps, search keys)
             rows.append({"at": e.timestamp, "action": actions.get(e.action, e.get_action_display()),
@@ -180,6 +207,7 @@ class AuditView(APIView):
 
 
 class ReportView(APIView):
+    permission_classes = [IsAuthenticated, Perm("reports.team")]
     """Simple counts for the weekly report / reports page: by source, by stage, lost reasons."""
 
     @extend_schema(parameters=[OpenApiParameter("days", int)], responses=OpenApiTypes.OBJECT)

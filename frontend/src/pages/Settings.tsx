@@ -1,22 +1,34 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { call, type Lookup, type Stage } from '../api/client'
 import { useCatalog, useSaveCatalog, useSaveStage, useStages, useUsers, type CatalogSlug } from '../api/hooks'
 import { Tabs } from '../components/bits'
-import { Badge, Button, Card, Dot, Field, FormError, Input, PageHeader, Select } from '../components/ui'
+import { Button, Card, Dot, Empty, Field, Input, PageHeader, Select } from '../components/ui'
+import { useAccess } from '../lib/access'
+import { Roles, Users } from './SettingsAccess'
 
-type Tab = 'stages' | 'lists' | 'users' | 'email' | 'handover'
+type Tab = 'stages' | 'lists' | 'users' | 'roles' | 'email' | 'handover'
+const TABS: [Tab, string, string][] = [
+  ['users', 'المستخدمين', 'admin.users'], ['roles', 'الأدوار والصلاحيات', 'admin.roles'],
+  ['stages', 'المراحل', 'admin.settings'], ['lists', 'القوائم', 'admin.settings'],
+  ['email', 'الإيميل والإشعارات', 'admin.settings'], ['handover', 'تسليم الشغل', 'admin.handover'],
+]
 
 export function Settings() {
-  const [tab, setTab] = useState<Tab>('stages')
+  const { can } = useAccess()
+  const tabs = TABS.filter(([, , perm]) => can(perm))
+  const [picked, setPicked] = useState<Tab | null>(null)
+  const tab = picked && tabs.some(([k]) => k === picked) ? picked : tabs[0]?.[0]
+  if (!tab) return <div className="p-6"><Empty title="ما عندك صلاحية على الإعدادات" /></div>
   return (
-    <div className="mx-auto max-w-[900px] pb-24">
-      <PageHeader title="الإعدادات" sub="القوائم والمراحل والمستخدمين والإيميل — كلها بتتعدّل من هون" />
+    <div className="mx-auto max-w-[1000px] pb-24">
+      <PageHeader title="الإعدادات" sub="المستخدمين والصلاحيات والقوائم والمراحل والإيميل — كلها بتتعدّل من هون" />
       <div className="px-4 md:px-6">
-        <Tabs value={tab} onChange={setTab} items={[['stages', 'المراحل'], ['lists', 'القوائم'], ['users', 'المستخدمين'], ['email', 'الإيميل والإشعارات'], ['handover', 'تسليم الشغل']]} />
+        <Tabs value={tab} onChange={setPicked} items={tabs.map(([k, label]) => [k, label] as [Tab, string])} />
+        {tab === 'users' && <Users />}
+        {tab === 'roles' && <Roles />}
         {tab === 'stages' && <Stages />}
         {tab === 'lists' && <Lists />}
-        {tab === 'users' && <Users />}
         {tab === 'email' && <Email />}
         {tab === 'handover' && <HandOver />}
       </div>
@@ -99,48 +111,6 @@ function Lists() {
         </Card>
         <p className="text-[12.5px] text-faint">القيمة المستعملة ما بتنحذف — بتوقّفها (فعّال) فبتختفي من الخيارات وبتضل بالسجلات القديمة.</p>
       </div>
-    </div>
-  )
-}
-
-type UserRow = { id: number; username: string; name: string; email: string; is_active: boolean; is_admin: boolean; can_delete: boolean; last_login: string | null }
-
-function Users() {
-  const qc = useQueryClient()
-  const users = useQuery({ queryKey: ['admin-users'], queryFn: () => call<UserRow[]>('GET', '/api/v1/admin/users/') })
-  const [form, setForm] = useState({ username: '', name: '', password: '', can_delete_input: false, is_admin: false })
-  const [err, setErr] = useState<string>()
-  const refresh = () => { qc.invalidateQueries({ queryKey: ['admin-users'] }); qc.invalidateQueries({ queryKey: ['users'] }) }
-  const patch = (id: number, body: object) => call('PATCH', `/api/v1/admin/users/${id}/`, body).then(refresh)
-  return (
-    <div>
-      <Card className="mb-4">
-        {users.data?.map((u) => (
-          <div key={u.id} className="flex flex-wrap items-center gap-3 border-b border-line px-3.5 py-2.5 last:border-0">
-            <div className="min-w-32"><b className="font-medium">{u.name || u.username}</b><div className="text-[12px] text-faint" dir="ltr">{u.username}</div></div>
-            {u.is_admin && <Badge tone="primary">مسؤول</Badge>}
-            <label className="flex items-center gap-1 text-[13px]"><input type="checkbox" checked={u.can_delete} onChange={(e) => patch(u.id, { can_delete_input: e.target.checked })} />صلاحية الحذف</label>
-            <label className="flex items-center gap-1 text-[13px]"><input type="checkbox" checked={u.is_active} onChange={(e) => patch(u.id, { is_active: e.target.checked })} />فعّال</label>
-            <Button size="sm" variant="ghost" className="ms-auto" onClick={() => { const pw = prompt('كلمة سر جديدة (8 أحرف على الأقل)'); if (pw) patch(u.id, { password: pw }).catch((e) => alert(e.message)) }}>تغيير كلمة السر</Button>
-          </div>
-        ))}
-      </Card>
-      <h3 className="mb-2 text-[14px] font-semibold text-navy">مستخدم جديد</h3>
-      <form className="grid grid-cols-1 gap-3 sm:grid-cols-2" onSubmit={async (e) => {
-        e.preventDefault(); setErr(undefined)
-        try { await call('POST', '/api/v1/admin/users/', form); setForm({ username: '', name: '', password: '', can_delete_input: false, is_admin: false }); refresh() }
-        catch (x) { setErr((x as Error).message) }
-      }}>
-        <Field label="اسم المستخدم"><Input dir="ltr" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} /></Field>
-        <Field label="الاسم الظاهر"><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
-        <Field label="كلمة السر"><Input type="password" dir="ltr" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></Field>
-        <div className="flex flex-wrap items-end gap-x-4 gap-y-2 pb-2 text-[13px]">
-          <label className="flex items-center gap-1"><input type="checkbox" checked={form.can_delete_input} onChange={(e) => setForm({ ...form, can_delete_input: e.target.checked })} />صلاحية الحذف</label>
-          <label className="flex items-center gap-1"><input type="checkbox" checked={form.is_admin} onChange={(e) => setForm({ ...form, is_admin: e.target.checked })} />مسؤول (الإعدادات)</label>
-        </div>
-        <div className="sm:col-span-2"><FormError message={err} /></div>
-        <div><Button variant="primary" type="submit">إنشاء</Button></div>
-      </form>
     </div>
   )
 }

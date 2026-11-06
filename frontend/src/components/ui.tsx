@@ -15,12 +15,12 @@ export const Button = forwardRef<HTMLButtonElement, BtnProps>(function Button(
       ref={ref}
       {...p}
       className={cx(
-        'inline-flex items-center justify-center gap-1.5 rounded-md border font-medium whitespace-nowrap transition-colors disabled:opacity-50 disabled:pointer-events-none',
-        size === 'md' ? 'h-[34px] px-3.5 text-sm' : 'h-7 px-2.5 text-[13px]',
-        variant === 'primary' && 'bg-primary border-primary text-white hover:bg-primary-hover',
-        variant === 'default' && 'bg-surface border-line text-ink hover:border-line-strong',
-        variant === 'ghost' && 'border-transparent text-muted hover:bg-subtle hover:text-ink',
-        variant === 'danger' && 'bg-surface border-line text-danger hover:bg-danger-soft',
+        'btn inline-flex items-center justify-center gap-1.5 border font-medium whitespace-nowrap disabled:pointer-events-none disabled:opacity-45',
+        size === 'md' ? 'h-9 rounded-[10px] px-4 text-sm' : 'h-7.5 rounded-[8px] px-2.5 text-[13px]',
+        variant === 'primary' && 'btn-primary border-transparent text-white',
+        variant === 'default' && 'btn-glass border-white/70 text-ink',
+        variant === 'ghost' && 'border-transparent text-muted hover:bg-white/60 hover:text-ink',
+        variant === 'danger' && 'btn-glass border-white/70 text-danger hover:bg-danger-soft/80',
         className,
       )}
     />
@@ -28,10 +28,10 @@ export const Button = forwardRef<HTMLButtonElement, BtnProps>(function Button(
 })
 
 /* ---------- Inputs ---------- */
-const field = 'w-full rounded-md border border-line bg-surface px-2.5 text-sm text-ink placeholder:text-faint hover:border-line-strong focus:border-primary focus:outline-none'
+const field = 'field w-full rounded-[10px] border border-line bg-white/75 px-3 text-sm text-ink placeholder:text-faint hover:border-line-strong focus:border-primary/60 focus:outline-none disabled:opacity-60'
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(function Input({ className, ...p }, ref) {
-  return <input ref={ref} {...p} className={cx(field, 'h-[34px]', className)} />
+  return <input ref={ref} {...p} className={cx(field, 'h-9', className)} />
 })
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(function Textarea(
@@ -43,7 +43,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
 export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(function Select(
   { className, ...p }, ref,
 ) {
-  return <select ref={ref} {...p} className={cx(field, 'h-[34px]', className)} />
+  return <select ref={ref} {...p} className={cx(field, 'h-9 pe-2', className)} />
 })
 
 export function Field({ label, error, hint, children, className }: {
@@ -85,17 +85,17 @@ export function Dialog({ open, onClose, title, children, footer, wide }: {
       ref={ref}
       onClose={onClose}
       onClick={(e) => e.target === ref.current && onClose()}
-      className={cx('m-auto rounded-[10px] border border-line bg-surface p-0 text-ink shadow-[0_12px_40px_rgb(11_46_74/0.18)]',
+      className={cx('dialog-glass m-auto rounded-[18px] border border-white/70 p-0 text-ink',
         wide ? 'w-[min(720px,94vw)]' : 'w-[min(480px,94vw)]')}
     >
       {open && (
         <div className="flex max-h-[86dvh] flex-col">
-          <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
+          <div className="flex items-center justify-between border-b border-line/70 px-5 py-3.5">
             <h2 className="m-0 text-[16px] font-semibold text-navy">{title}</h2>
-            <button onClick={onClose} className="rounded p-1 text-faint hover:bg-subtle hover:text-ink" aria-label="إغلاق">✕</button>
+            <button onClick={onClose} className="grid size-8 place-items-center rounded-full text-faint transition hover:bg-white/80 hover:text-ink" aria-label="إغلاق">✕</button>
           </div>
           <div className="overflow-auto px-5 py-4">{children}</div>
-          {footer && <div className="flex justify-start gap-2 border-t border-line px-5 py-3">{footer}</div>}
+          {footer && <div className="flex justify-start gap-2 border-t border-line/70 bg-white/40 px-5 py-3">{footer}</div>}
         </div>
       )}
     </dialog>
@@ -108,7 +108,7 @@ export function Avatar({ name, size = 28 }: { name?: string | null; size?: numbe
   return (
     <span
       title={name ?? undefined}
-      className="inline-grid flex-none place-items-center rounded-full bg-primary-soft font-semibold text-navy"
+      className="avatar inline-grid flex-none place-items-center rounded-full font-semibold text-navy"
       style={{ width: size, height: size, fontSize: size * 0.42 }}
     >
       {ch}
@@ -120,7 +120,7 @@ export function Badge({ children, tone = 'neutral', className }: {
   children: ReactNode; tone?: 'neutral' | 'accent' | 'mint' | 'primary' | 'danger'; className?: string
 }) {
   return (
-    <span className={cx('inline-flex items-center gap-1 rounded px-1.5 py-px text-[12px]',
+    <span className={cx('inline-flex items-center gap-1 rounded-[6px] px-1.5 py-px text-[12px]',
       tone === 'neutral' && 'bg-subtle text-muted',
       tone === 'accent' && 'bg-accent-soft text-accent-ink',
       tone === 'mint' && 'bg-mint-soft text-mint-ink',
@@ -137,12 +137,12 @@ export function Dot({ color, className }: { color: string; className?: string })
 }
 
 export function Card({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cx('rounded-card border border-line bg-surface', className)}>{children}</div>
+  return <div className={cx('card rounded-card', className)}>{children}</div>
 }
 
 export function Empty({ title, hint, action }: { title: string; hint?: string; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-card border border-dashed border-line-strong px-6 py-10 text-center">
+    <div className="flex flex-col items-center gap-2 rounded-card border border-dashed border-line-strong bg-white/40 px-6 py-10 text-center backdrop-blur-sm">
       <div className="font-medium text-ink">{title}</div>
       {hint && <div className="max-w-sm text-[13px] text-muted">{hint}</div>}
       {action}
@@ -156,12 +156,13 @@ export function Spinner() {
 
 export function PageHeader({ title, sub, actions }: { title: string; sub?: ReactNode; actions?: ReactNode }) {
   return (
-    <div className="flex flex-wrap items-center gap-3 px-6 pt-5 pb-3">
-      <div>
-        <h1 className="m-0 text-[20px] font-semibold text-navy">{title}</h1>
-        {sub && <div className="text-muted">{sub}</div>}
+    // sticky glass bar: the page title stays while the list scrolls under it
+    <div className="topbar sticky top-0 z-20 mb-3 flex flex-wrap items-center gap-3 px-4 py-3.5 md:px-6">
+      <div className="min-w-0">
+        <h1 className="m-0 text-[20px] leading-tight font-semibold tracking-[-0.01em] text-navy">{title}</h1>
+        {sub && <div className="mt-0.5 text-[13px] text-muted">{sub}</div>}
       </div>
-      <div className="ms-auto flex items-center gap-2">{actions}</div>
+      <div className="ms-auto flex flex-wrap items-center gap-2">{actions}</div>
     </div>
   )
 }
@@ -170,11 +171,41 @@ export function Chip({ on, children, onClick }: { on?: boolean; children: ReactN
   return (
     <button
       onClick={onClick}
-      className={cx('inline-flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-[13px]',
-        on ? 'border-[#bfd3e6] bg-[#eef4fa] text-primary' : 'border-line bg-surface text-muted hover:border-line-strong')}
+      aria-pressed={on}
+      className={cx('chip inline-flex h-7.5 items-center gap-1.5 rounded-full border px-3 text-[13px]',
+        on ? 'chip-on border-primary/30 text-primary' : 'border-white/70 text-muted hover:text-ink')}
     >
       {children}
     </button>
+  )
+}
+
+/* ---------- Switch (on/off) and Segmented (one of a few) ---------- */
+export function Switch({ on, onChange, disabled, label }: { on: boolean; onChange: (v: boolean) => void; disabled?: boolean; label?: string }) {
+  return (
+    <button type="button" role="switch" aria-checked={on} aria-label={label} disabled={disabled} onClick={() => onChange(!on)}
+      className={cx('relative inline-flex h-5.5 w-10 flex-none items-center rounded-full border transition-colors disabled:opacity-50',
+        on ? 'border-primary bg-primary' : 'border-line-strong bg-subtle')}>
+      <span className={cx('absolute top-1/2 size-4 -translate-y-1/2 rounded-full bg-white shadow-[0_1px_3px_rgb(11_46_74/0.3)] transition-[inset-inline-start]',
+        on ? 'start-[calc(100%-18px)]' : 'start-0.5')} />
+    </button>
+  )
+}
+
+export function Segmented<T extends string>({ value, options, onChange, label }: {
+  value: T; options: [T, string][]; onChange: (v: T) => void; label?: string
+}) {
+  return (
+    <div role="radiogroup" aria-label={label} className="inline-flex rounded-[10px] border border-line bg-subtle/80 p-0.5">
+      {options.map(([k, text]) => (
+        <button key={k} type="button" role="radio" aria-checked={value === k} onClick={() => onChange(k)}
+          className={cx('h-7 rounded-[8px] px-2.5 text-[12.5px] transition',
+            value === k ? (k === 'none' ? 'bg-white text-muted shadow-sm' : 'bg-white font-medium text-primary shadow-[0_1px_4px_rgb(11_46_74/0.12)]')
+              : 'text-faint hover:text-ink')}>
+          {text}
+        </button>
+      ))}
+    </div>
   )
 }
 
@@ -209,7 +240,7 @@ export function Pager({ page, count, pageSize = PAGE_SIZE, onChange, className }
       {pageWindow(page, pages).map((p, i) => p === '…'
         ? <span key={`gap${i}`} className="px-1 text-faint">…</span>
         : <button key={p} onClick={() => go(p)} aria-current={p === page ? 'page' : undefined}
-            className={cx('num h-7 min-w-7 rounded-md px-1.5', p === page ? 'bg-primary text-white' : 'text-muted hover:bg-subtle')}>{p}</button>)}
+            className={cx('num h-7.5 min-w-7.5 rounded-[8px] px-1.5 transition', p === page ? 'btn-primary text-white' : 'text-muted hover:bg-white/80 hover:text-ink')}>{p}</button>)}
       <Button size="sm" disabled={page >= pages} onClick={() => go(page + 1)}>التالي</Button>
     </nav>
   )

@@ -27,7 +27,8 @@ def test_login_csrf_and_401(user):
     token = c.get("/api/v1/auth/csrf/").cookies["csrftoken"].value
     r = c.post("/api/v1/auth/login/", {"username": "staff", "password": "s3cret-pass!"}, format="json",
                HTTP_X_CSRFTOKEN=token)
-    assert r.status_code == 200 and r.json()["can_delete"] is False
+    assert r.status_code == 200 and r.json()["role"]["slug"] == "agent"
+    assert r.json()["permissions"]["contacts.delete"] == "none" and r.json()["is_admin"] is False
 
 
 @pytest.mark.django_db
@@ -81,11 +82,16 @@ def test_settings_hide_password_and_admin_only(api, admin_api):
 
 
 @pytest.mark.django_db
-def test_admin_creates_user_with_delete_permission(admin_api):
+def test_admin_creates_user_with_a_role(admin_api):
+    from apps.access.models import Role
+
+    manager = Role.objects.get(slug="manager")
     r = admin_api.post("/api/v1/admin/users/", {"username": "rand2", "name": "Rand", "password": "Long-pass-123",
-                                                "can_delete_input": True}, format="json")
+                                                "role_id": manager.pk}, format="json")
     assert r.status_code == 201, r.json()
-    assert r.json()["can_delete"] is True
+    assert r.json()["role"]["slug"] == "manager"
+    r = admin_api.post("/api/v1/admin/users/", {"username": "new", "password": "Long-pass-123"}, format="json")
+    assert r.json()["role"]["slug"] == "agent"  # default
 
 
 @pytest.mark.django_db(transaction=True)

@@ -8,7 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from apps.catalog.models import Source, Tag
-from apps.core.serializers import ArchiveFieldMixin, UserRefSerializer, fk, ref
+from apps.core.serializers import AccessMixin, ArchiveFieldMixin, UserRefSerializer, fk, ref
 from apps.core.text import normalize_phone
 from apps.core.views import BaseViewSet, flag
 from apps.realtime.events import Event, publish
@@ -26,7 +26,8 @@ class PhoneSerializer(serializers.ModelSerializer):
         extra_kwargs = {"number": {"validators": []}}
 
 
-class ContactSerializer(ArchiveFieldMixin, serializers.ModelSerializer):
+class ContactSerializer(AccessMixin, ArchiveFieldMixin, serializers.ModelSerializer):
+    access_resource = "contacts"
     display_name = serializers.CharField(read_only=True)
     phones = PhoneSerializer(many=True, required=False)
     source = ref(Source)(read_only=True, allow_null=True)
@@ -42,7 +43,7 @@ class ContactSerializer(ArchiveFieldMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Contact
-        fields = ["id", "name", "display_name", "phones", "source", "source_id", "referred_by", "assignee",
+        fields = ["id", "access", "name", "display_name", "phones", "source", "source_id", "referred_by", "assignee",
                   "assignee_id", "email", "notes", "tags", "tag_ids", "last_contact_at", "open_deals",
                   "properties_count", "needs_attention", "merged_into", "is_archived", "created_at", "updated_at"]
         read_only_fields = ["last_contact_at", "merged_into", "created_at", "updated_at"]
@@ -76,6 +77,9 @@ class ContactSerializer(ArchiveFieldMixin, serializers.ModelSerializer):
 ]))
 class ContactViewSet(BaseViewSet):
     serializer_class = ContactSerializer
+    resource = "contacts"
+    # check-phone stops duplicates, so anyone who may add a contact can ask who owns a number
+    action_permissions = {"check_phone": "contacts.create", "duplicates": "contacts.merge", "merge": "contacts.merge"}
     ordering_fields = ["created_at", "name", "last_contact_at"]
 
     def get_queryset(self):

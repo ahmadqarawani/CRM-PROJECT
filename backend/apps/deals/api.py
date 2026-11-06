@@ -8,10 +8,11 @@ from rest_framework import permissions, serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from apps.access.services import has, scoped
 from apps.catalog.models import FinishLevel, Location, LostReason, PropertyType, ServiceType, Source, Tag
 from apps.contacts.models import Contact
-from apps.core.serializers import ArchiveFieldMixin, UserRefSerializer, fk, ref
-from apps.core.views import BaseViewSet, IsAdmin, IsAdminOrReadOnly, flag
+from apps.core.serializers import AccessMixin, ArchiveFieldMixin, UserRefSerializer, fk, ref
+from apps.core.views import BaseViewSet, Perm, flag
 from apps.properties.api import ContactRefSerializer
 from apps.properties.models import Property
 from apps.realtime.events import Event, publish
@@ -32,7 +33,7 @@ class StageSerializer(serializers.ModelSerializer):
 @extend_schema_view(list=extend_schema(parameters=[P("pipeline", str), P("include_inactive", bool)]))
 class StageViewSet(viewsets.ModelViewSet):
     serializer_class = StageSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdminOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated, Perm("admin.settings", read_open=True)]
     pagination_class = None
 
     def get_queryset(self):
@@ -85,7 +86,8 @@ class PropertyRefSerializer(serializers.ModelSerializer):
         fields = ["id", "code", "address"]
 
 
-class DealSerializer(ArchiveFieldMixin, serializers.ModelSerializer):
+class DealSerializer(AccessMixin, ArchiveFieldMixin, serializers.ModelSerializer):
+    access_resource = "deals"
     contact = ContactRefSerializer(read_only=True)
     contact_id = fk(Contact, "contact", Contact.objects.filter(archived_at__isnull=True), required=True,
                     allow_null=False)
@@ -117,7 +119,7 @@ class DealSerializer(ArchiveFieldMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Deal
-        fields = ["id", "kind", "pipeline", "title", "contact", "contact_id", "stage", "stage_id", "status",
+        fields = ["id", "access", "kind", "pipeline", "title", "contact", "contact_id", "stage", "stage_id", "status",
                   "stage_entered_at", "days_in_stage", "temperature", "source", "source_id", "assignee",
                   "assignee_id", "engineer", "engineer_id", "property", "property_id", "location", "location_id",
                   "address", "expected_amount", "contract_amount", "commission_amount", "paid_amount", "currency",
@@ -134,7 +136,25 @@ class DealSerializer(ArchiveFieldMixin, serializers.ModelSerializer):
     def get_days_in_stage(self, obj) -> int:
         return (timezone.now() - obj.stage_entered_at).days
 
+    # field-level security: money is hidden without finance.view; contract/commission change only with finance.manage
+    MONEY = ("expected_amount", "contract_amount", "commission_amount", "paid_amount")
+    CONTRACT = ("contract_amount", "commission_amount")
+
+    def to_representation(self, obj):
+        data = super().to_representation(obj)
+        if not has(self.context["request"].user, "finance.view"):
+            data.update(dict.fromkeys(self.MONEY))
+        return data
+
     def validate(self, data):
+        user = self.context["request"].user
+        if not has(user, "finance.view"):
+            data.pop("expected_amount", None)  # they never saw it: keep whatever is stored
+        if not has(user, "finance.manage"):
+            for f in self.CONTRACT:
+                if f in data and data[f] != (getattr(self.instance, f) if self.instance else None):
+                    raise serializers.ValidationError({f: ["ما عندك صلاحية تغيّر المبالغ"]})
+                data.pop(f, None)
         if self.instance:
             if "kind" in data and data["kind"] != self.instance.kind:
                 raise serializers.ValidationError({"kind": ["نوع الطلب ما بيتغيّر؛ افتح طلب جديد"]})
@@ -177,6 +197,9 @@ class DealSerializer(ArchiveFieldMixin, serializers.ModelSerializer):
 ]))
 class DealViewSet(BaseViewSet):
     serializer_class = DealSerializer
+    resource = "deals"
+    action_permissions = {"matches": None, "stage_counts": None, "set_match": "deals.edit",
+                          "convert": "deals.create"}
     ordering_fields = ["created_at", "next_step_at", "needs_attention", "temperature", "stage_entered_at"]
 
     def get_queryset(self):
@@ -224,7 +247,7 @@ class DealViewSet(BaseViewSet):
     @action(detail=False, methods=["get"], url_path="stage-counts")
     def stage_counts(self, request):
         """How many requests are in each stage under the current filters (the numbers on the stage filter)."""
-        qs = self._list_filters(with_attention(Deal.objects.all()), by_stage=False)
+        qs = scoped(self._list_filters(with_attention(Deal.objects.all()), by_stage=False), request.user, "deals")
         rows = qs.order_by().values("stage_id").annotate(n=Count("id", distinct=True))
         return Response([{"stage": r["stage_id"], "count": r["n"]} for r in rows])
 
@@ -310,10 +333,16 @@ class PaymentSerializer(serializers.ModelSerializer):
         return super().create(data)
 
 
+FINANCE_ACTIONS = {"list": "finance.view", "retrieve": "finance.view", "create": "finance.manage",
+                   "update": "finance.manage", "partial_update": "finance.manage", "destroy": "finance.manage"}
+
+
 @extend_schema_view(list=extend_schema(parameters=[P("deal", int)]))
 class QuoteViewSet(BaseViewSet):
     serializer_class = QuoteSerializer
     pagination_class = None
+    resource = "quotes"  # visible when the request is; amounts need finance.view
+    action_permissions = FINANCE_ACTIONS
 
     def get_queryset(self):
         qs = Quote.objects.select_related("created_by")
@@ -324,6 +353,8 @@ class QuoteViewSet(BaseViewSet):
 class PaymentViewSet(BaseViewSet):
     serializer_class = PaymentSerializer
     pagination_class = None
+    resource = "payments"
+    action_permissions = FINANCE_ACTIONS
 
     def get_queryset(self):
         qs = Payment.objects.all()
@@ -336,7 +367,7 @@ class HandOverSerializer(serializers.Serializer):
 
 
 class HandOverView(viewsets.ViewSet):
-    permission_classes = [permissions.IsAuthenticated, IsAdmin]
+    permission_classes = [permissions.IsAuthenticated, Perm("admin.handover")]
 
     @extend_schema(request=HandOverSerializer, responses=inline_serializer("HandOverResult", {
         k: serializers.IntegerField() for k in ("deals", "activities", "contacts", "properties")}))

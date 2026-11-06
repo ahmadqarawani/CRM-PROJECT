@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { useContact, useConvertToFinishing, useDeal, useDocuments, useMatches, useMe, usePayments, useQuotes, useRemove,
+import { useContact, useConvertToFinishing, useDeal, useDocuments, useMatches, usePayments, useQuotes, useRemove,
   useSaveDeal, useSetMatch, useStages } from '../api/hooks'
 import { KIND_LABEL, MATCH_LABEL, QUOTE_LABEL, TEMP_LABEL, ago, money, shortDate, when } from '../lib/format'
+import { accessOf, useAccess } from '../lib/access'
 import { AttentionBadges, AuditList, DocumentList, PhoneActions, Tabs, Timeline } from './bits'
 import { DealDialog, LogDialog, LostDialog, PaymentDialog, PlanDialog, QuoteDialog, UploadDialog } from './forms'
 import { Badge, Button, Card, Empty, Select, Spinner, cx } from './ui'
@@ -11,13 +12,13 @@ type Tab = 'activity' | 'details' | 'money' | 'files' | 'audit'
 
 /** Phone: full screen. Tablet & laptop: a drawer over the board (a fixed 420px column would squeeze the board to a
  *  couple of columns). Wide screens (≥1536px): a column beside the board. */
-const PANEL = cx('panel fixed inset-0 z-30 flex flex-col bg-surface',
+const PANEL = cx('panel fixed inset-0 z-30 flex flex-col bg-white/88 backdrop-blur-2xl',
   'md:start-auto md:w-[420px] md:border-s md:border-line md:shadow-[0_0_40px_rgb(11_46_74/0.18)]',
   '2xl:static 2xl:z-auto 2xl:flex-none 2xl:shadow-none')
 
 export function DealPanel({ id, onClose }: { id: number; onClose: () => void }) {
   const deal = useDeal(id)
-  const me = useMe()
+  const { can } = useAccess()
   const d = deal.data
   const contact = useContact(d?.contact.id ?? 0)
   const stages = useStages(d?.pipeline)
@@ -40,8 +41,11 @@ export function DealPanel({ id, onClose }: { id: number; onClose: () => void }) 
   if (deal.isLoading || !d) return <aside className={PANEL}><Spinner /></aside>
   const lost = stages.data?.find((s) => s.type === 'LOST')
   const isDemand = d.kind === 'BUY' || d.kind === 'RENT'
+  const a = accessOf(d)
   const tabs: [Tab, string, number?][] = [['activity', 'النشاط'], ['details', isDemand ? 'المواصفات والمطابقة' : 'التفاصيل'],
-    ...(d.kind === 'FINISHING' ? [['money', 'الدراسة والدفعات'] as [Tab, string]] : []), ['files', 'الملفات', docs.data?.count], ['audit', 'سجل التعديلات']]
+    ...(d.kind === 'FINISHING' && can('finance.view') ? [['money', 'الدراسة والدفعات'] as [Tab, string]] : []),
+    ...(can('documents.view') ? [['files', 'الملفات', docs.data?.count] as [Tab, string, number?]] : []),
+    ...(can('audit.view') ? [['audit', 'سجل التعديلات'] as [Tab, string]] : [])]
 
   return (
     <aside className={PANEL}>
@@ -59,7 +63,7 @@ export function DealPanel({ id, onClose }: { id: number; onClose: () => void }) 
 
         <div className="mt-3 grid grid-cols-[auto_minmax(0,1fr)] [overflow-wrap:anywhere] items-center gap-x-3 gap-y-2 text-[13px]">
           <span className="text-faint">المرحلة</span>
-          <Select value={d.stage.id} className="h-8" onChange={(e) => {
+          <Select value={d.stage.id} className="h-8" disabled={!a.edit} title={a.edit ? undefined : 'ما عندك صلاحية تعدّل هالطلب'} onChange={(e) => {
             const st = stages.data?.find((s) => s.id === Number(e.target.value))
             if (st?.type === 'LOST') setDialog('lost')
             else if (st) save.mutate({ id: d.id, body: { stage_id: st.id } })
@@ -76,14 +80,16 @@ export function DealPanel({ id, onClose }: { id: number; onClose: () => void }) 
         </div>
         <div className="mt-2"><AttentionBadges d={d} /></div>
         <div className="mt-3.5 flex flex-wrap gap-2">
-          <Button variant="primary" size="sm" onClick={() => { setLogType('CALL'); setDialog('log') }}>سجّل تواصل</Button>
-          <Button size="sm" onClick={() => setDialog('plan')}>موعد / مهمة</Button>
-          <Button size="sm" onClick={() => setDialog('upload')}>رفع ملف</Button>
-          <Button size="sm" variant="ghost" onClick={() => setDialog('edit')}>تعديل</Button>
-          {isDemand && d.property && <Button size="sm" variant="ghost" onClick={() => convert.mutate(d.id)}>حوّل لطلب إكساء</Button>}
-          {d.status === 'OPEN' && lost && <Button size="sm" variant="ghost" onClick={() => setDialog('lost')}>خسارة</Button>}
-          <Button size="sm" variant="ghost" onClick={() => save.mutate({ id: d.id, body: { is_archived: !d.is_archived } })}>{d.is_archived ? 'استرجاع' : 'أرشفة'}</Button>
-          {me.data?.can_delete && <Button size="sm" variant="danger" onClick={async () => { if (confirm('حذف الطلب نهائياً؟')) { await remove.mutateAsync(`/api/v1/deals/${d.id}/`); onClose() } }}>حذف</Button>}
+          {can('activities.create') && <>
+            <Button variant="primary" size="sm" onClick={() => { setLogType('CALL'); setDialog('log') }}>سجّل تواصل</Button>
+            <Button size="sm" onClick={() => setDialog('plan')}>موعد / مهمة</Button>
+          </>}
+          {can('documents.upload') && <Button size="sm" onClick={() => setDialog('upload')}>رفع ملف</Button>}
+          {a.edit && <Button size="sm" variant="ghost" onClick={() => setDialog('edit')}>تعديل</Button>}
+          {isDemand && d.property && can('deals.create') && <Button size="sm" variant="ghost" onClick={() => convert.mutate(d.id)}>حوّل لطلب إكساء</Button>}
+          {a.edit && d.status === 'OPEN' && lost && <Button size="sm" variant="ghost" onClick={() => setDialog('lost')}>خسارة</Button>}
+          {a.edit && <Button size="sm" variant="ghost" onClick={() => save.mutate({ id: d.id, body: { is_archived: !d.is_archived } })}>{d.is_archived ? 'استرجاع' : 'أرشفة'}</Button>}
+          {a.delete && <Button size="sm" variant="danger" onClick={async () => { if (confirm('حذف الطلب نهائياً؟')) { await remove.mutateAsync(`/api/v1/deals/${d.id}/`); onClose() } }}>حذف</Button>}
         </div>
       </div>
 
@@ -91,8 +97,8 @@ export function DealPanel({ id, onClose }: { id: number; onClose: () => void }) 
         <Tabs value={tab} onChange={setTab} items={tabs} />
         {tab === 'activity' && <Timeline scope={{ deal: d.id }} />}
         {tab === 'details' && <Details id={d.id} />}
-        {tab === 'money' && <Money id={d.id} contract={d.contract_amount} paid={d.paid_amount} onQuote={() => setDialog('quote')} onPay={() => setDialog('payment')} />}
-        {tab === 'files' && <DocumentList docs={docs.data?.results ?? []} canDelete={me.data?.can_delete} />}
+        {tab === 'money' && <Money id={d.id} contract={d.contract_amount} paid={d.paid_amount} manage={can('finance.manage')} onQuote={() => setDialog('quote')} onPay={() => setDialog('payment')} />}
+        {tab === 'files' && <DocumentList docs={docs.data?.results ?? []} />}
         {tab === 'audit' && <AuditList model="deal" id={d.id} />}
       </div>
 
@@ -156,7 +162,7 @@ function Details({ id }: { id: number }) {
                   <div key={p.id} className="flex items-center gap-2 border-b border-line px-3 py-2 text-[13px] last:border-0">
                     <Link to={`/properties/${p.id}`} className="font-medium">{p.code}</Link>
                     <span className="flex-1 truncate text-muted">{[p.type, p.location, p.area_m2 && `${Number(p.area_m2)}م`, money(p.price || p.rent_monthly)].filter(Boolean).join(' · ')}</span>
-                    <Select className="h-7 w-24! text-[12px]" value={m.status ?? ''} onChange={(e) => setMatch.mutate({ property_id: p.id, status: e.target.value as never })}>
+                    <Select className="h-7 w-24! text-[12px]" disabled={!accessOf(d).edit} value={m.status ?? ''} onChange={(e) => setMatch.mutate({ property_id: p.id, status: e.target.value as never })}>
                       <option value="">—</option>{Object.entries(MATCH_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                     </Select>
                   </div>
@@ -170,7 +176,7 @@ function Details({ id }: { id: number }) {
   )
 }
 
-function Money({ id, contract, paid, onQuote, onPay }: { id: number; contract?: string | null; paid?: string | null; onQuote: () => void; onPay: () => void }) {
+function Money({ id, contract, paid, manage, onQuote, onPay }: { id: number; contract?: string | null; paid?: string | null; manage: boolean; onQuote: () => void; onPay: () => void }) {
   const quotes = useQuotes(id)
   const payments = usePayments(id)
   const remaining = contract ? Number(contract) - Number(paid ?? 0) : null
@@ -178,7 +184,7 @@ function Money({ id, contract, paid, onQuote, onPay }: { id: number; contract?: 
     <div className="flex flex-col gap-4">
       <div>
         <div className="mb-2 flex items-center"><h3 className="m-0 text-[13px] font-medium text-muted">الدراسات / عروض الأسعار</h3>
-          <Button size="sm" variant="ghost" className="ms-auto" onClick={onQuote}>+ دراسة</Button></div>
+          {manage && <Button size="sm" variant="ghost" className="ms-auto" onClick={onQuote}>+ دراسة</Button>}</div>
         {!quotes.data?.length ? <Empty title="ما في دراسة لسا" /> : (
           <Card>{quotes.data.map((q) => (
             <div key={q.id} className="flex items-center gap-2 border-b border-line px-3 py-2 text-[13px] last:border-0">
@@ -190,7 +196,7 @@ function Money({ id, contract, paid, onQuote, onPay }: { id: number; contract?: 
       </div>
       <div>
         <div className="mb-2 flex items-center"><h3 className="m-0 text-[13px] font-medium text-muted">الدفعات</h3>
-          <Button size="sm" variant="ghost" className="ms-auto" onClick={onPay}>+ دفعة</Button></div>
+          {manage && <Button size="sm" variant="ghost" className="ms-auto" onClick={onPay}>+ دفعة</Button>}</div>
         {contract && (
           <div className="mb-2 grid grid-cols-3 gap-2 text-center text-[13px]">
             <Card className="p-2"><div className="text-faint">العقد</div><div className="num">{money(contract)}</div></Card>
