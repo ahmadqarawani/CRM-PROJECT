@@ -1,0 +1,2342 @@
+openapi: 3.0.3
+info:
+  title: CRM API
+  version: 1.0.0
+paths:
+  /api/v1/activities/:
+    get:
+      operationId: v1_activities_list
+      description: 'Activities are a log: create and read only. "I contacted the client"
+        is a POST here.'
+      parameters:
+      - in: query
+        name: client
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: رقم الصفحة ضمن النتائج المقسمة.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: عدد النتائج التي يجب إرجاعها في كل صفحة.
+        schema:
+          type: integer
+      - in: query
+        name: request
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedActivityList'
+          description: ''
+    post:
+      operationId: v1_activities_create
+      description: 'Activities are a log: create and read only. "I contacted the client"
+        is a POST here.'
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ActivityRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ActivityRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+          description: ''
+  /api/v1/apartments/:
+    get:
+      operationId: v1_apartments_list
+      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
+        true}.'
+      parameters:
+      - in: query
+        name: archived
+        schema:
+          type: boolean
+      - in: query
+        name: client
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: رقم الصفحة ضمن النتائج المقسمة.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: عدد النتائج التي يجب إرجاعها في كل صفحة.
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedApartmentList'
+          description: ''
+    post:
+      operationId: v1_apartments_create
+      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
+        true}.'
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApartmentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ApartmentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ApartmentRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Apartment'
+          description: ''
+  /api/v1/apartments/{id}/:
+    get:
+      operationId: v1_apartments_retrieve
+      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
+        true}.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا apartment.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Apartment'
+          description: ''
+    patch:
+      operationId: v1_apartments_partial_update
+      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
+        true}.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا apartment.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedApartmentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedApartmentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedApartmentRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Apartment'
+          description: ''
+  /api/v1/auth/csrf/:
+    get:
+      operationId: v1_auth_csrf_retrieve
+      description: 'Call once on app start (and after login/logout): sets the csrftoken
+        cookie.'
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/v1/auth/login/:
+    post:
+      operationId: v1_auth_login_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+  /api/v1/auth/logout/:
+    post:
+      operationId: v1_auth_logout_create
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/auth/me/:
+    get:
+      operationId: v1_auth_me_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+  /api/v1/clients/:
+    get:
+      operationId: v1_clients_list
+      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
+        true}.'
+      parameters:
+      - in: query
+        name: archived
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      - in: query
+        name: overdue
+        schema:
+          type: boolean
+      - name: page
+        required: false
+        in: query
+        description: رقم الصفحة ضمن النتائج المقسمة.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: عدد النتائج التي يجب إرجاعها في كل صفحة.
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+      - in: query
+        name: tag
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedClientList'
+          description: ''
+    post:
+      operationId: v1_clients_create
+      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
+        true}.'
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ClientRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ClientRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+          description: ''
+  /api/v1/clients/{id}/:
+    get:
+      operationId: v1_clients_retrieve
+      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
+        true}.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا client.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+          description: ''
+    patch:
+      operationId: v1_clients_partial_update
+      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
+        true}.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا client.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedClientRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedClientRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedClientRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+          description: ''
+  /api/v1/dashboard/:
+    get:
+      operationId: v1_dashboard_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/documents/:
+    get:
+      operationId: v1_documents_list
+      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
+        true}.'
+      parameters:
+      - in: query
+        name: apartment
+        schema:
+          type: integer
+      - in: query
+        name: archived
+        schema:
+          type: boolean
+      - in: query
+        name: category
+        schema:
+          type: string
+      - in: query
+        name: client
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: رقم الصفحة ضمن النتائج المقسمة.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: عدد النتائج التي يجب إرجاعها في كل صفحة.
+        schema:
+          type: integer
+      - in: query
+        name: request
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDocumentList'
+          description: ''
+    post:
+      operationId: v1_documents_create
+      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
+        true}.'
+      tags:
+      - v1
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DocumentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DocumentRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
+  /api/v1/documents/{id}/:
+    get:
+      operationId: v1_documents_retrieve
+      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
+        true}.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا document.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
+    patch:
+      operationId: v1_documents_partial_update
+      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
+        true}.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا document.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
+  /api/v1/documents/{id}/file/:
+    get:
+      operationId: v1_documents_file_retrieve
+      description: |-
+        Auth is checked here; the bytes are sent by nginx (X-Accel-Redirect) in production.
+        FileResponse under ASGI would read the whole file through Python.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا document.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/v1/notifications/:
+    get:
+      operationId: v1_notifications_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: رقم الصفحة ضمن النتائج المقسمة.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: عدد النتائج التي يجب إرجاعها في كل صفحة.
+        schema:
+          type: integer
+      - in: query
+        name: unread
+        schema:
+          type: boolean
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNotificationList'
+          description: ''
+  /api/v1/notifications/{id}/:
+    patch:
+      operationId: v1_notifications_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا notification.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedNotificationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedNotificationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedNotificationRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/v1/notifications/read-all/:
+    post:
+      operationId: v1_notifications_read_all_create
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/requests/:
+    get:
+      operationId: v1_requests_list
+      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
+        true}.'
+      parameters:
+      - in: query
+        name: apartment
+        schema:
+          type: integer
+      - in: query
+        name: archived
+        schema:
+          type: boolean
+      - in: query
+        name: assignee
+        schema:
+          type: string
+        description: user id or 'me'
+      - in: query
+        name: client
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      - in: query
+        name: overdue
+        schema:
+          type: boolean
+      - name: page
+        required: false
+        in: query
+        description: رقم الصفحة ضمن النتائج المقسمة.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: عدد النتائج التي يجب إرجاعها في كل صفحة.
+        schema:
+          type: integer
+      - in: query
+        name: stage
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - LOST
+          - OPEN
+          - WON
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRequestList'
+          description: ''
+    post:
+      operationId: v1_requests_create
+      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
+        true}.'
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RequestRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Request'
+          description: ''
+  /api/v1/requests/{id}/:
+    get:
+      operationId: v1_requests_retrieve
+      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
+        true}.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا request.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Request'
+          description: ''
+    patch:
+      operationId: v1_requests_partial_update
+      description: 'No DELETE by default: removal is archiving via PATCH {"is_archived":
+        true}.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا request.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRequestRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Request'
+          description: ''
+  /api/v1/search/:
+    get:
+      operationId: v1_search_retrieve
+      parameters:
+      - in: query
+        name: q
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/stages/:
+    get:
+      operationId: v1_stages_list
+      description: |-
+        DELETE works only for a stage that was never used (PROTECT -> 409); otherwise
+        PATCH {"is_active": false}.
+      parameters:
+      - in: query
+        name: include_inactive
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Stage'
+          description: ''
+    post:
+      operationId: v1_stages_create
+      description: |-
+        DELETE works only for a stage that was never used (PROTECT -> 409); otherwise
+        PATCH {"is_active": false}.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StageRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StageRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StageRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stage'
+          description: ''
+  /api/v1/stages/{id}/:
+    get:
+      operationId: v1_stages_retrieve
+      description: |-
+        DELETE works only for a stage that was never used (PROTECT -> 409); otherwise
+        PATCH {"is_active": false}.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا stage.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stage'
+          description: ''
+    patch:
+      operationId: v1_stages_partial_update
+      description: |-
+        DELETE works only for a stage that was never used (PROTECT -> 409); otherwise
+        PATCH {"is_active": false}.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا stage.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedStageRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedStageRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedStageRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stage'
+          description: ''
+    delete:
+      operationId: v1_stages_destroy
+      description: |-
+        DELETE works only for a stage that was never used (PROTECT -> 409); otherwise
+        PATCH {"is_active": false}.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا stage.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/tasks/:
+    get:
+      operationId: v1_tasks_list
+      parameters:
+      - in: query
+        name: assignee
+        schema:
+          type: string
+        description: user id or 'me'
+      - in: query
+        name: client
+        schema:
+          type: integer
+      - in: query
+        name: done
+        schema:
+          type: boolean
+      - in: query
+        name: due
+        schema:
+          type: string
+          enum:
+          - overdue
+          - today
+          - week
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: رقم الصفحة ضمن النتائج المقسمة.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: عدد النتائج التي يجب إرجاعها في كل صفحة.
+        schema:
+          type: integer
+      - in: query
+        name: request
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTaskList'
+          description: ''
+    post:
+      operationId: v1_tasks_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+  /api/v1/tasks/{id}/:
+    get:
+      operationId: v1_tasks_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا task.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+    patch:
+      operationId: v1_tasks_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا task.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+    delete:
+      operationId: v1_tasks_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: نوع رقم صحيح فريد يحدد هذا task.
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/timeline/:
+    get:
+      operationId: v1_timeline_retrieve
+      description: Activities + stage changes + uploaded files for one client or one
+        request, newest first.
+      parameters:
+      - in: query
+        name: client
+        schema:
+          type: integer
+      - in: query
+        name: request
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/users/:
+    get:
+      operationId: v1_users_list
+      description: Active users, for assignee pickers.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: أي حقل يجب استخدامه عند ترتيب النتائج.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserRef'
+          description: ''
+components:
+  schemas:
+    Activity:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        body:
+          type: string
+        client_id:
+          type: integer
+        request_id:
+          type: integer
+          nullable: true
+        by:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          readOnly: true
+          nullable: true
+        at:
+          type: string
+          format: date-time
+      required:
+      - by
+      - client_id
+      - id
+      - type
+    ActivityRequest:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        body:
+          type: string
+        client_id:
+          type: integer
+        request_id:
+          type: integer
+          nullable: true
+        at:
+          type: string
+          format: date-time
+      required:
+      - client_id
+      - type
+    Apartment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        client:
+          allOf:
+          - $ref: '#/components/schemas/ClientRef'
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        address:
+          type: string
+          maxLength: 300
+        floor:
+          type: string
+          maxLength: 20
+        area_m2:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          nullable: true
+        rooms:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        notes:
+          type: string
+        is_archived:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - client
+      - created_at
+      - id
+      - title
+      - updated_at
+    ApartmentRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+      required:
+      - id
+      - title
+    ApartmentRefRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+      required:
+      - title
+    ApartmentRequest:
+      type: object
+      properties:
+        client_id:
+          type: integer
+          writeOnly: true
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        address:
+          type: string
+          maxLength: 300
+        floor:
+          type: string
+          maxLength: 20
+        area_m2:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          nullable: true
+        rooms:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        notes:
+          type: string
+        is_archived:
+          type: boolean
+      required:
+      - client_id
+      - title
+    BlankEnum:
+      enum:
+      - ''
+    CategoryEnum:
+      enum:
+      - CONTRACT
+      - QUOTE
+      - PLAN
+      - INVOICE
+      - PHOTO
+      - OTHER
+      type: string
+      description: |-
+        * `CONTRACT` - عقد
+        * `QUOTE` - عرض سعر
+        * `PLAN` - مخطط
+        * `INVOICE` - فاتورة
+        * `PHOTO` - صور
+        * `OTHER` - أخرى
+    Client:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        phone:
+          type: string
+          nullable: true
+          maxLength: 30
+        whatsapp:
+          type: string
+          maxLength: 30
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        city:
+          type: string
+          maxLength: 100
+        source:
+          type: string
+          maxLength: 50
+        tags:
+          type: array
+          items:
+            type: string
+            maxLength: 40
+        notes:
+          type: string
+        last_contact_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        open_requests:
+          type: integer
+          readOnly: true
+          default: 0
+        has_overdue:
+          type: boolean
+          readOnly: true
+          default: false
+        is_archived:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - has_overdue
+      - id
+      - last_contact_at
+      - name
+      - open_requests
+      - updated_at
+    ClientRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+      required:
+      - id
+      - name
+    ClientRefRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+      required:
+      - name
+    ClientRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        phone:
+          type: string
+          nullable: true
+          maxLength: 30
+        whatsapp:
+          type: string
+          maxLength: 30
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        city:
+          type: string
+          maxLength: 100
+        source:
+          type: string
+          maxLength: 50
+        tags:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 40
+        notes:
+          type: string
+        is_archived:
+          type: boolean
+      required:
+      - name
+    ClosesAsEnum:
+      enum:
+      - WON
+      - LOST
+      type: string
+      description: |-
+        * `WON` - تم
+        * `LOST` - ملغي
+    Document:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        url:
+          type: string
+          readOnly: true
+        original_name:
+          type: string
+          readOnly: true
+        content_type:
+          type: string
+          readOnly: true
+        size_bytes:
+          type: integer
+          readOnly: true
+        category:
+          $ref: '#/components/schemas/CategoryEnum'
+        client_id:
+          type: integer
+          nullable: true
+        apartment_id:
+          type: integer
+          nullable: true
+        request_id:
+          type: integer
+          nullable: true
+        uploaded_by:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          readOnly: true
+          nullable: true
+        is_archived:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - content_type
+      - created_at
+      - id
+      - original_name
+      - size_bytes
+      - uploaded_by
+      - url
+    DocumentRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+          writeOnly: true
+        category:
+          $ref: '#/components/schemas/CategoryEnum'
+        client_id:
+          type: integer
+          nullable: true
+        apartment_id:
+          type: integer
+          nullable: true
+        request_id:
+          type: integer
+          nullable: true
+        is_archived:
+          type: boolean
+      required:
+      - file
+    KindEnum:
+      enum:
+      - REQUEST_OVERDUE
+      - TASK_DUE
+      - TASK_ASSIGNED
+      type: string
+      description: |-
+        * `REQUEST_OVERDUE` - Request Overdue
+        * `TASK_DUE` - Task Due
+        * `TASK_ASSIGNED` - Task Assigned
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          minLength: 1
+      required:
+      - password
+      - username
+    Me:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        name:
+          type: string
+        is_admin:
+          type: boolean
+      required:
+      - id
+      - is_admin
+      - name
+      - username
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/KindEnum'
+          readOnly: true
+        message:
+          type: string
+          readOnly: true
+        request:
+          allOf:
+          - $ref: '#/components/schemas/RequestRef'
+          readOnly: true
+          nullable: true
+        task:
+          allOf:
+          - $ref: '#/components/schemas/TaskRef'
+          readOnly: true
+          nullable: true
+        is_read:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - is_read
+      - kind
+      - message
+      - request
+      - task
+    OverdueReasonsEnum:
+      enum:
+      - FOLLOWUP_DUE
+      - STAGE_SLA
+      - NO_CONTACT
+      type: string
+      description: |-
+        * `FOLLOWUP_DUE` - FOLLOWUP_DUE
+        * `STAGE_SLA` - STAGE_SLA
+        * `NO_CONTACT` - NO_CONTACT
+    PaginatedActivityList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Activity'
+    PaginatedApartmentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Apartment'
+    PaginatedClientList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Client'
+    PaginatedDocumentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Document'
+    PaginatedNotificationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+    PaginatedRequestList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Request'
+    PaginatedTaskList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+    PatchedApartmentRequest:
+      type: object
+      properties:
+        client_id:
+          type: integer
+          writeOnly: true
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        address:
+          type: string
+          maxLength: 300
+        floor:
+          type: string
+          maxLength: 20
+        area_m2:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          nullable: true
+        rooms:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        notes:
+          type: string
+        is_archived:
+          type: boolean
+    PatchedClientRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        phone:
+          type: string
+          nullable: true
+          maxLength: 30
+        whatsapp:
+          type: string
+          maxLength: 30
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        city:
+          type: string
+          maxLength: 100
+        source:
+          type: string
+          maxLength: 50
+        tags:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 40
+        notes:
+          type: string
+        is_archived:
+          type: boolean
+    PatchedDocumentRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+          writeOnly: true
+        category:
+          $ref: '#/components/schemas/CategoryEnum'
+        client_id:
+          type: integer
+          nullable: true
+        apartment_id:
+          type: integer
+          nullable: true
+        request_id:
+          type: integer
+          nullable: true
+        is_archived:
+          type: boolean
+    PatchedNotificationRequest:
+      type: object
+      properties:
+        is_read:
+          type: boolean
+    PatchedRequestRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+        budget:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        priority:
+          $ref: '#/components/schemas/PriorityEnum'
+        client_id:
+          type: integer
+          writeOnly: true
+        apartment_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        stage_id:
+          type: integer
+          writeOnly: true
+        assignee_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        next_follow_up_at:
+          type: string
+          format: date-time
+          nullable: true
+        is_archived:
+          type: boolean
+    PatchedStageRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        color:
+          type: string
+          minLength: 1
+          maxLength: 7
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        sla_days:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        requires_follow_up:
+          type: boolean
+        closes_as:
+          oneOf:
+          - $ref: '#/components/schemas/ClosesAsEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        is_active:
+          type: boolean
+    PatchedTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        due_at:
+          type: string
+          format: date-time
+        is_done:
+          type: boolean
+        client_id:
+          type: integer
+          nullable: true
+        request_id:
+          type: integer
+          nullable: true
+        assignee_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+    PriorityEnum:
+      enum:
+      - LOW
+      - NORMAL
+      - HIGH
+      type: string
+      description: |-
+        * `LOW` - Low
+        * `NORMAL` - Normal
+        * `HIGH` - High
+    Request:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        budget:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        priority:
+          $ref: '#/components/schemas/PriorityEnum'
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          readOnly: true
+        client:
+          allOf:
+          - $ref: '#/components/schemas/ClientRef'
+          readOnly: true
+        apartment:
+          allOf:
+          - $ref: '#/components/schemas/ApartmentRef'
+          readOnly: true
+          nullable: true
+        stage:
+          allOf:
+          - $ref: '#/components/schemas/StageRef'
+          readOnly: true
+        assignee:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          readOnly: true
+          nullable: true
+        next_follow_up_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_contact_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        stage_entered_at:
+          type: string
+          format: date-time
+          readOnly: true
+        days_in_stage:
+          type: integer
+          readOnly: true
+        is_overdue:
+          type: boolean
+          readOnly: true
+        overdue_reasons:
+          type: array
+          items:
+            $ref: '#/components/schemas/OverdueReasonsEnum'
+          readOnly: true
+        is_archived:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - apartment
+      - assignee
+      - client
+      - created_at
+      - days_in_stage
+      - id
+      - is_overdue
+      - last_contact_at
+      - overdue_reasons
+      - stage
+      - stage_entered_at
+      - status
+      - title
+      - updated_at
+    RequestRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+      required:
+      - id
+      - title
+    RequestRefRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+      required:
+      - title
+    RequestRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+        budget:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        priority:
+          $ref: '#/components/schemas/PriorityEnum'
+        client_id:
+          type: integer
+          writeOnly: true
+        apartment_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        stage_id:
+          type: integer
+          writeOnly: true
+        assignee_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+        next_follow_up_at:
+          type: string
+          format: date-time
+          nullable: true
+        is_archived:
+          type: boolean
+      required:
+      - client_id
+      - title
+    Stage:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 80
+        color:
+          type: string
+          maxLength: 7
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        sla_days:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        requires_follow_up:
+          type: boolean
+        closes_as:
+          oneOf:
+          - $ref: '#/components/schemas/ClosesAsEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        is_active:
+          type: boolean
+      required:
+      - id
+      - name
+      - order
+    StageRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 80
+        color:
+          type: string
+          maxLength: 7
+      required:
+      - id
+      - name
+    StageRefRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        color:
+          type: string
+          minLength: 1
+          maxLength: 7
+      required:
+      - name
+    StageRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        color:
+          type: string
+          minLength: 1
+          maxLength: 7
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        sla_days:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        requires_follow_up:
+          type: boolean
+        closes_as:
+          oneOf:
+          - $ref: '#/components/schemas/ClosesAsEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        is_active:
+          type: boolean
+      required:
+      - name
+      - order
+    StatusEnum:
+      enum:
+      - OPEN
+      - WON
+      - LOST
+      type: string
+      description: |-
+        * `OPEN` - Open
+        * `WON` - Won
+        * `LOST` - Lost
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        due_at:
+          type: string
+          format: date-time
+        is_done:
+          type: boolean
+        done_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        client_id:
+          type: integer
+          nullable: true
+        request_id:
+          type: integer
+          nullable: true
+        assignee:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - assignee
+      - created_at
+      - done_at
+      - due_at
+      - id
+      - title
+    TaskRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+      required:
+      - id
+      - title
+    TaskRefRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+      required:
+      - title
+    TaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        due_at:
+          type: string
+          format: date-time
+        is_done:
+          type: boolean
+        client_id:
+          type: integer
+          nullable: true
+        request_id:
+          type: integer
+          nullable: true
+        assignee_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+      required:
+      - due_at
+      - title
+    TypeEnum:
+      enum:
+      - CALL
+      - WHATSAPP
+      - VISIT
+      - NOTE
+      type: string
+      description: |-
+        * `CALL` - مكالمة
+        * `WHATSAPP` - واتساب
+        * `VISIT` - زيارة
+        * `NOTE` - ملاحظة
+    UserRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+      required:
+      - id
+      - name
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

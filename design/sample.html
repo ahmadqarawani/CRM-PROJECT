@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BGI CRM — عيّنة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #13263A;
+    --navy: #0B2E4A;
+    --primary: #0A5A9C;
+    --primary-hover: #084B83;
+    --accent: #F26B1D;
+    --accent-soft: #FDEEE4;
+    --mint: #7CC9BC;
+    --mint-soft: #E3F3EE;
+    --danger: #C8432F;
+    --bg: #F5F6F8;
+    --surface: #FFFFFF;
+    --subtle: #F0F2F5;
+    --border: #E3E7EC;
+    --border-strong: #D4DAE1;
+    --muted: #5E6E7E;
+    --faint: #8A97A4;
+    --radius: 8px;
+    --sans: "IBM Plex Sans Arabic", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: var(--sans); font-size: 14px; line-height: 1.5;
+    color: var(--ink); background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: var(--mono); font-size: 12.5px; letter-spacing: -0.01em; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+
+  .app { display: grid; grid-template-columns: 232px 1fr 380px; height: 100vh; }
+
+  /* ---------- sidebar ---------- */
+  .side { background: var(--surface); border-inline-end: 1px solid var(--border); display: flex; flex-direction: column; padding: 16px 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 18px; }
+  .brand b { font-weight: 600; color: var(--navy); font-size: 18px; letter-spacing: .02em; }
+  .brand small { display: block; color: var(--faint); font-size: 10.5px; letter-spacing: .14em; margin-top: -2px; }
+  .nav { display: flex; flex-direction: column; gap: 2px; }
+  .nav a { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 6px; color: var(--muted); text-decoration: none; }
+  .nav a:hover { background: var(--subtle); color: var(--ink); }
+  .nav a.on { background: #E8EFF6; color: var(--navy); font-weight: 500; }
+  .nav svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.6; flex: none; }
+  .nav .count { margin-inline-start: auto; font-family: var(--mono); font-size: 11.5px; color: var(--faint); }
+  .nav .count.hot { color: var(--accent); }
+  .nav-label { font-size: 11.5px; color: var(--faint); padding: 18px 10px 6px; }
+  .me { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px 8px 2px; border-top: 1px solid var(--border); }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 600; background: #E4ECF5; color: var(--navy); flex: none; }
+
+  /* ---------- main ---------- */
+  .main { display: flex; flex-direction: column; min-width: 0; }
+  .top { display: flex; align-items: center; gap: 12px; padding: 18px 24px 12px; }
+  .top h1 { font-size: 20px; font-weight: 600; margin: 0; color: var(--navy); }
+  .top .sub { color: var(--muted); }
+  .search { margin-inline-start: auto; display: flex; align-items: center; gap: 8px; height: 34px; width: 260px; padding: 0 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--faint); }
+  .kbd { margin-inline-start: auto; font-family: var(--mono); font-size: 11px; border: 1px solid var(--border); border-radius: 4px; padding: 0 5px; }
+  .btn { height: 34px; padding: 0 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); }
+  .btn:hover { border-color: var(--border-strong); }
+  .btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 500; }
+  .btn.primary:hover { background: var(--primary-hover); }
+
+  .bar { display: flex; align-items: center; gap: 8px; padding: 0 24px 14px; border-bottom: 1px solid var(--border); }
+  .chip { height: 28px; padding: 0 10px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+  .chip.on { border-color: #BFD3E6; background: #EEF4FA; color: var(--primary); }
+  .chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  .bar .spacer { flex: 1; }
+  .bar .meta { color: var(--faint); font-size: 13px; }
+
+  /* ---------- board ---------- */
+  .board { flex: 1; overflow: auto; display: flex; gap: 14px; padding: 16px 24px 24px; align-items: flex-start; }
+  .col { width: 268px; flex: none; }
+  .col-head { display: flex; align-items: center; gap: 8px; padding: 2px 4px 10px; }
+  .col-head .sw { width: 8px; height: 8px; border-radius: 50%; }
+  .col-head b { font-weight: 500; }
+  .col-head .n { font-family: var(--mono); font-size: 12px; color: var(--faint); }
+  .col-head .late { margin-inline-start: auto; font-size: 12px; color: var(--accent); }
+  .cards { display: flex; flex-direction: column; gap: 8px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: border-color .12s; }
+  .card:hover { border-color: var(--border-strong); }
+  .card.sel { border-color: var(--primary); box-shadow: 0 0 0 3px #0A5A9C1A; }
+  .card .body { padding: 10px 12px 10px; }
+  .card h3 { margin: 0 0 2px; font-size: 14px; font-weight: 500; }
+  .card .who { color: var(--muted); font-size: 13px; }
+  .card .row { display: flex; align-items: center; gap: 8px; margin-top: 8px; color: var(--faint); font-size: 12.5px; }
+  .card .row .avatar { width: 22px; height: 22px; font-size: 10.5px; margin-inline-start: auto; }
+  .pri { font-size: 11.5px; padding: 1px 7px; border-radius: 4px; background: var(--subtle); color: var(--muted); }
+  .pri.high { background: #FBEDE6; color: #A8481A; }
+  .next { display: flex; align-items: center; gap: 7px; padding: 7px 12px; border-top: 1px solid var(--border); background: #FAFBFC; font-size: 12.5px; color: var(--muted); }
+  .next .d { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); flex: none; }
+  .next.late { background: var(--accent-soft); color: #9A4512; border-top-color: #F6D9C6; }
+  .next.late .d { background: var(--accent); }
+  .next.today .d { background: var(--primary); }
+  .next.today { color: var(--primary); }
+  .next .when { margin-inline-start: auto; font-family: var(--mono); font-size: 11.5px; }
+  .add { border: 1px dashed var(--border-strong); background: transparent; border-radius: var(--radius); height: 34px; color: var(--faint); }
+
+  /* ---------- client panel ---------- */
+  .panel { background: var(--surface); border-inline-start: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
+  .p-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--border); }
+  .p-head .kicker { color: var(--faint); font-size: 12px; display: flex; gap: 8px; }
+  .p-head h2 { margin: 4px 0 2px; font-size: 18px; font-weight: 600; color: var(--navy); }
+  .p-head .line { color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; }
+  .tags { display: flex; gap: 6px; margin-top: 10px; }
+  .tag { font-size: 12px; padding: 1px 8px; border-radius: 4px; background: var(--subtle); color: var(--muted); }
+  .p-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .p-actions .btn { height: 32px; font-size: 13px; }
+
+  .fresh { margin-top: 14px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; font-size: 12.5px; color: var(--muted); }
+  .fresh .track { height: 6px; border-radius: 3px; background: var(--subtle); overflow: hidden; }
+  .fresh .fill { height: 100%; width: 72%; background: linear-gradient(to left, var(--accent), #F7A06E); border-radius: 3px; }
+
+  .tabs { display: flex; gap: 18px; padding: 0 20px; border-bottom: 1px solid var(--border); }
+  .tabs button { background: none; border: 0; padding: 11px 0 10px; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tabs button.on { color: var(--navy); border-bottom-color: var(--navy); font-weight: 500; }
+  .tabs .n { font-family: var(--mono); font-size: 11.5px; color: var(--faint); }
+
+  .p-body { overflow: auto; padding: 16px 20px 24px; }
+  .sec { font-size: 12px; color: var(--faint); margin: 4px 0 8px; }
+  .step { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; }
+  .step .ck { width: 16px; height: 16px; border: 1.5px solid var(--border-strong); border-radius: 4px; margin-top: 2px; flex: none; }
+  .step .t { font-weight: 500; }
+  .step .s { color: var(--muted); font-size: 12.5px; }
+  .step.late { border-color: #F6D9C6; background: var(--accent-soft); }
+  .step.late .s { color: #9A4512; }
+
+  .tl { position: relative; margin-top: 18px; }
+  .tl::before { content: ""; position: absolute; inset-inline-start: 7px; top: 6px; bottom: 6px; width: 1px; background: var(--border); }
+  .ev { position: relative; padding-inline-start: 26px; padding-bottom: 16px; }
+  .ev .ic { position: absolute; inset-inline-start: 0; top: 2px; width: 15px; height: 15px; border-radius: 50%; background: var(--surface); border: 1.5px solid var(--border-strong); }
+  .ev.call .ic { border-color: var(--primary); }
+  .ev.stage .ic { border-color: var(--mint); background: var(--mint-soft); }
+  .ev.doc .ic { border-color: var(--navy); }
+  .ev .h { display: flex; gap: 8px; align-items: baseline; }
+  .ev .h b { font-weight: 500; }
+  .ev .h .when { margin-inline-start: auto; color: var(--faint); }
+  .ev p { margin: 2px 0 0; color: var(--muted); }
+  .stagepill { font-size: 12px; padding: 0 7px; border-radius: 4px; }
+  .file { display: flex; align-items: center; gap: 10px; margin-top: 6px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; }
+  .file .pdf { width: 28px; height: 34px; border-radius: 3px; border: 1px solid var(--border-strong); display: grid; place-items: end center; font-family: var(--mono); font-size: 9px; color: var(--danger); padding-bottom: 3px; background: #fff; }
+  .file .nm { font-weight: 500; font-size: 13px; }
+  .file .sz { color: var(--faint); font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- sidebar -->
+  <aside class="side">
+    <div class="brand">
+      <svg width="34" height="30" viewBox="0 0 34 30" aria-hidden="true">
+        <circle cx="21.5" cy="9" r="8.5" fill="#7CC9BC" fill-opacity=".9"/>
+        <circle cx="9" cy="13" r="8.5" fill="#F26B1D" fill-opacity=".92"/>
+        <circle cx="18" cy="20.5" r="9" fill="#0A5A9C" fill-opacity=".95"/>
+      </svg>
+      <div><b>BGI</b><small>REAL ESTATE</small></div>
+    </div>
+    <nav class="nav">
+      <a href="#"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></svg>اليوم<span class="count hot">6</span></a>
+      <a href="#"><svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c.8-3 3-4.6 5.5-4.6s4.7 1.6 5.5 4.6"/><path d="M15.5 6.2a3 3 0 0 1 0 5.6M17.5 14.6c1.5.6 2.5 2 3 4.4"/></svg>العملاء<span class="count">148</span></a>
+      <a href="#" class="on"><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="5" height="15" rx="1.2"/><rect x="10" y="4.5" width="5" height="10" rx="1.2"/><rect x="16.5" y="4.5" width="4" height="7" rx="1.2"/></svg>الطلبات<span class="count">37</span></a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"/><path d="M9.5 20v-6h5v6"/></svg>الشقق<span class="count">92</span></a>
+      <a href="#"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8.5 12 2.4 2.4 4.6-4.8"/></svg>المهام<span class="count">9</span></a>
+      <div class="nav-label">أخرى</div>
+      <a href="#"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="4" rx="1"/><path d="M5 9v10h14V9M10 13h4"/></svg>الأرشيف</a>
+      <a href="#"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M6 18l1.4-1.4M16.6 7.4 18 6"/></svg>الإعدادات</a>
+    </nav>
+    <div class="me"><span class="avatar">س</span><div><div>سامر</div><div style="color:var(--faint);font-size:12px">مسؤول مبيعات</div></div></div>
+  </aside>
+
+  <!-- board -->
+  <main class="main">
+    <div class="top">
+      <div>
+        <h1>الطلبات</h1>
+        <div class="sub">الخميس 6 تشرين الثاني · <span style="color:var(--accent)">4 متابعات متأخرة</span></div>
+      </div>
+      <div class="search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4-4"/></svg>
+        ابحث عن عميل، شقة، طلب…
+        <span class="kbd">Ctrl K</span>
+      </div>
+      <button class="btn primary">+ طلب جديد</button>
+    </div>
+    <div class="bar">
+      <span class="chip on">كل الطلبات</span>
+      <span class="chip">طلباتي</span>
+      <span class="chip"><span class="dot"></span>المتأخر فقط</span>
+      <span class="spacer"></span>
+      <span class="meta">مرتبة: المتأخر أولاً، بعدين حسب موعد المتابعة</span>
+    </div>
+
+    <div class="board">
+      <!-- column -->
+      <section class="col">
+        <div class="col-head"><span class="sw" style="background:#9AA7B4"></span><b>طلب جديد</b><span class="n">3</span></div>
+        <div class="cards">
+          <article class="card">
+            <div class="body">
+              <h3>إكساء شقة كاملة</h3>
+              <div class="who">ليلى حداد · المالكي، بناء 12</div>
+              <div class="row"><span class="mono">#1043</span><span class="avatar">ر</span></div>
+            </div>
+            <div class="next today"><span class="d"></span>اتصال تعارف<span class="when">اليوم 14:00</span></div>
+          </article>
+          <article class="card">
+            <div class="body">
+              <h3>تقييم شقة للبيع</h3>
+              <div class="who">مازن الخطيب</div>
+              <div class="row"><span class="mono">#1044</span><span class="avatar">س</span></div>
+            </div>
+            <div class="next"><span class="d"></span>إرسال قائمة الأوراق<span class="when">السبت</span></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="col">
+        <div class="col-head"><span class="sw" style="background:#5B93C4"></span><b>معاينة</b><span class="n">2</span></div>
+        <div class="cards">
+          <article class="card">
+            <div class="body">
+              <h3>ترميم مطبخ وحمّامين</h3>
+              <div class="who">رامي سعد · المزة فيلات</div>
+              <div class="row"><span class="pri high">عاجل</span><span class="mono">#1031</span><span class="avatar">س</span></div>
+            </div>
+            <div class="next late"><span class="d"></span>تأكيد موعد المعاينة<span class="when">من يومين</span></div>
+          </article>
+          <article class="card">
+            <div class="body">
+              <h3>فرز شقة إلى استوديوهين</h3>
+              <div class="who">هالة نصر · مشروع دمر</div>
+              <div class="row"><span class="mono">#1036</span><span class="avatar">ر</span></div>
+            </div>
+            <div class="next"><span class="d"></span>معاينة الموقع<span class="when">الأحد 10:30</span></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="col">
+        <div class="col-head"><span class="sw" style="background:#E8A06C"></span><b>عرض سعر</b><span class="n">3</span><span class="late">1 متأخر</span></div>
+        <div class="cards">
+          <article class="card sel">
+            <div class="body">
+              <h3>إكساء شقة المزة</h3>
+              <div class="who">أحمد سليمان · المزة، بناء 4</div>
+              <div class="row"><span class="pri high">عاجل</span><span class="mono">#1027</span><span class="avatar">س</span></div>
+            </div>
+            <div class="next late"><span class="d"></span>متابعة عرض السعر<span class="when">من 3 أيام</span></div>
+          </article>
+          <article class="card">
+            <div class="body">
+              <h3>عزل سطح وواجهة</h3>
+              <div class="who">نور الأتاسي</div>
+              <div class="row"><span class="mono">#1029</span><span class="avatar">ر</span></div>
+            </div>
+            <div class="next today"><span class="d"></span>إرسال العرض المعدّل<span class="when">اليوم</span></div>
+          </article>
+          <article class="card">
+            <div class="body">
+              <h3>تجهيز شقة للإيجار</h3>
+              <div class="who">كريم داود · أبو رمانة</div>
+              <div class="row"><span class="mono">#1033</span><span class="avatar">س</span></div>
+            </div>
+            <div class="next"><span class="d"></span>انتظار رد العميل<span class="when">الإثنين</span></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="col">
+        <div class="col-head"><span class="sw" style="background:#7E93B0"></span><b>عقد</b><span class="n">1</span></div>
+        <div class="cards">
+          <article class="card">
+            <div class="body">
+              <h3>إكساء طابقين — مكتب</h3>
+              <div class="who">شركة الندى · كفرسوسة</div>
+              <div class="row"><span class="mono">#1019</span><span class="avatar">ر</span></div>
+            </div>
+            <div class="next"><span class="d"></span>توقيع العقد<span class="when">الثلاثاء</span></div>
+          </article>
+          <button class="add">+ إضافة</button>
+        </div>
+      </section>
+
+      <section class="col">
+        <div class="col-head"><span class="sw" style="background:#7CC9BC"></span><b>تنفيذ</b><span class="n">2</span></div>
+        <div class="cards">
+          <article class="card">
+            <div class="body">
+              <h3>إكساء شقة الشعلان</h3>
+              <div class="who">فادي عيسى</div>
+              <div class="row"><span class="mono">#1011</span><span class="avatar">س</span></div>
+            </div>
+            <div class="next"><span class="d"></span>زيارة متابعة الورشة<span class="when">بعد 4 أيام</span></div>
+          </article>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- client panel -->
+  <aside class="panel">
+    <div class="p-head">
+      <div class="kicker"><span>عميل</span><span class="mono">#C-0213</span></div>
+      <h2>أحمد سليمان</h2>
+      <div class="line"><span class="mono" dir="ltr">+963 991 234 567</span><span>دمشق</span></div>
+      <div class="tags"><span class="tag">إحالة</span><span class="tag">2 طلبات</span><span class="tag">شقتين</span></div>
+      <div class="fresh"><span>آخر تواصل</span><div class="track"><div class="fill"></div></div><span style="color:#9A4512">قبل 6 أيام</span></div>
+      <div class="p-actions">
+        <button class="btn primary">سجّل تواصل</button>
+        <button class="btn">مهمة</button>
+        <button class="btn">رفع ملف</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="on">النشاط</button>
+      <button>الطلبات <span class="n">2</span></button>
+      <button>الشقق <span class="n">2</span></button>
+      <button>الملفات <span class="n">7</span></button>
+    </div>
+
+    <div class="p-body">
+      <div class="sec">الخطوات الجاية</div>
+      <div class="step late"><span class="ck"></span><div><div class="t">متابعة عرض السعر</div><div class="s">إكساء شقة المزة · كان مطلوب يوم الإثنين</div></div></div>
+      <div class="step"><span class="ck"></span><div><div class="t">معاينة الشقة التانية</div><div class="s">المزة، بناء 9 · الأحد 11:00</div></div></div>
+
+      <div class="tl">
+        <div class="ev doc">
+          <span class="ic"></span>
+          <div class="h"><b>رفع عرض سعر</b><span class="when mono">03/11</span></div>
+          <div class="file"><span class="pdf">PDF</span><div><div class="nm">عرض سعر — المزة بناء 4.pdf</div><div class="sz">عرض سعر · 1.2 MB · سامر</div></div></div>
+        </div>
+        <div class="ev stage">
+          <span class="ic"></span>
+          <div class="h"><b>انتقل لمرحلة</b><span class="stagepill" style="background:#FDF0E7;color:#9A4512">عرض سعر</span><span class="when mono">03/11</span></div>
+        </div>
+        <div class="ev call">
+          <span class="ic"></span>
+          <div class="h"><b>مكالمة</b><span class="when mono">31/10</span></div>
+          <p>بدّه خشب للمطبخ بدل الألمنيوم، والميزانية بحدود اللي اتفقنا عليه.</p>
+        </div>
+        <div class="ev doc">
+          <span class="ic"></span>
+          <div class="h"><b>رفع مخطط</b><span class="when mono">28/10</span></div>
+          <div class="file"><span class="pdf">PDF</span><div><div class="nm">مخطط الشقة.pdf</div><div class="sz">مخطط · 3.4 MB · رامي</div></div></div>
+        </div>
+        <div class="ev">
+          <span class="ic"></span>
+          <div class="h"><b>طلب جديد</b><span class="when mono">27/10</span></div>
+          <p>إكساء شقة المزة · مصدره إحالة</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>
+</body>
+</html>

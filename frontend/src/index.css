@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+/* BGI tokens — derived from the logo. Colour carries meaning; everything else is neutral. */
+@theme {
+  --font-sans: "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --color-ink: #13263a;
+  --color-navy: #0b2e4a;
+  --color-primary: #0a5a9c;
+  --color-primary-hover: #084b83;
+  --color-primary-soft: #e8eff6;
+  --color-accent: #f26b1d;
+  --color-accent-ink: #9a4512;
+  --color-accent-soft: #fdeee4;
+  --color-accent-line: #f6d9c6;
+  --color-mint: #7cc9bc;
+  --color-mint-soft: #e3f3ee;
+  --color-mint-ink: #2f6f63;
+  --color-danger: #c8432f;
+  --color-danger-soft: #f8e7e3;
+
+  --color-bg: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-subtle: #f0f2f5;
+  --color-line: #e3e7ec;
+  --color-line-strong: #d4dae1;
+  --color-muted: #5e6e7e;
+  --color-faint: #8a97a4;
+
+  --radius-card: 8px;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-ink);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* numbers & dates: tabular mono, always LTR so "12/03" never flips */
+.num {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  letter-spacing: -0.01em;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+dialog::backdrop {
+  background: rgb(11 46 74 / 0.28);
+}
