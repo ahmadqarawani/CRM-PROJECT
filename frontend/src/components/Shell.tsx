@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { api, unwrap, type Me } from '../api/client'
 import { useDashboard, useMarkNotification, useNotifications, useReadAll } from '../api/hooks'
@@ -86,8 +87,8 @@ export function Shell({ me }: { me: Me }) {
   return (
     <div className="grid h-full grid-cols-1 md:grid-cols-[244px_1fr]">
       <SectionBackdrop />
-      <aside className="glass-strong z-10 hidden flex-col overflow-y-auto border-e border-white/70 px-3 py-4 shadow-[1px_0_0_rgb(11_46_74/0.05),8px_0_30px_-20px_rgb(11_46_74/0.25)] md:flex">
-        <div className="mb-4"><BrandMark section={section} /></div>
+      <aside className="glass-strong z-10 hidden flex-col overflow-x-hidden overflow-y-auto border-e border-white/70 px-3 py-4 shadow-[1px_0_0_rgb(11_46_74/0.05),8px_0_30px_-20px_rgb(11_46_74/0.25)] md:flex">
+        <div className="mb-4 flex justify-center"><BrandMark section={section} /></div>
         <button
           onClick={() => setSearchOpen(true)}
           className="btn btn-glass mb-4 flex h-9 items-center gap-2 rounded-[var(--r-ctl)] border border-white/80 px-2.5 text-[13px] text-faint hover:text-ink"
@@ -197,14 +198,27 @@ function NotificationList({ onPicked }: { onPicked: () => void }) {
   const mark = useMarkNotification()
   const readAll = useReadAll()
   const navigate = useNavigate()
+  const unread = list.data?.results.filter((n) => !n.is_read).length ?? 0
   return (
     <>
-      <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
-        <b className="font-medium">الإشعارات</b>
-        <button onClick={() => readAll.mutate()} className="text-[12.5px] text-primary hover:underline">اعتبرها كلها مقروءة</button>
+      <div className="flex items-center gap-2 border-b border-line/70 px-4 py-3">
+        <b className="font-semibold text-navy">الإشعارات</b>
+        {unread > 0 && <span className="num rounded-full bg-accent-soft px-1.5 text-[11.5px] text-accent-ink">{unread} جديد</span>}
+        {unread > 0 && (
+          <button onClick={() => readAll.mutate()} className="ms-auto rounded-full px-2 py-0.5 text-[12.5px] text-primary transition hover:bg-primary-soft">
+            اعتبرها كلها مقروءة
+          </button>
+        )}
       </div>
-      <div className="max-h-[360px] overflow-auto">
-        {list.data?.results.length === 0 && <div className="px-4 py-6 text-center text-[13px] text-faint">ما في إشعارات</div>}
+      <div className="max-h-[min(380px,60dvh)] overflow-y-auto">
+        {list.isLoading && <div className="px-4 py-8 text-center text-[13px] text-faint">عم يحمّل…</div>}
+        {list.data?.results.length === 0 && (
+          <div className="flex flex-col items-center gap-2 px-6 py-9 text-center">
+            <span className="grid size-11 place-items-center rounded-full bg-primary-soft text-primary"><Icon d={I.bell} size={20} /></span>
+            <div className="font-medium text-ink">ما في إشعارات</div>
+            <div className="text-[12.5px] text-faint">رح نخبرك هون بالمواعيد يلي اقتربت والطلبات يلي انسندتلك</div>
+          </div>
+        )}
         {list.data?.results.map((n) => (
           <button
             key={n.id}
@@ -213,7 +227,7 @@ function NotificationList({ onPicked }: { onPicked: () => void }) {
               onPicked()
               navigate(n.deal_id ? `/finishing?open=${n.deal_id}` : '/')
             }}
-            className={cx('flex w-full items-start gap-2.5 border-b border-line px-4 py-2.5 text-start last:border-0 hover:bg-bg', !n.is_read && 'bg-accent-soft/40')}
+            className={cx('flex w-full items-start gap-2.5 border-b border-line/70 px-4 py-3 text-start transition-colors last:border-0 hover:bg-primary-soft/50', !n.is_read && 'bg-accent-soft/35')}
           >
             <span className={cx('mt-1.5 size-2 flex-none rounded-full', n.is_read ? 'bg-line-strong' : n.kind === 'ACTIVITY_OVERDUE' ? 'bg-accent' : 'bg-primary')} />
             <span className="min-w-0 flex-1">
@@ -227,28 +241,50 @@ function NotificationList({ onPicked }: { onPicked: () => void }) {
   )
 }
 
+/** The bell lives in the (scrollable) sidebar, so its panel is portalled to <body> with a fixed position
+ *  above the bell — inside the sidebar it would be clipped and add a sideways scrollbar. */
 function Bell({ unread }: { unread: number }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState<{ bottom: number; right: number } | null>(null)
+  const btn = useRef<HTMLButtonElement>(null)
+  const panel = useRef<HTMLDivElement>(null)
+  const open = pos !== null
+  const toggle = () => {
+    if (open) return setPos(null)
+    const r = btn.current!.getBoundingClientRect()
+    // open upwards, its right edge a little past the bell, so it spreads over the page (RTL: sidebar on the right)
+    setPos({ bottom: window.innerHeight - r.top + 10, right: Math.max(8, window.innerWidth - r.right - 14) })
+  }
 
   useEffect(() => {
     if (!open) return
-    const close = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false)
-    document.addEventListener('mousedown', close)
-    return () => document.removeEventListener('mousedown', close)
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as Node
+      if (!panel.current?.contains(t) && !btn.current?.contains(t)) setPos(null)
+    }
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setPos(null)
+    const close = () => setPos(null)
+    document.addEventListener('mousedown', onDown)
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('resize', close)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('resize', close)
+    }
   }, [open])
 
   return (
-    <div ref={ref} className="relative">
-      <button onClick={() => setOpen(!open)} className="relative rounded-md p-1.5 text-muted hover:bg-subtle hover:text-ink" aria-label="الإشعارات">
+    <>
+      <button ref={btn} onClick={toggle} aria-expanded={open} aria-label="الإشعارات"
+        className={cx('relative grid size-8 place-items-center rounded-full text-muted transition hover:bg-white hover:text-ink', open && 'bg-white text-primary shadow-sm')}>
         <Icon d={I.bell} size={18} />
-        {unread > 0 && <span className="num absolute -top-0.5 -left-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] text-white">{unread}</span>}
+        {unread > 0 && <span className="num absolute -top-0.5 -left-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] text-white ring-2 ring-white">{unread}</span>}
       </button>
-      {open && (
-        <div className="glass absolute bottom-12 right-0 z-40 w-[340px] overflow-hidden rounded-[16px]">
-          <NotificationList onPicked={() => setOpen(false)} />
-        </div>
-      )}
-    </div>
+      {pos && createPortal(
+        <div ref={panel} role="dialog" aria-label="الإشعارات" style={{ bottom: pos.bottom, right: pos.right }}
+          className="fixed z-50 w-[min(360px,calc(100vw-16px))] overflow-hidden rounded-[var(--r-lg)] border border-white bg-white/95 shadow-[0_0_0_1px_rgb(11_46_74/0.06),0_24px_60px_-20px_rgb(11_46_74/0.5)] backdrop-blur-xl [animation:pop_.16s_var(--ease)]">
+          <NotificationList onPicked={() => setPos(null)} />
+        </div>, document.body)}
+    </>
   )
 }

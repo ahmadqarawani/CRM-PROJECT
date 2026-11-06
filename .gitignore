@@ -2,3 +2,5 @@
 data-import/import-report.txt
 data-import/*.csv
 data-import/*.xlsx
+/*.csv
+/*.xlsx

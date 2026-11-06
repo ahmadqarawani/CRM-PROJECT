@@ -39,11 +39,11 @@ const LOGO = {
 
 /** Sidebar brand: the section's own logo, or both logos in a square split by its diagonal. */
 export function BrandMark({ section }: { section: Section }) {
-  if (section === 'brand') return <BrandSquare />
+  if (section === 'brand') return <BrandSquare className="w-[136px]" />
   const logo = LOGO[section]
   return (
     // keyed by section so the logo fades in when you switch
-    <div key={section} className="brand-single px-3 py-3.5">
+    <div key={section} className="brand-single w-full px-3 py-3.5">
       <img src={logo.src} alt={logo.alt} className="block h-auto w-full" draggable={false} />
     </div>
   )
