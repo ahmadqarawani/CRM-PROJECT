@@ -178,6 +178,8 @@ def test_password_reset_flow(user, settings):
         assert c.post("/api/v1/auth/password-reset/", {"login": "nobody"}, format="json").json() == {"email_enabled": True}
         assert c.post("/api/v1/auth/password-reset/", {"login": "STAFF@example.com"}, format="json").status_code == 200
     assert len(mail.outbox) == 1 and "/reset-password?uid=" in mail.outbox[0].body
+    html, kind = mail.outbox[0].alternatives[0]
+    assert kind == "text/html" and "/reset-password?uid=" in html and 'dir="rtl"' in html
 
     url = reset_link(user)
     uid, token = url.split("uid=")[1].split("&token=")

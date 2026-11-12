@@ -426,8 +426,12 @@ paths:
       security:
       - cookieAuth: []
       responses:
-        '204':
-          description: No response body
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestEmailSent'
+          description: ''
   /api/v1/admin/users/:
     get:
       operationId: v1_admin_users_list
@@ -6779,6 +6783,13 @@ components:
         * `HOT` - ساخن
         * `WARM` - دافئ
         * `COLD` - بارد
+    TestEmailSent:
+      type: object
+      properties:
+        to:
+          type: string
+      required:
+      - to
     UserAdmin:
       type: object
       description: Users get a role (what they may do); "active" switches the account

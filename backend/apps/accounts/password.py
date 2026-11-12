@@ -16,6 +16,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Q
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes, force_str
+from django.utils.html import escape
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.views.decorators.csrf import csrf_protect
 from drf_spectacular.utils import extend_schema, inline_serializer
@@ -59,6 +60,39 @@ def check_new_password(password: str, user, field: str = "password"):
         raise serializers.ValidationError({field: list(e.messages)}) from None
 
 
+def reset_email(user, url: str) -> tuple[str, str]:
+    """Plain text + HTML (RTL, inline styles: mail clients drop <style> and CSS files)."""
+    name = user.get_full_name() or user.get_username()
+    hours = link_hours()
+    text = (f"مرحبا {name}،\n\n"
+            f"حدا طلب إعادة تعيين كلمة السر لحسابك ({user.get_username()}) بنظام BGI CRM.\n"
+            f"افتح هالرابط لتحط كلمة سر جديدة (بيشتغل مرة وحدة، ولمدة {hours} ساعة):\n\n{url}\n\n"
+            "إذا ما طلبت هالشي، تجاهل هالإيميل وكلمة السر بتضل متل ما هي.")
+    e = escape
+    html = f"""<!doctype html><html lang="ar" dir="rtl"><body style="margin:0;background:#f5f6f8;padding:24px 12px;
+font-family:Tahoma,Arial,sans-serif;color:#13263a">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#fff;
+border:1px solid #e3e7ec;border-radius:14px">
+<tr><td style="padding:28px 28px 8px;text-align:right">
+<div style="font-size:13px;color:#8a97a4;letter-spacing:.08em" dir="ltr">BGI · Bahri Group Investment</div>
+<h1 style="margin:12px 0 8px;font-size:20px;color:#0b2e4a">إعادة تعيين كلمة السر</h1>
+<p style="margin:0 0 6px;font-size:15px;line-height:1.7">مرحبا {e(name)}،</p>
+<p style="margin:0;font-size:15px;line-height:1.7">حدا طلب إعادة تعيين كلمة السر لحسابك
+<b dir="ltr">{e(user.get_username())}</b> بنظام <span dir="ltr" style="white-space:nowrap">BGI CRM</span>.</p>
+</td></tr>
+<tr><td style="padding:20px 28px" align="center">
+<a href="{e(url)}" style="display:inline-block;background:#0a5a9c;color:#fff;text-decoration:none;font-size:15px;
+font-weight:bold;padding:12px 26px;border-radius:10px">اختار كلمة سر جديدة</a>
+</td></tr>
+<tr><td style="padding:0 28px 24px;text-align:right;font-size:13px;line-height:1.7;color:#5e6e7e">
+الرابط بيشتغل <b>مرة وحدة</b> ولمدة {hours} ساعة. إذا الزر ما اشتغل، انسخ هالرابط:<br>
+<a href="{e(url)}" dir="ltr" style="color:#0a5a9c;word-break:break-all">{e(url)}</a>
+<p style="margin:16px 0 0;color:#8a97a4">إذا ما طلبت هالشي، تجاهل هالإيميل وكلمة السر بتضل متل ما هي.</p>
+</td></tr></table></td></tr></table></body></html>"""
+    return text, html
+
+
 def app_base(request) -> str:
     """The address the user is on (the SPA and the API share one origin: Vite proxy in dev, nginx in production)."""
     return request.build_absolute_uri("/").rstrip("/")
@@ -82,13 +116,9 @@ class PasswordResetRequestView(APIView):
         login = data.validated_data["login"].strip()
         user = User.objects.filter(Q(username__iexact=login) | Q(email__iexact=login), is_active=True).first()
         if user and user.email:
-            hours = link_hours()
-            body = (f"مرحبا {user.get_full_name() or user.get_username()}،\n\n"
-                    f"حدا طلب إعادة تعيين كلمة السر لحسابك ({user.get_username()}) بنظام BGI CRM.\n"
-                    f"افتح هالرابط لتحط كلمة سر جديدة (بيشتغل مرة وحدة، ولمدة {hours} ساعة):\n\n"
-                    f"{reset_link(user, app_base(request))}\n\n"
-                    "إذا ما طلبت هالشي، تجاهل هالإيميل وكلمة السر بتضل متل ما هي.")
-            send_mail_dynamic(subject="إعادة تعيين كلمة السر — BGI CRM", body=body, to=[user.email], fail_silently=True)
+            body, html = reset_email(user, reset_link(user, app_base(request)))
+            send_mail_dynamic(subject="إعادة تعيين كلمة السر — BGI CRM", body=body, html=html, to=[user.email],
+                              fail_silently=True)
         elif user:
             logger.info("password reset asked for %s, who has no email", user.get_username())
         # same answer either way: the form must not reveal which accounts exist

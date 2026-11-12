@@ -2,14 +2,15 @@
 
 import logging
 
-from django.core.mail import EmailMessage, get_connection
+from django.core.mail import EmailMultiAlternatives, get_connection
 
 from .models import SiteSettings
 
 logger = logging.getLogger(__name__)
 
 
-def send_mail_dynamic(*, subject: str, body: str, to: list[str], fail_silently: bool = False) -> bool:
+def send_mail_dynamic(*, subject: str, body: str, to: list[str], html: str | None = None, fail_silently: bool = False) -> bool:
+    """Plain text always (some clients show only that); `html` adds a formatted version."""
     s = SiteSettings.load()
     if not s.email_enabled or not s.smtp_username or not s.smtp_password:
         if not fail_silently:
@@ -21,7 +22,10 @@ def send_mail_dynamic(*, subject: str, body: str, to: list[str], fail_silently: 
         use_tls=s.smtp_use_tls, timeout=15, fail_silently=fail_silently,
     )
     try:
-        sent = EmailMessage(subject, body, s.from_email or s.smtp_username, to, connection=connection).send()
+        msg = EmailMultiAlternatives(subject, body, s.from_email or s.smtp_username, to, connection=connection)
+        if html:
+            msg.attach_alternative(html, "text/html")
+        sent = msg.send()
         return bool(sent)
     except Exception:
         logger.exception("sending email failed")

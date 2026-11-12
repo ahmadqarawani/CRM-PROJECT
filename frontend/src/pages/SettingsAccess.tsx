@@ -25,10 +25,11 @@ export function Users() {
   const roles = useRoles()
   const { me } = useAccess()
   const refresh = useRefresh()
-  const [form, setForm] = useState({ username: '', name: '', password: '', role_id: '' })
+  const [form, setForm] = useState({ username: '', name: '', email: '', password: '', role_id: '' })
   const [err, setErr] = useState<string>()
   const patch = (id: number, body: object) =>
     call('PATCH', `/api/v1/admin/users/${id}/`, body).then(refresh).catch((e) => alert((e as Error).message))
+  const [editFor, setEditFor] = useState<UserRow | null>(null)
   const [pwFor, setPwFor] = useState<UserRow | null>(null)
   const [linkFor, setLinkFor] = useState<UserRow | null>(null)
   const iAmSuper = !!users.data?.find((x) => x.id === me?.id)?.is_superuser
@@ -41,7 +42,9 @@ export function Users() {
             <Avatar name={u.name || u.username} size={34} />
             <div className="min-w-32 flex-1">
               <b className="font-medium">{u.name || u.username}</b>{u.id === me?.id && <span className="text-[12px] text-faint"> · أنت</span>}
-              <div className="text-[12px] text-faint" dir="ltr">{u.username}</div>
+              <div className="text-[12px] text-faint" dir="ltr">
+                {u.username} · {u.email || <span className="text-accent-ink" dir="rtl">بلا إيميل (ما بيوصله رابط «نسيت كلمة السر»)</span>}
+              </div>
             </div>
             {u.is_superuser
               ? <Badge tone="primary">مدير أعلى · كل الصلاحيات</Badge>
@@ -55,12 +58,14 @@ export function Users() {
             </label>
             {/* a superuser's account is only for another superuser (the server refuses too) */}
             {(!u.is_superuser || iAmSuper) && <>
+              <Button size="sm" variant="ghost" onClick={() => setEditFor(u)}>تعديل</Button>
               <Button size="sm" variant="ghost" onClick={() => setPwFor(u)}>كلمة سر جديدة</Button>
               <Button size="sm" variant="ghost" onClick={() => setLinkFor(u)}>رابط إعادة تعيين</Button>
             </>}
           </div>
         ))}
       </Card>
+      <EditUserDialog user={editFor} onClose={() => setEditFor(null)} onSaved={refresh} />
       <SetPasswordDialog user={pwFor} onClose={() => setPwFor(null)} />
       <ResetLinkDialog user={linkFor} onClose={() => setLinkFor(null)} />
 
@@ -71,12 +76,13 @@ export function Users() {
           setErr(undefined)
           try {
             await call('POST', '/api/v1/admin/users/', { ...form, role_id: form.role_id ? Number(form.role_id) : undefined })
-            setForm({ username: '', name: '', password: '', role_id: '' })
+            setForm({ username: '', name: '', email: '', password: '', role_id: '' })
             refresh()
           } catch (x) { setErr((x as Error).message) }
         }}>
           <Field label="اسم المستخدم"><Input dir="ltr" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} /></Field>
           <Field label="الاسم الظاهر"><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+          <Field label="الإيميل" hint="لرابط «نسيت كلمة السر» والإشعارات"><Input type="email" dir="ltr" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
           <Field label="كلمة السر" hint="8 أحرف على الأقل"><Input type="password" dir="ltr" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></Field>
           <Field label="الدور" hint="شو بيقدر يشوف ويعمل">
             <Select value={form.role_id} onChange={(e) => setForm({ ...form, role_id: e.target.value })}>
@@ -259,6 +265,37 @@ function ResetLinkDialog({ user, onClose }: { user: UserRow | null; onClose: () 
           </div>
         </div>
       )}
+    </Dialog>
+  )
+}
+
+/* ---------- admin: name & email (the email is where "forgot password" links go) ---------- */
+function EditUserDialog({ user, onClose, onSaved }: { user: UserRow | null; onClose: () => void; onSaved: () => void }) {
+  const [v, setV] = useState({ name: '', email: '' })
+  const [err, setErr] = useState<string>()
+  const [busy, setBusy] = useState(false)
+  useEffect(() => { setV({ name: user?.name ?? '', email: user?.email ?? '' }); setErr(undefined) }, [user])
+  const save = async () => {
+    if (!user) return
+    setBusy(true)
+    setErr(undefined)
+    try {
+      await call('PATCH', `/api/v1/admin/users/${user.id}/`, { name: v.name, email: v.email.trim() })
+      onSaved()
+      onClose()
+    } catch (e) { setErr((e as Error).message) } finally { setBusy(false) }
+  }
+  return (
+    <Dialog open={!!user} onClose={onClose} title={`تعديل ${user?.name || user?.username || ''}`}
+      footer={<><Button variant="primary" onClick={save} disabled={busy}>حفظ</Button><Button variant="ghost" onClick={onClose}>إلغاء</Button></>}>
+      <div className="flex flex-col gap-3">
+        <Field label="الاسم الظاهر"><Input data-autofocus value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} /></Field>
+        <Field label="الإيميل" hint="هون بيوصل رابط «نسيت كلمة السر». بدونه، الرابط بيعطيه المدير من «رابط إعادة تعيين»">
+          <Input type="email" dir="ltr" value={v.email} onChange={(e) => setV({ ...v, email: e.target.value })}
+            onKeyDown={(e) => { if (e.key === 'Enter') save() }} />
+        </Field>
+        <FormError message={err} />
+      </div>
     </Dialog>
   )
 }

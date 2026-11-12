@@ -280,7 +280,7 @@ class SiteSettingsView(APIView):
 class TestEmailView(APIView):
     permission_classes = [IsAuthenticated, Perm("admin.settings")]
 
-    @extend_schema(request=None, responses={204: None})
+    @extend_schema(request=None, responses=inline_serializer("TestEmailSent", {"to": serializers.CharField()}))
     def post(self, request):
         from apps.core.mail import send_mail_dynamic
 
@@ -289,4 +289,4 @@ class TestEmailView(APIView):
             send_mail_dynamic(subject="تجربة إيميل — BGI CRM", body="الإيميل شغّال ✓", to=[to])
         except (OSError, RuntimeError, smtplib.SMTPException) as exc:  # show SMTP errors to the admin
             raise serializers.ValidationError({"non_field_errors": [f"فشل الإرسال: {exc}"]}) from None
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({"to": to})

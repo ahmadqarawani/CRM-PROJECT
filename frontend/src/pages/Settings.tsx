@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { call, type Lookup, type Stage } from '../api/client'
 import { useCatalog, useSaveCatalog, useSaveStage, useStages, useUsers, type CatalogSlug } from '../api/hooks'
 import { Tabs } from '../components/bits'
-import { Button, Card, Dot, Empty, Field, Input, PageHeader, Select } from '../components/ui'
+import { Button, Card, Dot, Empty, Field, Input, PageHeader, Select, cx } from '../components/ui'
 import { useAccess } from '../lib/access'
 import { Roles, Users } from './SettingsAccess'
 
@@ -119,6 +119,9 @@ type SiteSettings = { email_enabled: boolean; smtp_host: string; smtp_port: numb
 
 function Email() {
   const q = useQuery({ queryKey: ['site-settings'], queryFn: () => call<SiteSettings>('GET', '/api/v1/admin/settings/') })
+  // who has no email: needs admin.users too; without it the check is just left out
+  const users = useQuery({ queryKey: ['admin-users'], retry: false,
+    queryFn: () => call<{ username: string; name: string; email: string; is_active: boolean }[]>('GET', '/api/v1/admin/users/') })
   const [s, setS] = useState<SiteSettings | null>(null)
   const [password, setPassword] = useState('')
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
@@ -131,12 +134,33 @@ function Email() {
   }
   const test = async () => {
     setMsg(null)
-    try { await call('POST', '/api/v1/admin/settings/test-email/'); setMsg({ ok: true, text: 'وصل إيميل تجربة ✓' }) }
+    try {
+      const r = await call<{ to: string }>('POST', '/api/v1/admin/settings/test-email/')
+      setMsg({ ok: true, text: `انبعت إيميل تجربة لـ ${r.to} ✓ — شوف صندوقك (والبريد غير المرغوب)` })
+    }
     catch (e) { setMsg({ ok: false, text: (e as Error).message }) }
   }
   const num = (k: keyof SiteSettings) => (e: React.ChangeEvent<HTMLInputElement>) => setS({ ...s, [k]: Number(e.target.value) })
+  // what "forgot password" needs, from what is saved (not what is typed and unsaved)
+  const saved = q.data
+  const noEmail = (users.data ?? []).filter((u) => u.is_active && !u.email).map((u) => u.name || u.username)
+  const checks: [boolean, string][] = [
+    [!!saved?.email_enabled, 'إرسال الإيميلات مفعّل'],
+    [!!saved?.smtp_username && !!saved?.smtp_password_set, 'حساب الإرسال وكلمة سر التطبيق محفوظين'],
+    ...(users.data ? [[noEmail.length === 0, noEmail.length ? `في مستخدمين بلا إيميل: ${noEmail.join('، ')}` : 'كل المستخدمين إلهم إيميل'] as [boolean, string]] : []),
+  ]
+  const ready = checks.every(([ok]) => ok)
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className={cx('sm:col-span-2 rounded-[var(--r-card)] border p-3.5', ready ? 'border-mint/50 bg-mint-soft/60' : 'border-accent-line bg-accent-soft/60')}>
+        <div className={cx('mb-1.5 font-medium', ready ? 'text-mint-ink' : 'text-accent-ink')}>
+          {ready ? '«نسيت كلمة السر» شغّال ✓' : '«نسيت كلمة السر» ما رح يبعت إيميلات لسا'}
+        </div>
+        <ul className="m-0 flex list-none flex-col gap-1 p-0 text-[13px]">
+          {checks.map(([ok, text]) => <li key={text} className={ok ? 'text-mint-ink' : 'text-accent-ink'}>{ok ? '✓' : '✗'} {text}</li>)}
+        </ul>
+        {!ready && <div className="mt-1.5 text-[12.5px] text-muted">لحد ما يجهز: «رابط إعادة تعيين» من تبويب المستخدمين بيشتغل بدون إيميل.</div>}
+      </div>
       <p className="sm:col-span-2 m-0 text-[13px] text-muted">Gmail: فعّل التحقق بخطوتين بحسابك، وبعدين اعمل <b>App Password</b> من إعدادات حساب Google وحطها هون (مش كلمة سر الحساب).</p>
       <label className="sm:col-span-2 flex items-center gap-2"><input type="checkbox" checked={s.email_enabled} onChange={(e) => setS({ ...s, email_enabled: e.target.checked })} />تفعيل إرسال الإيميلات</label>
       <Field label="الإيميل (اسم المستخدم)"><Input dir="ltr" value={s.smtp_username} onChange={(e) => setS({ ...s, smtp_username: e.target.value })} /></Field>
