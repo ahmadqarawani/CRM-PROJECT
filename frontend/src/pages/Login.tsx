@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { api, ensureCsrf, unwrap } from '../api/client'
 import { K } from '../api/hooks'
 import { BrandSquare, SectionBackdrop } from '../components/Brand'
@@ -51,6 +51,7 @@ export function Login() {
           <Button variant="primary" type="submit" disabled={formState.isSubmitting} className="mt-1">
             {formState.isSubmitting ? 'عم يدخل…' : 'دخول'}
           </Button>
+          <Link to="/forgot-password" className="text-center text-[13px] text-muted hover:text-primary">نسيت كلمة السر؟</Link>
         </div>
       </form>
     </div>

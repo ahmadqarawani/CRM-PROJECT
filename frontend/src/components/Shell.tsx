@@ -9,6 +9,7 @@ import { useLiveEvents } from '../lib/live'
 import { useAccess } from '../lib/access'
 import { ErrorBoundary } from './ErrorBoundary'
 import { BrandMark, SectionBackdrop, useSectionTheme } from './Brand'
+import { ChangePasswordDialog } from '../pages/Password'
 import { SearchPalette } from './SearchPalette'
 import { Avatar, cx } from './ui'
 
@@ -49,6 +50,7 @@ export function Shell({ me }: { me: Me }) {
   const [toast, setToast] = useState<string | null>(null)
   const [searchOpen, setSearchOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
+  const [pwOpen, setPwOpen] = useState(false)
   const dash = useDashboard()
   const unread = dash.data?.unread_notifications ?? 0
   const { can } = useAccess()
@@ -114,7 +116,11 @@ export function Shell({ me }: { me: Me }) {
           <div className="min-w-0 flex-1">
             <div className="truncate font-medium">{me.name}</div>
             {me.role && <div className="truncate text-[11.5px] text-faint">{(me.role as { name: string }).name}</div>}
-            <button onClick={logout} className="text-[12px] text-faint hover:text-ink">تسجيل خروج</button>
+            <div className="flex gap-2 text-[12px]">
+              <button onClick={() => setPwOpen(true)} className="text-faint hover:text-primary">كلمة السر</button>
+              <span className="text-line-strong">·</span>
+              <button onClick={logout} className="text-faint hover:text-ink">تسجيل خروج</button>
+            </div>
           </div>
           <Bell unread={unread} />
         </div>
@@ -136,7 +142,8 @@ export function Shell({ me }: { me: Me }) {
           {unread > 0 && <span className="absolute top-1.5 left-[calc(50%-14px)] size-2 rounded-full bg-accent" />}
         </button>
       </nav>
-      {moreOpen && <MoreSheet me={me} unread={unread} onLogout={logout} onClose={() => setMoreOpen(false)} />}
+      {moreOpen && <MoreSheet me={me} unread={unread} onLogout={logout} onPassword={() => { setMoreOpen(false); setPwOpen(true) }} onClose={() => setMoreOpen(false)} />}
+      <ChangePasswordDialog open={pwOpen} onClose={() => setPwOpen(false)} />
       {searchOpen && <SearchPalette onClose={() => setSearchOpen(false)} />}
       {toast && (
         <div className="fixed bottom-20 left-4 z-50 rounded-card border border-white/20 bg-navy/90 px-4 py-2.5 text-[13px] text-white shadow-[0_14px_30px_-12px_rgb(11_46_74/0.6)] backdrop-blur-md md:bottom-5 md:left-5">{toast}</div>
@@ -146,7 +153,7 @@ export function Shell({ me }: { me: Me }) {
 }
 
 /** Phones: everything the sidebar has that the bottom bar doesn't. */
-function MoreSheet({ me, unread, onLogout, onClose }: { me: Me; unread: number; onLogout: () => void; onClose: () => void }) {
+function MoreSheet({ me, unread, onLogout, onPassword, onClose }: { me: Me; unread: number; onLogout: () => void; onPassword: () => void; onClose: () => void }) {
   const [view, setView] = useState<'menu' | 'notifications'>('menu')
   const { can } = useAccess()
   const { pathname } = useLocation()
@@ -185,7 +192,8 @@ function MoreSheet({ me, unread, onLogout, onClose }: { me: Me; unread: number; 
               <Icon d={I.bell} size={18} />الإشعارات
               {unread > 0 && <span className="num ms-auto grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1.5 text-[11px] text-white">{unread}</span>}
             </button>
-            <button onClick={onLogout} className="mt-1 flex items-center gap-3 rounded-md border-t border-line px-3 py-3 text-start text-muted">تسجيل خروج</button>
+            <button onClick={onPassword} className="mt-1 flex items-center gap-3 rounded-md border-t border-line px-3 py-3 text-start text-muted">تغيير كلمة السر</button>
+            <button onClick={onLogout} className="flex items-center gap-3 rounded-md px-3 py-3 text-start text-muted">تسجيل خروج</button>
           </nav>
         )}
       </div>

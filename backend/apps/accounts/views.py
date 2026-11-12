@@ -4,8 +4,10 @@ from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.db import transaction
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -187,6 +189,7 @@ class UserAdminSerializer(serializers.ModelSerializer):
         role = data.pop("role_id", None)
         password = data.pop("password", None)
         me = self.context["request"].user
+        guard_superuser(user, me)
         if user.pk == me.pk and data.get("is_active") is False:
             raise serializers.ValidationError({"is_active": ["ما بتقدر توقّف حسابك"]})
         for k, v in data.items():
@@ -214,6 +217,12 @@ class UserAdminSerializer(serializers.ModelSerializer):
         return self._apply(instance, data)
 
 
+def guard_superuser(target, me):
+    """Someone with "manage users" must not take over a superuser by setting its password / sending it a link."""
+    if target.pk and target.is_superuser and not me.is_superuser:
+        raise PermissionDenied("بس المدير الأعلى بيعدّل حساب مدير أعلى")
+
+
 class UserAdminViewSet(viewsets.ModelViewSet):
     serializer_class = UserAdminSerializer
     permission_classes = [IsAuthenticated, Perm("admin.users")]
@@ -222,6 +231,17 @@ class UserAdminViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return get_user_model().objects.select_related("access__role").order_by("first_name", "username")
+
+    @extend_schema(request=None, responses=inline_serializer("ResetLink", {"url": serializers.CharField(),
+                                                                         "hours": serializers.IntegerField()}))
+    @action(detail=True, methods=["post"], url_path="reset-link")
+    def reset_link(self, request, pk=None):
+        """A one-time link to set a new password — for when the user has no email or email is off."""
+        from .password import app_base, link_hours, reset_link
+
+        user = self.get_object()
+        guard_superuser(user, request.user)
+        return Response({"url": reset_link(user, app_base(request)), "hours": link_hours()})
 
 
 # ---------- admin area: system settings ----------

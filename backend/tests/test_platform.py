@@ -97,7 +97,8 @@ def test_admin_creates_user_with_a_role(admin_api):
 @pytest.mark.django_db(transaction=True)
 def test_publish_only_on_commit():
     s = connection.settings_dict
-    conn = psycopg.connect(host=s["HOST"], port=s["PORT"], user=s["USER"], dbname=s["NAME"], autocommit=True)
+    conn = psycopg.connect(host=s["HOST"], port=s["PORT"], user=s["USER"], password=s["PASSWORD"] or None,
+                           dbname=s["NAME"], autocommit=True)
     conn.execute(f"LISTEN {CHANNEL}")
     with pytest.raises(RuntimeError), transaction.atomic():
         publish("request.changed", id=1)
@@ -153,3 +154,74 @@ def test_import_sheets(tmp_path, user):
     buy = Deal.objects.get(kind="BUY")
     assert (buy.demand.area_min, buy.demand.area_max, buy.demand.budget_max) == (100, 120, 80000)
     assert Path(leads).exists()
+
+
+@pytest.mark.django_db
+def test_password_reset_flow(user, settings):
+    from django.core import mail
+    from django.core.management import call_command
+
+    from apps.accounts.password import reset_link
+    from apps.core.models import SiteSettings
+
+    settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+    user.email = "staff@example.com"
+    user.save()
+    s = SiteSettings.load()
+    s.email_enabled, s.smtp_username, s.smtp_password = True, "crm@example.com", "x"
+    s.save()
+    c = APIClient()
+    from unittest.mock import patch
+
+    with patch("apps.core.mail.get_connection", return_value=mail.get_connection()):
+        # same answer for a real and an unknown account (no way to probe who exists)
+        assert c.post("/api/v1/auth/password-reset/", {"login": "nobody"}, format="json").json() == {"email_enabled": True}
+        assert c.post("/api/v1/auth/password-reset/", {"login": "STAFF@example.com"}, format="json").status_code == 200
+    assert len(mail.outbox) == 1 and "/reset-password?uid=" in mail.outbox[0].body
+
+    url = reset_link(user)
+    uid, token = url.split("uid=")[1].split("&token=")
+    assert c.post("/api/v1/auth/password-reset/check/", {"uid": uid, "token": token}, format="json").json()["username"] == "staff"
+    weak = c.post("/api/v1/auth/password-reset/confirm/", {"uid": uid, "token": token, "password": "123"}, format="json")
+    assert weak.status_code == 400 and "password" in weak.json()["errors"]
+    ok = c.post("/api/v1/auth/password-reset/confirm/", {"uid": uid, "token": token, "password": "Brand-new-pass-77"},
+                format="json")
+    assert ok.status_code == 204
+    user.refresh_from_db()
+    assert user.check_password("Brand-new-pass-77")
+    # the link dies once used
+    again = c.post("/api/v1/auth/password-reset/confirm/", {"uid": uid, "token": token, "password": "Other-pass-88"},
+                   format="json")
+    assert again.status_code == 400 and "token" in again.json()["errors"]
+
+    out = __import__("io").StringIO()
+    call_command("password_link", "STAFF", stdout=out)
+    assert "/reset-password?uid=" in out.getvalue()
+
+
+@pytest.mark.django_db
+def test_change_own_password_keeps_session(user):
+    c = APIClient()
+    c.login(username="staff", password="s3cret-pass!")
+    bad = c.post("/api/v1/auth/password/change/", {"current_password": "wrong", "new_password": "Brand-new-pass-77"},
+                 format="json")
+    assert bad.status_code == 400 and "current_password" in bad.json()["errors"]
+    r = c.post("/api/v1/auth/password/change/", {"current_password": "s3cret-pass!", "new_password": "Brand-new-pass-77"},
+               format="json")
+    assert r.status_code == 204
+    assert c.get("/api/v1/auth/me/").status_code == 200  # still logged in
+
+
+@pytest.mark.django_db
+def test_admin_reset_link_and_superuser_guard(admin_api, admin, user):
+    from django.contrib.auth import get_user_model
+
+    r = admin_api.post(f"/api/v1/admin/users/{user.pk}/reset-link/")
+    assert r.status_code == 200 and "/reset-password?uid=" in r.json()["url"]
+    boss = get_user_model().objects.create_superuser("owner", password="Owner-pass-123")
+    # admin role (not a superuser) can't take over a superuser account
+    assert admin_api.post(f"/api/v1/admin/users/{boss.pk}/reset-link/").status_code == 403
+    assert admin_api.patch(f"/api/v1/admin/users/{boss.pk}/", {"password": "Hijack-pass-123"},
+                           format="json").status_code == 403
+    boss.refresh_from_db()
+    assert boss.check_password("Owner-pass-123")

@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { call } from '../api/client'
-import { Avatar, Badge, Button, Card, Field, FormError, Input, Segmented, Select, Spinner, Switch, cx } from '../components/ui'
+import { Avatar, Badge, Button, Card, Dialog, Field, FormError, Input, Segmented, Select, Spinner, Switch, cx } from '../components/ui'
 import { useAccess } from '../lib/access'
 
 type RoleRef = { id: number; slug: string; name: string }
@@ -29,6 +29,9 @@ export function Users() {
   const [err, setErr] = useState<string>()
   const patch = (id: number, body: object) =>
     call('PATCH', `/api/v1/admin/users/${id}/`, body).then(refresh).catch((e) => alert((e as Error).message))
+  const [pwFor, setPwFor] = useState<UserRow | null>(null)
+  const [linkFor, setLinkFor] = useState<UserRow | null>(null)
+  const iAmSuper = !!users.data?.find((x) => x.id === me?.id)?.is_superuser
 
   return (
     <div>
@@ -50,12 +53,16 @@ export function Users() {
             <label className="flex items-center gap-2 text-[13px] text-muted">
               <Switch on={u.is_active} disabled={u.id === me?.id} onChange={(v) => patch(u.id, { is_active: v })} label="فعّال" />فعّال
             </label>
-            <Button size="sm" variant="ghost" onClick={() => { const pw = prompt('كلمة سر جديدة (8 أحرف على الأقل)'); if (pw) patch(u.id, { password: pw }) }}>
-              تغيير كلمة السر
-            </Button>
+            {/* a superuser's account is only for another superuser (the server refuses too) */}
+            {(!u.is_superuser || iAmSuper) && <>
+              <Button size="sm" variant="ghost" onClick={() => setPwFor(u)}>كلمة سر جديدة</Button>
+              <Button size="sm" variant="ghost" onClick={() => setLinkFor(u)}>رابط إعادة تعيين</Button>
+            </>}
           </div>
         ))}
       </Card>
+      <SetPasswordDialog user={pwFor} onClose={() => setPwFor(null)} />
+      <ResetLinkDialog user={linkFor} onClose={() => setLinkFor(null)} />
 
       <h3 className="mb-2 text-[14px] font-semibold text-navy">مستخدم جديد</h3>
       <Card className="p-4">
@@ -185,5 +192,73 @@ export function Roles() {
         </div>
       </div>
     </div>
+  )
+}
+
+/* ---------- admin: set a password, or hand over a one-time link ---------- */
+function SetPasswordDialog({ user, onClose }: { user: UserRow | null; onClose: () => void }) {
+  const [pw, setPw] = useState('')
+  const [err, setErr] = useState<string>()
+  const [busy, setBusy] = useState(false)
+  useEffect(() => { setPw(''); setErr(undefined) }, [user])
+  const save = async () => {
+    if (!user) return
+    setBusy(true)
+    setErr(undefined)
+    try {
+      await call('PATCH', `/api/v1/admin/users/${user.id}/`, { password: pw })
+      onClose()
+    } catch (e) { setErr((e as Error).message) } finally { setBusy(false) }
+  }
+  return (
+    <Dialog open={!!user} onClose={onClose} title={`كلمة سر جديدة لـ ${user?.name || user?.username || ''}`}
+      footer={<><Button variant="primary" onClick={save} disabled={busy || pw.length < 8}>حفظ</Button><Button variant="ghost" onClick={onClose}>إلغاء</Button></>}>
+      <div className="flex flex-col gap-3">
+        <Field label="كلمة السر الجديدة" hint="8 أحرف على الأقل. بلّغها للموظف بطريقة آمنة، أو استعمل «رابط إعادة تعيين» ليختارها هو">
+          <Input data-autofocus type="password" dir="ltr" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && pw.length >= 8) save() }} />
+        </Field>
+        <FormError message={err} />
+      </div>
+    </Dialog>
+  )
+}
+
+function ResetLinkDialog({ user, onClose }: { user: UserRow | null; onClose: () => void }) {
+  const [link, setLink] = useState<{ url: string; hours: number } | null>(null)
+  const [err, setErr] = useState<string>()
+  const [copied, setCopied] = useState(false)
+  useEffect(() => {
+    setLink(null)
+    setErr(undefined)
+    setCopied(false)
+    if (user) {
+      call<{ url: string; hours: number }>('POST', `/api/v1/admin/users/${user.id}/reset-link/`)
+        .then(setLink, (e) => setErr((e as Error).message))
+    }
+  }, [user])
+  const copy = async () => {
+    if (!link) return
+    try {
+      await navigator.clipboard.writeText(link.url)
+      setCopied(true)
+    } catch { setCopied(false) }
+  }
+  return (
+    <Dialog open={!!user} onClose={onClose} title={`رابط إعادة تعيين لـ ${user?.name || user?.username || ''}`}
+      footer={<Button variant="ghost" onClick={onClose}>إغلاق</Button>}>
+      {err ? <FormError message={err} /> : !link ? <Spinner /> : (
+        <div className="flex flex-col gap-3">
+          <p className="m-0 text-[13px] leading-relaxed text-muted">
+            ابعته للموظف (واتساب مثلاً). بيفتحه وبيختار كلمة سر جديدة بنفسه. بيشتغل <b>مرة وحدة</b> ولمدة{' '}
+            <span className="num">{link.hours}</span> ساعة، وبيبطل إذا تغيّرت كلمة السر.
+          </p>
+          <div className="flex items-center gap-2">
+            <Input readOnly dir="ltr" value={link.url} onFocus={(e) => e.target.select()} className="min-w-0 flex-1 font-mono text-[12px]" />
+            <Button variant="primary" onClick={copy}>{copied ? 'انتسخ ✓' : 'نسخ'}</Button>
+          </div>
+        </div>
+      )}
+    </Dialog>
   )
 }

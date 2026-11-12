@@ -162,7 +162,8 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": ["rest_framework.filters.OrderingFilter"],
     "EXCEPTION_HANDLER": "apps.core.exceptions.exception_handler",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    "DEFAULT_THROTTLE_RATES": {"login": env("LOGIN_THROTTLE_RATE", "10/min")},
+    "DEFAULT_THROTTLE_RATES": {"login": env("LOGIN_THROTTLE_RATE", "10/min"),
+                               "password_reset": env("PASSWORD_RESET_THROTTLE_RATE", "10/hour")},
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
 }
 
@@ -201,5 +202,9 @@ LOGGING = {
 AUDITLOG_INCLUDE_ALL_MODELS = True
 AUDITLOG_EXCLUDE_TRACKING_MODELS = ("sessions", "auditlog", "notifications", "contenttypes", "admin")
 AUDITLOG_DISABLE_REMOTE_ADDR = False
+
+# where people open the app: links in password-reset emails / password_link (the API builds them from the request)
+APP_URL = env("APP_URL", "http://localhost:5173")
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24  # reset links work for 24 hours
 
 SERVICE_AREA = ["دمشق", "ريف دمشق"]  # finishing outside these -> lost "خارج منطقة الخدمة" on import

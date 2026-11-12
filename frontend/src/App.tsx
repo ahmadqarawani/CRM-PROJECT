@@ -12,6 +12,7 @@ import { ContactDetail } from './pages/ContactDetail'
 import { Contacts } from './pages/Contacts'
 import { Duplicates } from './pages/Duplicates'
 import { Login } from './pages/Login'
+import { ForgotPassword, ResetPassword } from './pages/Password'
 import { Properties } from './pages/Properties'
 import { PropertyDetail } from './pages/PropertyDetail'
 import { Settings } from './pages/Settings'
@@ -37,6 +38,9 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={loggedIn ? <Navigate to="/" replace /> : <Login />} />
+      {/* public either way: a reset link must open even when someone else is logged in on this browser */}
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       {loggedIn ? (
         <Route element={<Shell me={me.data!} />}>
           <Route index element={<Today />} />

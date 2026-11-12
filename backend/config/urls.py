@@ -4,6 +4,12 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView
 from rest_framework.routers import SimpleRouter
 
+from apps.accounts.password import (
+    PasswordChangeView,
+    PasswordResetCheckView,
+    PasswordResetConfirmView,
+    PasswordResetRequestView,
+)
 from apps.accounts.views import (
     CsrfView,
     LoginView,
@@ -48,6 +54,10 @@ api = [
     path("auth/login/", LoginView.as_view()),
     path("auth/logout/", LogoutView.as_view()),
     path("auth/me/", MeView.as_view()),
+    path("auth/password-reset/", PasswordResetRequestView.as_view()),
+    path("auth/password-reset/check/", PasswordResetCheckView.as_view()),
+    path("auth/password-reset/confirm/", PasswordResetConfirmView.as_view()),
+    path("auth/password/change/", PasswordChangeView.as_view()),
     path("users/", UserListView.as_view()),
     path("admin/permissions/", PermissionCatalogView.as_view()),
     path("admin/settings/", SiteSettingsView.as_view()),
