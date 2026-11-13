@@ -42,7 +42,7 @@ export function PropertyDetail() {
           <h1 className="m-0 flex flex-wrap items-center gap-2 text-[22px] font-semibold text-navy">{p.property_type?.name ?? 'عقار'} {p.location && `— ${p.location.name}`}
             <Badge tone={p.status === 'AVAILABLE' ? 'mint' : 'neutral'}>{PSTATUS_LABEL[p.status ?? 'AVAILABLE']}</Badge></h1>
           <div className="mt-1 text-muted">{OWNER_ROLE_LABEL[p.owner_role ?? 'OWNER']}: <Link to={`/contacts/${p.owner.id}`}>{p.owner.name}</Link>
-            {p.price && <span className="num ms-3 font-medium text-ink">{money(p.price)}</span>}</div>
+            {p.price && <span className="num mr-3 font-medium text-ink">{money(p.price)}</span>}</div>
           {!!p.tags.length && <div className="mt-2 flex flex-wrap gap-1.5">{p.tags.map((t) => <Badge key={t.id} tone="accent">{t.name}</Badge>)}</div>}
         </div>
         <div className="flex flex-wrap gap-2">

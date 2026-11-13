@@ -156,7 +156,7 @@ export function Roles() {
               r.id === role.id ? 'border-primary/35 bg-primary-soft shadow-[0_0_0_3px_rgb(var(--brand-rgb)/0.08)]' : 'glass border-transparent')}>
             <div className="flex items-center gap-2">
               <b className="font-medium text-navy">{r.name}</b>
-              <span className="num ms-auto rounded-full bg-surface/80 px-1.5 text-[11.5px] text-faint" title="عدد المستخدمين">{r.members}</span>
+              <span className="num mr-auto rounded-full bg-surface/80 px-1.5 text-[11.5px] text-faint" title="عدد المستخدمين">{r.members}</span>
             </div>
             <div className="line-clamp-2 text-[12px] text-muted">{r.description}</div>
           </button>

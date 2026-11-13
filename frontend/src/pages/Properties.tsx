@@ -98,7 +98,7 @@ function PropertyCard({ p }: { p: Property }) {
         <span>{LISTING_LABEL[p.listing ?? 'SALE']}</span>
         {p.area_m2 && <span><span className="num">{Number(p.area_m2)}</span> م²</span>}
         {roomsFloor(p) !== '—' && <span>{roomsFloor(p)}</span>}
-        <span className="num ms-auto font-medium text-ink">{money(p.price) || money(p.rent_monthly) || p.price_note}</span>
+        <span className="num mr-auto font-medium text-ink">{money(p.price) || money(p.rent_monthly) || p.price_note}</span>
       </div>
       <div className="mt-1 truncate text-[12.5px] text-faint">المالك: {p.owner.name}</div>
     </Link>

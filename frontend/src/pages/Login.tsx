@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router'
 import { api, ensureCsrf, unwrap } from '../api/client'
 import { K } from '../api/hooks'
 import { BrandSquare, SectionBackdrop } from '../components/Brand'
-import { Button, Field, FormError, Input } from '../components/ui'
+import { Button, Field, FormError, Input, PasswordInput } from '../components/ui'
 import { applyServerErrors } from '../lib/forms'
 
 type F = { username: string; password: string; root?: string }
@@ -45,7 +45,7 @@ export function Login() {
             <Input autoFocus autoComplete="username" dir="ltr" {...register('username', { required: 'مطلوب' })} />
           </Field>
           <Field label="كلمة السر" error={formState.errors.password?.message}>
-            <Input type="password" autoComplete="current-password" dir="ltr" {...register('password', { required: 'مطلوب' })} />
+            <PasswordInput autoComplete="current-password" {...register('password', { required: 'مطلوب' })} />
           </Field>
           <FormError message={formState.errors.root?.message} />
           <Button variant="primary" type="submit" disabled={formState.isSubmitting} className="mt-1">

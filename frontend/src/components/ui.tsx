@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode,
+import { forwardRef, useEffect, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode,
   type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
 
 export function cx(...c: (string | false | null | undefined)[]) {
@@ -34,6 +34,25 @@ const field = 'field rounded-[var(--r-ctl)] border border-line bg-white/75 px-3 
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(function Input({ className, ...p }, ref) {
   return <input ref={ref} {...p} className={cx(field, width(className), 'h-9', className)} />
+})
+
+/** password field with a show/hide eye; always ltr (passwords are latin) */
+export const PasswordInput = forwardRef<HTMLInputElement, Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>>(function PasswordInput(
+  { className, ...p }, ref,
+) {
+  const [shown, setShown] = useState(false)
+  return (
+    <div dir="ltr" className={cx('relative', width(className), className)}>
+      <input ref={ref} {...p} type={shown ? 'text' : 'password'} className={cx(field, 'h-9 w-full pe-9')} />
+      <button type="button" onClick={() => setShown(!shown)} aria-label={shown ? 'إخفاء كلمة السر' : 'إظهار كلمة السر'} aria-pressed={shown}
+        className="absolute inset-y-0 end-0 grid w-9 place-items-center text-faint hover:text-ink">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />
+          {shown && <path d="M3 3l18 18" />}
+        </svg>
+      </button>
+    </div>
+  )
 })
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(function Textarea(

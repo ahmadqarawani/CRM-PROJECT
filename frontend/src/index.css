@@ -213,7 +213,8 @@ body {
     }
   }
   
-  /* numbers & dates: tabular mono, always LTR so "12/03" never flips */
+  /* numbers & dates: tabular mono, always LTR so "12/03" never flips.
+     Being LTR, logical margins (ms, me) flip on these: use mr or ml (the app is RTL only). */
   .num {
     font-family: var(--font-mono);
     font-size: 0.9em;

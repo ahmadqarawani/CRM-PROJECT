@@ -98,7 +98,8 @@ function Lists() {
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="إضافة قيمة جديدة…" />
           <Button variant="primary" type="submit">إضافة</Button>
         </form>
-        <Card className="max-h-[60vh] overflow-auto">
+        {/* key: ids repeat across lists (separate tables), and defaultValue inputs must remount per list */}
+        <Card key={slug} className="max-h-[60vh] overflow-auto">
           {q.data?.map((o: Lookup) => (
             <div key={o.id} className="flex items-center gap-2 border-b border-line px-3 py-1.5 last:border-0">
               <Input defaultValue={o.name} className="h-8" onBlur={(e) => e.target.value !== o.name && save.mutate({ id: o.id, body: { name: e.target.value } })} />

@@ -95,7 +95,7 @@ function TimelineRow({ it }: { it: TimelineItem }) {
       <li className="relative ps-[26px] pb-4">
         <span className="absolute start-0 top-[3px] size-[15px] rounded-full border-[1.5px] border-navy bg-surface" />
         <div className="flex items-baseline gap-2"><b className="font-medium">رفع {CATEGORY_LABEL[it.category]}</b>
-          <span className="num ms-auto text-faint">{shortDate(it.at)}</span></div>
+          <span className="num mr-auto text-faint">{shortDate(it.at)}</span></div>
         <a href={it.url} target="_blank" rel="noreferrer" className="text-[13px] text-primary">{it.name}</a>
       </li>
     )
@@ -109,11 +109,11 @@ function TimelineRow({ it }: { it: TimelineItem }) {
       <div className="flex items-baseline gap-2">
         <b className="font-medium">{it.type === 'SYSTEM' ? it.subject : `${ACTIVITY_LABEL[it.type]}${it.subject ? ` · ${it.subject}` : ''}`}</b>
         {planned && <Badge tone={late ? 'accent' : 'primary'}>{late ? 'متأخرة' : 'مخطط'} {when(it.due_at)}</Badge>}
-        <span className="num ms-auto text-faint">{shortDate(it.at)}</span>
+        <span className="num mr-auto text-faint">{shortDate(it.at)}</span>
       </div>
       {it.notes && <p className="m-0 mt-0.5 whitespace-pre-wrap text-muted">{it.notes}</p>}
       {it.outcome && <p className="m-0 mt-0.5 text-[13px] text-ink">النتيجة: {it.outcome}</p>}
-      <div className="mt-0.5 text-[12px] text-faint">{it.created_by?.name}{it.deal && ` · ${it.deal.title || KIND_LABEL[it.deal.kind]}`}</div>
+      <div className="mt-0.5 text-[12px] text-faint"><bdi>{it.created_by?.name}</bdi>{it.deal && <> · <bdi>{it.deal.title || KIND_LABEL[it.deal.kind]}</bdi></>}</div>
     </li>
   )
 }
@@ -128,7 +128,7 @@ export function AuditList({ model, id }: { model: 'contact' | 'deal' | 'property
       {q.data.map((e, i) => (
         <li key={i} className="border-b border-line py-2 last:border-0">
           <div className="flex gap-2"><b className="font-medium">{e.by}</b><span className="text-faint">{e.action}</span>
-            <span className="num ms-auto text-faint">{shortDate(e.at)} {new Date(e.at).toTimeString().slice(0, 5)}</span></div>
+            <span className="num mr-auto text-faint">{shortDate(e.at)} {new Date(e.at).toTimeString().slice(0, 5)}</span></div>
           <div className="mt-0.5 text-muted">
             {(e.changes ?? []).map((c) => (
               <div key={c.field}>
@@ -198,7 +198,7 @@ export function DocumentList({ docs }: { docs: Doc[] }) {
 
 export function Tabs<T extends string>({ value, onChange, items }: { value: T; onChange: (v: T) => void; items: [T, string, number?][] }) {
   return (
-    <div className="mb-4 flex gap-4 overflow-x-auto border-b border-line [scrollbar-width:thin] sm:gap-5">
+    <div className="mb-4 flex gap-3 overflow-x-auto overflow-y-hidden border-b border-line [scrollbar-width:thin]">
       {items.map(([k, label, n]) => (
         <button key={k} onClick={() => onChange(k)}
           className={cx('-mb-px flex-none border-b-2 pb-2 transition-colors', value === k ? 'border-primary font-medium text-navy' : 'border-transparent text-muted hover:border-line-strong hover:text-ink')}>

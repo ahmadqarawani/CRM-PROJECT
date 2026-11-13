@@ -69,13 +69,13 @@ export function Today() {
                 {p === 'FINISHING' ? 'الإكساء' : 'العقارات'}
               </Link>
               {d.pipelines.filter((s) => s.pipeline === p).map((s) => (
-                <div key={s.id} className="flex items-center gap-2 py-1 text-[13.5px]"><Dot color={s.color} />{s.name}<span className="num ms-auto text-faint">{s.count}</span></div>
+                <div key={s.id} className="flex items-center gap-2 py-1 text-[13.5px]"><Dot color={s.color} />{s.name}<span className="num mr-auto text-faint">{s.count}</span></div>
               ))}
             </Card>
           ))}
           <Card className="px-3.5 py-2.5 text-[13px] text-muted">
-            <div className="flex">طلبات واقفة بمرحلتها<span className="num ms-auto">{d.stuck_count}</span></div>
-            <div className="flex">عملاء جدد هالشهر<span className="num ms-auto">{d.new_contacts_this_month}</span></div>
+            <div className="flex">طلبات واقفة بمرحلتها<span className="num mr-auto">{d.stuck_count}</span></div>
+            <div className="flex">عملاء جدد هالشهر<span className="num mr-auto">{d.new_contacts_this_month}</span></div>
           </Card>
         </aside>
       </div>

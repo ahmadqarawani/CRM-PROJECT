@@ -207,7 +207,7 @@ function Money({ id, contract, paid, manage, onQuote, onPay }: { id: number; con
         {!payments.data?.length ? <Empty title="ما في دفعات" hint={contract ? undefined : 'حط قيمة العقد من "تعديل" لتنحسب الباقي'} /> : (
           <Card>{payments.data.map((p) => (
             <div key={p.id} className="flex flex-wrap gap-x-2 border-b border-line px-3 py-2 text-[13px] last:border-0">
-              <span className="num">{money(p.amount)}</span><span className="text-muted">{p.note}</span><span className="num ms-auto text-faint">{shortDate(p.paid_at)}</span>
+              <span className="num">{money(p.amount)}</span><span className="text-muted">{p.note}</span><span className="num mr-auto text-faint">{shortDate(p.paid_at)}</span>
             </div>))}</Card>
         )}
       </div>

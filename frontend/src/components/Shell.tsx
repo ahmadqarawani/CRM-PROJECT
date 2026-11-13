@@ -96,7 +96,7 @@ export function Shell({ me }: { me: Me }) {
           className="btn btn-glass mb-4 flex h-9 items-center gap-2 rounded-[var(--r-ctl)] border border-white/80 px-2.5 text-[13px] text-faint hover:text-ink"
         >
           <Icon d={I.search} size={15} />بحث
-          <span className="num ms-auto rounded border border-line px-1 text-[10.5px]">Ctrl K</span>
+          <span className="num mr-auto rounded border border-line px-1 text-[10.5px]">Ctrl K</span>
         </button>
         <nav className="flex flex-col gap-0.5">
           <NavItem to="/" icon={I.today} label="اليوم" count={dash.data?.overdue_count} hot />
@@ -190,7 +190,7 @@ function MoreSheet({ me, unread, onLogout, onPassword, onClose }: { me: Me; unre
             ))}
             <button onClick={() => setView('notifications')} className="flex items-center gap-3 rounded-md px-3 py-3 text-start">
               <Icon d={I.bell} size={18} />الإشعارات
-              {unread > 0 && <span className="num ms-auto grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1.5 text-[11px] text-white">{unread}</span>}
+              {unread > 0 && <span className="num mr-auto grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1.5 text-[11px] text-white">{unread}</span>}
             </button>
             <button onClick={onPassword} className="mt-1 flex items-center gap-3 rounded-md border-t border-line px-3 py-3 text-start text-muted">تغيير كلمة السر</button>
             <button onClick={onLogout} className="flex items-center gap-3 rounded-md px-3 py-3 text-start text-muted">تسجيل خروج</button>
