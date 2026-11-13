@@ -1,805 +1,183 @@
-# معمارية مشروع CRM: متابعة العملاء والطلبات والشقق
+# معمارية BGI CRM
 
-> **الهدف:** نخزّن كل العملاء ببطاقات (cards)، ونتابع كل طلب عبر مراحل (steps). النظام بيبيّن مين متأخر بالرد، وبيذكّر تلقائياً، وبيأرشف الشغل وملفات الـ PDF لكل شقة.
-
-> **المبدأ:** المشروع صغير، يعني عشرات أو مئات العملاء مش ملايين. منختار **أقل عدد أدوات** بيعطي **تصميم صحيح**. كل أداة لازم تبرّر وجودها. وكل شي منأجّله، منصمّمه بطريقة بتسمح نضيفه لاحقاً بدون إعادة بناء.
-
----
+هاد الملف بيوصف النظام **متل ما هو مبني هلق**. التفاصيل الدقيقة بالكود، وهون الصورة الكبيرة والقرارات وليش.
 
 ## 0. القرارات
 
-| القرار | الاختيار |
+| الموضوع | القرار |
 |---|---|
-| Backend | **Django 5 + Django REST Framework** |
-| ORM / DB | **Django ORM + PostgreSQL** |
-| Frontend | **React 19 + Vite (SPA)** |
-| Validation | **الـ backend هو المرجع الوحيد (single source of truth)**. ما في Zod |
-| Types | **drf-spectacular → OpenAPI → openapi-typescript** |
-| Repo | **repo واحد** فيه `backend/` و `frontend/` |
-| Auth | **Django session + CSRF**، لأن nginx بيخليهم على نفس الـ origin |
-| Jobs | **Django management commands** بتنقدح دورياً (cron/systemd timer عندك)، وكلها idempotent |
-| Realtime | **SSE** (`EventSource`) فوق **Postgres `LISTEN/NOTIFY`**. ما في WebSockets ولا Channels ولا Redis (القسم 6.1) |
-| تشغيل Django | **ASGI على Granian** (`granian --interface asginl config.asgi:application`). Granian بيحل محل gunicorn و uvicorn، والـ DRF views بتضل sync عادي |
-| Admin | `is_staff = True` معناها ADMIN. ما في groups |
+| Backend | Django 6.1 + DRF + PostgreSQL (16 أو أحدث). كل التحقق (validation) بالـ backend |
+| Frontend | React 19 + Vite 8 + Tailwind 4 + TanStack Query، و PWA. مكوّنات خاصة فينا (ما في shadcn) |
+| الربط | نفس الـ origin (nginx قدّام الاتنين)، فالدخول بـ **Django session + CSRF**. ما في JWT |
+| Types الفرونت | من OpenAPI: `drf-spectacular` ← `schema.yml` ← `openapi-typescript` |
+| تشغيل Django | **ASGI على Granian**: `granian --interface asginl config.asgi:application` (`asginl` لأنه Django ما بيدعم ASGI lifespan). الـ views عادية sync، إلا الـ SSE |
+| Realtime | **SSE** من Postgres `LISTEN/NOTIFY`. ما في WebSockets ولا Redis |
+| Jobs | **management command** وحيد (`notify_tick`) كل 5 دقائق، idempotent. ما في worker دايم ولا Redis |
+| الملفات | على الديسك (`MEDIA_ROOT`). العرض بيمرق من فحص الصلاحية، و nginx بيبعت الملف (`X-Accel-Redirect`) |
+| الحزم | **pip + venv**، Python **3.12**. `requirements.txt` للتشغيل و `requirements-dev.txt` للاختبار |
 
-**الـ processes:** `postgres` · `granian` · وأمرين مجدولين. ما في Redis ولا worker دايم.
+**الـ processes:** `postgres` و `granian` و `notify_tick` كل 5 دقائق. بس هيك.
 
-> **الكود الحقيقي موجود بـ `backend/`، وهو المرجع.** أمثلة الكود بهالملف للشرح بس، والقسم 10 بيلخّص اللي تغيّر بعد التشغيل والاختبار.
+## 1. هيكلية الـ repo
 
-### شو شلنا ببساطة، وليش
+```
+backend/
+  config/            settings (كلها من env أو .env)، urls، asgi
+  apps/
+    core/            BaseViewSet (scope + ترتيب ثابت)، pagination، error handler، الإيميل، Dashboard/Search/Timeline/Audit/Reports
+    access/          الأدوار والصلاحيات (RBAC)
+    accounts/        login/logout/me، كلمة السر، إدارة المستخدمين، bootstrap_team، password_link
+    catalog/         القوائم يلي بيعدّلها المسؤول (مصادر، مناطق، أنواع عقار، مستويات إكساء، …)
+    contacts/        العميل + أرقامه (E.164)، كشف المكرر، الدمج
+    properties/      العقارات المعروضة
+    deals/           الطلبات (إكساء + وساطة)، المراحل، المطابقة، الدراسات والدفعات، import_sheets
+    activities/      النشاط المنجز والمخطط (مكالمة، واتساب، معاينة، مهمة…)
+    documents/       الملفات المرفوعة
+    notifications/   الإشعارات + notify_tick
+    realtime/        SSE (hub + events)
+  tests/
+frontend/src/
+  api/               client (openapi-fetch) + hooks (TanStack Query) + schema.d.ts (مولّد)
+  components/        Shell، DealPanel، forms، bits، ui، Brand، SearchPalette
+  pages/             Today، Board (كروت الطلبات)، Contacts، Properties، Archive، Settings، …
+  lib/               access (الصلاحيات بالواجهة)، url (فلاتر بالـ URL)، live (SSE)، format
+  index.css، themes.css   التصميم (زجاج + لكل قسم ألوانه وحوافه)
+data-import/DATA_MODEL.md   نموذج البيانات المعياري وقواعد الاستيراد
+```
 
-| كان بالخطة | القرار | السبب |
+## 2. نموذج البيانات
+
+- **Contact:** عميل واحد لكل شخص. الاسم اختياري، فبيبيّن الرقم بداله. أرقام متعددة (`ContactPhone`) مطبّعة لـ E.164، والرقم ما بيتكرر أبداً بالنظام. فيه مصدر، ومسؤول، ووسوم. المكررات المحتملة (نفس الاسم بأرقام مختلفة) بتنعرض للمراجعة وبتندمج يدوياً.
+- **Property:** المالك دايماً Contact. كود تلقائي `P-0001` (بيتبحث فيه)، والنوع، والمنطقة، والمساحة، والسعر، والحالة (متاح/محجوز/مباع)، والإضافات.
+- **Deal (الطلب):** على **pipeline** من اتنين: `FINISHING` (إكساء) و `BROKERAGE` (شراء/إيجار/بيع/تأجير). المرحلة (`Stage`) إلها نوع `OPEN/WON/LOST`، والخسارة لازم يكون معها سبب.
+  - `FinishingSpec`: تفاصيل الإكساء. `Demand`: مواصفات الشاري أو المستأجر. `DemandMatch`: رأيه بكل عقار مطابق.
+  - `Quote`: الدراسات (بإصدارات). `Payment`: الدفعات، والباقي = قيمة العقد − المدفوع.
+- **Activity:** نشاط **منجز** (`done_at`) أو **مخطط** (`due_at`) على عميل، ومعه طلب أو عقار اختياري. "الخطوة الجاية" لأي طلب هي أقرب نشاط مخطط إله.
+- **Document:** ملف مربوط بعميل، ومعه طلب أو عقار أو دراسة اختياري.
+- **Role / UserAccess:** كل مستخدم إله دور واحد (شوف §4).
+- **Audit log** على كل الموديلات (`django-auditlog`)، وبينعرض بالعربي (أسماء بدل أرقام).
+- **الأرشفة** (`archived_at`) بدل الحذف. الحذف النهائي صلاحية لحالها.
+
+## 3. "بدها انتباه" (مكان واحد: `deals/overdue.py`)
+
+`with_attention()` بتضيف للـ query أعلام محسوبة بالـ SQL، فالفلتر والترتيب والعدّ وصفحة اليوم كلهم بيعتمدوا على نفس التعريف:
+
+| السبب | متى |
+|---|---|
+| `ACTIVITY_OVERDUE` | طلب مفتوح إله نشاط مخطط موعده فات |
+| `NO_NEXT_STEP` | طلب مفتوح ما إله ولا نشاط مخطط |
+| `STUCK` | صرله بالمرحلة أكتر من `rotting_days` تبعها (بيتعدّل من الإعدادات) |
+
+## 4. الصلاحيات (RBAC)
+
+- **التعريف كله بمكان واحد:** `access/registry.py`. فيه:
+  - **صلاحيات بنطاق** (`none` / `own` / `all`): عرض وتعديل وحذف العملاء والطلبات والعقارات والنشاط والملفات.
+  - **صلاحيات تشغيل/إطفاء:** إضافة، دمج، المبالغ (`finance.view` و `finance.manage`)، تقارير الفريق، سجل التعديلات، والإدارة (مستخدمين / أدوار / إعدادات / تسليم شغل).
+- **"تبعه" (own):** مسؤول عنه، أو مهندسه، أو هو يلي أنشأه. للعميل كمان: إذا عنده طلب مسؤول عنه.
+- **التطبيق بالسيرفر:**
+  - `BaseViewSet` بيفلتر كل query حسب نطاق العرض، فيلي ما إلك تشوفه بيرجع 404.
+  - `RolePermission` بيحوّل كل action لمفتاح صلاحية، وبيفحص "own" على السجل نفسه.
+  - كل سجل بيرجع معه `access: {edit, delete}`، فالواجهة بتخبي الأزرار يلي ما بتنفع.
+- **المبالغ (حماية على مستوى الحقل):** بتطلع `null` بدون `finance.view`، وقيمة العقد والعمولة بتتغيّر بس مع `finance.manage`.
+- **5 أدوار أساسية** بتتعدّل من الإعدادات وما بتنحذف: مدير النظام، مدير مبيعات، موظف مبيعات (الافتراضي)، مهندس، مشاهد. الـ superuser بيتجاوز كلشي، وما حدا غير superuser بيقدر يعدّل حساب superuser.
+- **المالك الافتراضي:** يلي بيضيف عميل أو طلب بيصير هو المسؤول.
+
+## 5. الـ API (`/api/v1/`)
+
+**المبادئ:**
+- resources مسطّحة (`deals/?contact=7` بدل `contacts/7/deals/`).
+- تغيير الحالة بـ `PATCH` (مرحلة، أرشفة).
+- للكتابة `*_id`، وللقراءة كائن متداخل (`COMPONENT_SPLIT_REQUEST`)، فالـ types المولّدة دقيقة.
+- كل الأخطاء بشكل واحد: `{"type": "...", "errors": {"field": ["..."]}}`.
+- **الترتيب بكل list بينتهي بـ `-pk`،** فما في سجل بيتكرر أو بيضيع بين الصفحات.
+
+| المسار | الوظيفة |
+|---|---|
+| `contacts/` + `check-phone/` `duplicates/` `{id}/merge/` | العملاء |
+| `properties/` + `{id}/demands/` | العقارات + الطلبات المناسبة إلها |
+| `deals/` + `stage-counts/` `{id}/matches/` `{id}/match/` `{id}/convert/` | الطلبات، وأعداد المراحل حسب الفلاتر، والمطابقة، والتحويل لإكساء |
+| `stages/` `quotes/` `payments/` `activities/` (+ `{id}/complete/`) `documents/` (+ `{id}/file/`) | الباقي |
+| `dashboard/` `search/` `timeline/` `audit/` `reports/` | قراءة مجمّعة |
+| `notifications/` `notification-preferences/` | الإشعارات والكتم |
+| `auth/*` | csrf، login، logout، me، password-reset (+ check/confirm)، password/change |
+| `admin/users/` (+ `{id}/reset-link/`) `admin/roles/` `admin/permissions/` `admin/settings/` `admin/hand-over/` | الإدارة |
+| `events/` | SSE |
+
+## 6. Realtime (SSE)
+
+- **الـ event هو إشارة مش بيانات:** `request.changed {id}`، و `client.changed`، و `activity.created`، و `document.created`، و `notification.created`. الواجهة بتعمل invalidate للـ query المناسب وبتجيب من الـ API (والصلاحيات بتنطبق هونيك).
+- **النشر:** `publish()` بيعمل `NOTIFY` جوّا `transaction.on_commit`، فما بيطلع event لشي ما انحفظ.
+- **الاستقبال:** بكل process في **اتصال LISTEN واحد بـ thread** (sync psycopg)، وبيوزّع على كل الـ streams المفتوحة بالـ process. هيك بيشتغل على Windows و Linux، وبأكتر من worker.
+- **الـ stream:** `retry: 5000` بالأول، و heartbeat كل 20 ثانية، و `X-Accel-Buffering: no`.
+
+## 7. الإشعارات و `notify_tick`
+
+بيشتغل كل 5 دقائق، و idempotent (إشعار واحد لكل مستخدم/نوع/هدف/يوم):
+- **تذكير بموعد قبل ساعة** (`ACTIVITY_DUE`)، إلا بساعات الهدوء.
+- **ملخص الصبح** (`DIGEST`) بعد `digest_hour`، وبالإيميل كمان إذا الإيميل مفعّل.
+- **المتأخرات مرة وحدة آخر النهار** (`ACTIVITY_OVERDUE`، الساعة 20).
+- **ساعات الهدوء، والملخص، والإيميل** كلهم من `SiteSettings` (صفحة الإعدادات)، وكل مستخدم بيقدر يكتم أنواع.
+- **الإيميل:** SMTP من الإعدادات (Gmail App Password). بـ Django 6.1 بننبني `EmailBackend(alias=...)` مباشرة لأنه الإعدادات بالـ DB مش بـ `MAILERS`.
+
+## 8. الـ Frontend
+
+- **طبقة الـ API:**
+  - `openapi-fetch` مع types من الـ schema، و TanStack Query للكاش.
+  - SSE بيعمل invalidate بس.
+- **الصفحات:**
+  - **اليوم:** المتأخر، ومواعيد اليوم، والطلبات بلا خطوة جاية.
+  - **الإكساء** و **طلبات العقارات:** كروت 4 بالصف × 5 صفوف، وفلاتر بالـ URL، وعدد لكل مرحلة من السيرفر، و pagination.
+  - **العملاء** و **العقارات** و **الأرشيف:** صفحات بالـ pagination.
+  - **كرت العميل** و **كرت العقار** و **لوحة الطلب.**
+  - **المكررات** و **الإعدادات:** المستخدمين، والأدوار، والقوائم، والمراحل، والإيميل، وتسليم الشغل.
+- **التصميم:**
+  - زجاج على ألوان اللوغو.
+  - **كل قسم إله ثيم:**
+    - الإكساء = BGI Unlocked (برتقالي، حواف مدوّرة).
+    - العقارات = BGI Real Estate (كحلي، حواف حادة).
+    - الباقي = اللوغوين بمربع.
+  - كلها متغيّرات CSS بـ `themes.css` حسب `html[data-theme]`.
+- **PWA**، والموبايل إله شريط سفلي وقائمة "المزيد". **Ctrl+K** للبحث.
+
+## 9. التطوير والفحوصات
+
+- **التشغيل المحلي والأوامر:** بالـ `README.md` (pip + venv، Python 3.12، Node 22 أو أحدث).
+- **CI** (`.github/workflows/ci.yml`) على **Ubuntu 24.04 + Python 3.12.3** (نفس السيرفر)، و Postgres 16 و 18:
+  - تنصيب الـ requirements بـ pip، و `pip check`، و ruff.
+  - `check` و `check --deploy` بإعدادات الإنتاج، وفحص إنه ما في migrations ناقصة.
+  - الاختبارات (والـ deprecation warnings بتعتبر أخطاء)، وإنه الـ OpenAPI schema محدّث.
+  - تشغيل حقيقي على Granian: login، والـ endpoints الأساسية، والـ SSE.
+  - build الفرونت على Node LTS.
+
+## 10. دروس من الاختبار والـ docs الرسمية
+
+| الموضوع | المشكلة | الحل |
 |---|---|---|
-| Procrastinate / Celery (worker دايم) | ❌ هلق | الشغل الخلفي الوحيد هو sweep دوري. أمر `manage.py` مجدول بيكفيه. **بيدخل Procrastinate** لما يصير في إرسال واتساب/إيميل بدّه retry |
-| PyMuPDF thumbnails | ❌ | `react-pdf` بيرسم أول صفحة بالمتصفح. هيك ما في معالجة على السيرفر وما في queue |
-| `django-simple-history` | ❌ | `StageChange` و `Activity` بيغطّوا "مين عمل شو" اللي بيهمنا. ما منحتاج نسخة من كل جدول |
-| `pg_trgm` + GIN index | ❌ | مع مئات السجلات، `icontains` على عمود مطبّع (normalized) سريع كفاية |
-| ترتيب يدوي للبطاقات (`position`) | ❌ | البطاقات بتترتب لحالها: المتأخر أولاً، وبعدها حسب موعد المتابعة |
-| نسخ الملفات (versions) | ❌ | بترفع الملف الجديد وبتأرشف القديم. بيعطي نفس النتيجة بدون منطق إضافي |
-| `python-magic` | ❌ | بدّه libmagic. منفحص أول bytes (`%PDF-`) والصور بـ Pillow |
-| TanStack Table | ❌ | جداولنا بسيطة، و shadcn `<Table>` بيكفي |
-| `AppSetting` model | ❌ | الإعداد الوحيد (`NO_CONTACT_DAYS`) بيكون بالـ settings. والإعدادات اللي بتتغيّر كتير (SLA) أصلاً على الـ `Stage` |
-
----
-
-## 1. الموديولات
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│ Dashboard (اليوم): المتأخرين · مهام اليوم · أرقام سريعة       │
-├──────────┬──────────────┬──────────────┬─────────────────────┤
-│ Clients  │ Requests     │ Apartments   │ Tasks               │
-│ بطاقات   │ Kanban مراحل │ شقق + PDF    │ مهام + إشعارات       │
-├──────────┴──────────────┴──────────────┴─────────────────────┤
-│ Activity Timeline (مكالمة/واتساب/زيارة/ملاحظة/تغيير مرحلة)    │
-└──────────────────────────────────────────────────────────────┘
-```
-
-- **Clients:** grid بطاقات، وإنشاء سريع (اسم + هاتف). صفحة العميل فيها طلباته وشققه والـ timeline وملفاته.
-- **Requests:** أكتر من طلب لكل عميل، وكل طلب بيرتبط اختيارياً بشقة. بالـ Kanban بتسحب الطلب لمرحلة تانية، وكل نقلة بتنسجل.
-- **Apartments + Documents:** ملفات مصنّفة لكل شقة، وبتنعرض جوّا التطبيق.
-- **Tasks + Notifications:** مهام إلها مواعيد، وإشعارات للمتأخرين.
-- **Activity:** أي تواصل بتسجّله بيحدّث `last_contact_at`.
-- **Archive:** soft delete بس.
-
-**المراحل الافتراضية** (seed، وبتتعدّل):
-طلب جديد → تواصل أولي → معاينة → عرض سعر → بانتظار رد العميل* → عقد → تنفيذ → تسليم → **تم ✓** / **ملغي ✗**
-
-\* `requires_follow_up`: ما بتقدر تنقل الطلب لهون بدون موعد متابعة.
-آخر مرحلتين إلهم `closes_as = WON / LOST`، ونقل الطلب لوحدة منهن بيسكّره.
-
-### متى الطلب "متأخر"؟ (مكان واحد: `pipeline/overdue.py`)
-الطلب **المفتوح** بيعتبر متأخر إذا تحقق شرط من هدول:
-1. `FOLLOWUP_DUE`: موعد المتابعة فات
-2. `STAGE_SLA`: صرله بالمرحلة أكتر من `stage.sla_days`
-3. `NO_CONTACT`: ما في تواصل من `NO_CONTACT_DAYS` يوم
-
-**التأخير بيتحسب وقت الطلب (query)، وما بينخزّن.** ما في عمود `is_overdue` ممكن يصير قديم وما يطابق الواقع.
-
----
-
-## 2. هيكلية الـ repo
-
-```
-crm/
-├─ backend/
-│  ├─ config/                 settings.py (واحد + env)، urls.py
-│  ├─ apps/
-│  │  ├─ core/                base models، normalize_ar، pagination، exception handler، dashboard، search
-│  │  ├─ accounts/            session auth endpoints
-│  │  ├─ clients/
-│  │  ├─ apartments/
-│  │  ├─ pipeline/            Stage، Request، StageChange، overdue.py
-│  │  ├─ activities/
-│  │  ├─ documents/
-│  │  └─ tasks/               Task، Notification، management/commands/
-│  │     كل app: models · serializers · services · views · urls · tests
-│  └─ manage.py
-├─ frontend/
-│  └─ src/
-│     ├─ api/                 schema.d.ts (مولّد) + client.ts
-│     ├─ features/<module>/   pages · components · hooks
-│     ├─ components/ui/       shadcn
-│     └─ main.tsx / routes.tsx
-└─ Makefile                   make schema · make test
-```
-
-**القاعدة بالـ backend:** `views` (HTTP بس) ← `serializers` (شكل البيانات + validation للحقول) ← `services` (قواعد الشغل + transactions) ← `models`.
-
----
-
-## 3. نموذج البيانات
-
-```python
-# core/models.py
-class TimeStamped(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    class Meta: abstract = True
-
-class Archivable(models.Model):
-    archived_at = models.DateTimeField(null=True, blank=True)
-    class Meta: abstract = True
-    # QuerySet.active() / .archived()
-
-# core/text.py
-def normalize_ar(s): ...   # أ/إ/آ→ا، ة→ه، ى→ي، بلا تشكيل، lower
-```
-
-```python
-class Client(TimeStamped, Archivable):
-    name            = models.CharField(max_length=200)
-    phone           = models.CharField(max_length=30, unique=True, null=True, blank=True)
-    whatsapp        = models.CharField(max_length=30, blank=True)
-    email           = models.EmailField(blank=True)
-    city            = models.CharField(max_length=100, blank=True)
-    source          = models.CharField(max_length=50, blank=True)
-    tags            = ArrayField(models.CharField(max_length=40), default=list, blank=True)
-    notes           = models.TextField(blank=True)
-    last_contact_at = models.DateTimeField(null=True, blank=True)
-    search_text     = models.TextField(editable=False, default="")   # normalize_ar(name + phone + city)
-
-class Apartment(TimeStamped, Archivable):
-    client   = models.ForeignKey(Client, on_delete=models.PROTECT, related_name="apartments")
-    title    = models.CharField(max_length=200)
-    address  = models.CharField(max_length=300, blank=True)
-    floor    = models.CharField(max_length=20, blank=True)
-    area_m2  = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
-    rooms    = models.PositiveSmallIntegerField(null=True, blank=True)
-    notes    = models.TextField(blank=True)
-
-class Stage(models.Model):
-    name               = models.CharField(max_length=80)
-    color              = models.CharField(max_length=7, default="#64748b")
-    order              = models.PositiveSmallIntegerField()
-    sla_days           = models.PositiveSmallIntegerField(null=True, blank=True)
-    requires_follow_up = models.BooleanField(default=False)
-    closes_as          = models.CharField(max_length=4, choices=[("WON", "تم"), ("LOST", "ملغي")], blank=True)
-    is_active          = models.BooleanField(default=True)   # المرحلة المستعملة ما بتنحذف (StageChange بيأشّر عليها)، بتنخفى بس
-    class Meta: ordering = ["order"]
-
-class Request(TimeStamped, Archivable):
-    class Status(models.TextChoices):   OPEN = "OPEN"; WON = "WON"; LOST = "LOST"
-    class Priority(models.TextChoices): LOW = "LOW"; NORMAL = "NORMAL"; HIGH = "HIGH"
-
-    client            = models.ForeignKey(Client, on_delete=models.PROTECT, related_name="requests")
-    apartment         = models.ForeignKey(Apartment, on_delete=models.PROTECT, null=True, blank=True)
-    title             = models.CharField(max_length=200)
-    description       = models.TextField(blank=True)
-    budget            = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
-    priority          = models.CharField(max_length=6, choices=Priority, default=Priority.NORMAL)
-    status            = models.CharField(max_length=4, choices=Status, default=Status.OPEN)
-    stage             = models.ForeignKey(Stage, on_delete=models.PROTECT)
-    stage_entered_at  = models.DateTimeField(default=timezone.now)
-    next_follow_up_at = models.DateTimeField(null=True, blank=True)
-    last_contact_at   = models.DateTimeField(null=True, blank=True)
-    assignee          = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-
-class StageChange(models.Model):               # سجل المراحل (للـ timeline وتقارير المدة)
-    request    = models.ForeignKey(Request, on_delete=models.CASCADE, related_name="stage_changes")
-    from_stage = models.ForeignKey(Stage, on_delete=models.PROTECT, null=True, related_name="+")
-    to_stage   = models.ForeignKey(Stage, on_delete=models.PROTECT, related_name="+")
-    by         = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    at         = models.DateTimeField(auto_now_add=True)
-
-class Activity(models.Model):
-    class Type(models.TextChoices):
-        CALL = "CALL"; WHATSAPP = "WHATSAPP"; VISIT = "VISIT"; NOTE = "NOTE"
-    type     = models.CharField(max_length=10, choices=Type)
-    body     = models.TextField(blank=True)
-    client   = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="activities")
-    request  = models.ForeignKey(Request, on_delete=models.CASCADE, null=True, blank=True)
-    by       = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    at       = models.DateTimeField(default=timezone.now)
-
-class Document(TimeStamped, Archivable):
-    class Category(models.TextChoices):
-        CONTRACT = "CONTRACT"; QUOTE = "QUOTE"; PLAN = "PLAN"; INVOICE = "INVOICE"; PHOTO = "PHOTO"; OTHER = "OTHER"
-    file          = models.FileField(upload_to=document_path)    # documents/<client>/<uuid>.<ext>
-    original_name = models.CharField(max_length=255)
-    size_bytes    = models.PositiveIntegerField()
-    category      = models.CharField(max_length=8, choices=Category, default=Category.OTHER)
-    client        = models.ForeignKey(Client, on_delete=models.PROTECT, related_name="documents")
-    apartment     = models.ForeignKey(Apartment, on_delete=models.PROTECT, null=True, blank=True,
-                                      related_name="documents")
-    request       = models.ForeignKey(Request, on_delete=models.SET_NULL, null=True, blank=True)
-    uploaded_by   = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-
-class Task(TimeStamped):
-    title    = models.CharField(max_length=200)
-    due_at   = models.DateTimeField()
-    done_at  = models.DateTimeField(null=True, blank=True)
-    client   = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True)
-    request  = models.ForeignKey(Request, on_delete=models.CASCADE, null=True, blank=True)
-    assignee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-
-class Notification(models.Model):
-    class Kind(models.TextChoices):
-        REQUEST_OVERDUE = "REQUEST_OVERDUE"   # واحد لكل طلب باليوم. الأسباب بتنقرا live من الطلب
-        TASK_DUE        = "TASK_DUE"
-        TASK_ASSIGNED   = "TASK_ASSIGNED"
-    user    = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications")
-    kind    = models.CharField(max_length=15, choices=Kind)
-    request = models.ForeignKey(Request, on_delete=models.CASCADE, null=True, blank=True)
-    task    = models.ForeignKey(Task, on_delete=models.CASCADE, null=True, blank=True)
-    day     = models.DateField()
-    read_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)   # بيعرّف الإشعارات الجديدة ليطلع إلها SSE event
-    class Meta:
-        constraints = [models.UniqueConstraint(
-            fields=["user", "kind", "request", "task", "day"],
-            nulls_distinct=False, name="one_notification_per_day")]
-```
-
-**ملاحظات:**
-- تغيير المرحلة **ما بينسجل كـ Activity**. الـ timeline بيدمج `Activity` و `StageChange` وقت العرض، وهيك ما في بيانات مكررة.
-- الـ `message` تبع الإشعار ما بينخزّن. بيتولّد بالـ serializer من `kind` والطلب.
-- `nulls_distinct=False` بدها **PostgreSQL 15+**.
-- **الهاتف:** بينطبّع قبل الحفظ (أرقام بس، و`""` بيصير `NULL`). بدون هالخطوة، الـ `unique` بيفشل على الأرقام الفاضية، و "0991 234" و "0991234" بيمرقوا كعميلين.
-- **تناسق العلاقات:** شقة الطلب لازم تكون لنفس العميل، والملف المرفوع لشقة أو طلب لازم يكون لنفس العميل. الـ `client` تبع الملف **بيشتقّه السيرفر** من الشقة أو الطلب، وما بيتبعت من الفرونت. والـ `client` تبع الطلب ما بيتغيّر بعد الإنشاء.
-- 9 جداول بس، وكل واحد إلو سبب.
-
----
-
-## 4. طبقة الـ services (قواعد الشغل)
-
-كل عملية فيها أكتر من خطوة بتنكتب بـ `services.py` جوّا `transaction.atomic`. الـ API والـ Admin والـ commands بيستدعوا نفس الـ function.
-
-**قواعد الطبقة:**
-- الـ services **ما بتعرف DRF**. بترمي `django.core.exceptions.ValidationError` (بشكل dict)، والـ exception handler بيحوّلها لـ 400 بالشكل الموحّد.
-- كل service بيغيّر شي بيستدعي `publish()` (القسم 6.1) **جوّا نفس الـ transaction**.
-
-```python
-# pipeline/services.py
-@transaction.atomic
-def change_stage(req: Request, to: Stage, *, by, follow_up_at=None) -> Request:
-    req = Request.objects.select_for_update().get(pk=req.pk)
-    if req.stage_id == to.id:
-        return req
-    if to.requires_follow_up and not (follow_up_at or req.next_follow_up_at):
-        raise ValidationError({"next_follow_up_at": ["حدد موعد المتابعة لهالمرحلة"]})
-    StageChange.objects.create(request=req, from_stage=req.stage, to_stage=to, by=by)
-    req.stage, req.stage_entered_at = to, timezone.now()
-    req.status = to.closes_as or Request.Status.OPEN
-    if follow_up_at:
-        req.next_follow_up_at = follow_up_at
-    req.save()
-    publish("request.changed", id=req.pk)
-    return req
-
-@transaction.atomic
-def archive_client(client: Client, *, by) -> None:
-    """أرشفة العميل بتأرشف طلباته المفتوحة كمان، وإلا بيضلّوا يطلعوا متأخرين."""
-    now = timezone.now()
-    Client.objects.filter(pk=client.pk).update(archived_at=now)
-    Request.objects.filter(client=client, archived_at__isnull=True).update(archived_at=now)
-    publish("request.changed", client_id=client.pk)
-
-# activities/services.py
-@transaction.atomic
-def log_activity(*, client, type, body="", request=None, by) -> Activity:
-    act = Activity.objects.create(client=client, type=type, body=body, request=request, by=by)
-    if type != Activity.Type.NOTE:                       # أي تواصل حقيقي
-        Client.objects.filter(pk=client.pk).update(last_contact_at=act.at)
-        if request:
-            Request.objects.filter(pk=request.pk).update(last_contact_at=act.at)
-    publish("activity.created", client_id=client.pk, request_id=request and request.pk)
-    return act
-```
-
-```python
-# pipeline/overdue.py: المصدر الوحيد، مكتوب مرة وحدة بـ SQL
-def with_overdue(qs, now=None):
-    """بيضيف r_followup و r_sla و r_no_contact و is_overdue على كل طلب.
-    منه بينبنى الفلتر (?overdue=true)، والحقول بالـ serializer، والترتيب بالـ Kanban،
-    والـ scan_overdue. ما في نسخة Python تانية ممكن تختلف عنه."""
-    now = now or timezone.now()
-    stale = now - timedelta(days=settings.NO_CONTACT_DAYS)
-    is_open = Q(status="OPEN", archived_at__isnull=True, client__archived_at__isnull=True)
-    sla_interval = Func(F("stage__sla_days"), template="make_interval(days => %(expressions)s)",
-                        output_field=DurationField())          # NULL إذا المرحلة بلا SLA
-    qs = qs.annotate(
-        sla_deadline=ExpressionWrapper(F("stage_entered_at") + sla_interval, output_field=DateTimeField()),
-        contact_ref=Coalesce("last_contact_at", "created_at"),
-    )
-    flag = lambda cond: ExpressionWrapper(is_open & cond, output_field=BooleanField())
-    return qs.annotate(
-        r_followup=flag(Q(next_follow_up_at__lt=now)),
-        r_sla=flag(Q(sla_deadline__lt=now)),
-        r_no_contact=flag(Q(contact_ref__lt=stale)),
-    ).annotate(
-        is_overdue=ExpressionWrapper(Q(r_followup=True) | Q(r_sla=True) | Q(r_no_contact=True),
-                                     output_field=BooleanField()),
-    )
-    # tests: حالة لكل سبب، وحالة بدون ولا سبب، وطلب مسكّر، وطلب عميل مؤرشف.
-
-REASONS = {"r_followup": "FOLLOWUP_DUE", "r_sla": "STAGE_SLA", "r_no_contact": "NO_CONTACT"}
-```
-
----
-
-## 5. الـ Jobs: بسيطة بس صح
-
-### شو تعلمنا من أكبر مشاريع الـ CRM على GitHub
-| المشروع | طريقتهم |
-|---|---|
-| **Twenty** (~60k ⭐) | BullMQ + Redis، و worker process منفصل |
-| **Frappe CRM / ERPNext** | RQ + Redis. الـ scheduler بيعرّف `hourly/daily/cron` بـ `hooks.py` |
-| **BottleCRM** (Django + DRF) | Celery + Redis + beat. فحص SLA كل 5 دقائق، و claim بـ UPDATE مشروط ليمنع التذكير المكرر |
-| **django-crm** | thread جوّا الـ web process (**نمط غلط**: بيتكرر مع كل gunicorn worker) |
-
-هدول بيبعتوا آلاف الإيميلات و webhooks، فالـ queue عندهم ضروري. **إحنا عنا 2 jobs دوريات بس.** المبادئ الصح منحتفظ فيها، والبنية التحتية ما منحتاجها:
-
-| المبدأ | التطبيق عنا |
-|---|---|
-| الـ job ما بيشتغل جوّا الـ web process | management command منفصل |
-| **Idempotent** | إذا انطلق مرتين ما بيصير شي مكرر (الـ UniqueConstraint + `ignore_conflicts`) |
-| **State-based مش time-based** | الـ command بيفحص **الحالة الحالية**، فإذا فات run، اللي بعده بيلقط كل شي |
-| ما في تداخل | `pg_try_advisory_lock`: إذا في نسخة شغالة، التانية بتطلع فوراً (helper صغير بـ `core/locks.py`) |
-| الـ context بينبعت صريح | ما في اعتماد على request أو user |
-
-```python
-# tasks/management/commands/scan_overdue.py   ← كل 5 دقائق
-class Command(BaseCommand):
-    def handle(self, *args, **opts):
-        with advisory_lock("scan_overdue") as got:
-            if not got:
-                return
-            now, today = timezone.now(), timezone.localdate()     # اليوم بتوقيتكم، مش UTC
-            overdue = with_overdue(Request.objects.all(), now).filter(is_overdue=True)
-            rows = [
-                Notification(user=u, kind=Notification.Kind.REQUEST_OVERDUE, request=req, day=today)
-                for req in overdue.select_related("assignee")
-                for u in recipients(req)                       # المسند إلو، وإلا الـ ADMINs
-            ] + [
-                Notification(user=t.assignee, kind=Notification.Kind.TASK_DUE, task=t, day=today)
-                for t in Task.objects.filter(done_at__isnull=True, due_at__lte=now, assignee__isnull=False)
-            ]
-            # إشعار واحد لكل طلب متأخر باليوم، مش واحد لكل سبب. والتذكير بيتكرر كل يوم لحتى ينحل
-            Notification.objects.bulk_create(rows, ignore_conflicts=True)
-            # ignore_conflicts ما بيرجّع شو انضاف فعلاً، فمنسأل حسب created_at
-            for uid in (Notification.objects.filter(created_at__gte=now)
-                        .values_list("user_id", flat=True).distinct()):
-                publish("notification.created", user_id=uid)       # ← SSE (القسم 6.1)
-```
-
-```python
-# tasks/management/commands/cleanup.py   ← مرة باليوم
-# بيحذف الإشعارات المقروءة الأقدم من 90 يوم
-```
-
-```
-*/5 * * * *   manage.py scan_overdue
-30 2 * * *    manage.py cleanup
-```
-(الجدولة نفسها cron أو systemd timer، عليك.)
-
-**متى بنضيف queue حقيقي؟** لما بدنا نبعت واتساب/إيميل. وقتها بيدخل **Procrastinate**: queue على Postgres، و worker واحد، و retries. الـ services ما بتتغيّر، بس منضيف `send_notification.defer(id)` بعد إنشاء الإشعار.
-
----
-
-## 6. تصميم الـ API
-
-### المبادئ
-1. **Resources أسماء جمع، و flat.** العلاقات بتنعمل بالـ filters، ما في nesting عميق: `/requests/?client=12` مش `/clients/12/requests/`.
-2. **التغيير بيكون بـ `PATCH` على الـ resource نفسه** وقت ما بيكون ممكن. ما في endpoint لكل فعل:
-   - نقل مرحلة: `PATCH /requests/42/ {"stage": 5}` (الـ serializer بيمرّر لـ `change_stage`)
-   - تأجيل: `PATCH /requests/42/ {"next_follow_up_at": "..."}`
-   - أرشفة: `PATCH /clients/7/ {"is_archived": true}`
-   - إنهاء مهمة: `PATCH /tasks/3/ {"is_done": true}`
-   - قراءة إشعار: `PATCH /notifications/9/ {"is_read": true}`
-3. **"تواصلت مع العميل" = إنشاء Activity:** `POST /activities/ {"type": "CALL", "client": 7, "request": 42}`. هيك ما في endpoint `contacted`.
-4. **قراءة غنية وكتابة بالـ ids:** الـ response فيه ملخص صغير للعلاقات (`client: {id, name}`)، والـ request بياخد `client: 7`.
-5. **حقول محسوبة read-only:** `is_overdue` و `overdue_reasons` و `days_in_stage`.
-6. **أشكال ثابتة:** JSON بـ `snake_case`، والتواريخ ISO-8601 بـ UTC، والـ ids integers، والـ pagination بشكل واحد، والأخطاء بشكل واحد.
-
-### الـ Endpoints (`/api/v1/`)
-
-```
-auth/csrf/            GET      بيزرع csrftoken
-auth/login/           POST     {username, password}
-auth/logout/          POST
-auth/me/              GET
-
-clients/              GET POST         ?search= &tag= &archived= &overdue=
-clients/{id}/         GET PATCH
-apartments/           GET POST         ?client= &search=
-apartments/{id}/      GET PATCH
-stages/               GET POST         (الكتابة: ADMIN)
-stages/{id}/          PATCH DELETE     (DELETE بس لمرحلة ما انستعملت أبداً، وإلا 409 → `is_active=false`)
-requests/             GET POST         ?client= &stage= &status= &assignee=me &overdue=
-requests/{id}/        GET PATCH
-activities/           GET POST         ?client= &request=
-timeline/             GET              ?client= | ?request=   (Activity + StageChange + Documents مرتبين)
-documents/            GET POST         ?client= &apartment= &request= &category=    (POST = multipart)
-documents/{id}/       GET PATCH
-documents/{id}/file/  GET              (الملف نفسه، بعد فحص الصلاحية)
-tasks/                GET POST         ?due=today|week|overdue &assignee=me &done=
-tasks/{id}/           GET PATCH DELETE
-notifications/        GET              ?unread=true
-notifications/{id}/   PATCH
-notifications/read-all/  POST          (الـ action الوحيد، لأنه bulk)
-dashboard/            GET
-search/               GET              ?q=
-```
-
-**ما في `DELETE`** على العملاء والشقق والطلبات والملفات. الحذف هو أرشفة عبر `PATCH`، والحذف النهائي من Django Admin بس.
-
-**تفاصيل لازم تنتبه إلها:**
-- **Pagination:** حجم الصفحة الافتراضي 25، و `?page_size=` لحد 200. الـ Kanban بيطلب `requests/?status=OPEN&page_size=200`، وبيترتب بـ `?ordering=-is_overdue,next_follow_up_at`.
-- **`?overdue=true`** على `clients/` معناه "عنده طلب متأخر" (`Exists` على `with_overdue`).
-- **`is_archived`** حقل بالـ serializer بس: `true` بتستدعي `archive_*` service، و `false` بترجّع (`archived_at = NULL`).
-- **الـ login عليه throttle** (`ScopedRateThrottle`، مثلاً 10 بالدقيقة)، والـ endpoints التانية لأ.
-
-### أمثلة
-
-```http
-GET /api/v1/requests/?stage=4&overdue=true
-
-200 OK
-{
-  "count": 2,
-  "next": null,
-  "previous": null,
-  "results": [
-    {
-      "id": 42,
-      "title": "إكساء شقة المزة",
-      "client":    { "id": 7, "name": "أحمد سليمان" },
-      "apartment": { "id": 3, "title": "المزة - بناء 4" },
-      "stage":     { "id": 4, "name": "عرض سعر", "color": "#f59e0b" },
-      "status": "OPEN",
-      "priority": "HIGH",
-      "next_follow_up_at": "2026-11-04T09:00:00Z",
-      "last_contact_at": "2026-10-29T12:10:00Z",
-      "days_in_stage": 9,
-      "is_overdue": true,
-      "overdue_reasons": ["FOLLOWUP_DUE", "STAGE_SLA"],
-      "assignee": { "id": 1, "name": "أحمد" },
-      "created_at": "2026-10-20T08:00:00Z"
-    }
-  ]
-}
-```
-
-```http
-PATCH /api/v1/requests/42/
-{ "stage": 5 }
-
-400 Bad Request
-{
-  "type": "validation_error",
-  "errors": { "next_follow_up_at": ["حدد موعد المتابعة لهالمرحلة"] }
-}
-```
-
-### شكل الأخطاء (موحّد عبر custom exception handler)
-
-| Status | `type` | متى |
-|---|---|---|
-| 400 | `validation_error` | `errors: {field: [msg]}`، والأخطاء العامة على `non_field_errors` |
-| 401 | `not_authenticated` | الجلسة انتهت. ⚠️ DRF مع `SessionAuthentication` بيرجّع 403 افتراضياً، والـ handler بيحوّلها لـ 401 ليعرف الفرونت إنه لازم يعمل login |
-| 403 | `permission_denied` | (فيها كمان فشل الـ CSRF) |
-| 404 | `not_found` | |
-| 409 | `conflict` | الـ handler بيحوّل `ProtectedError` لـ 409، متل حذف مرحلة مستعملة |
-
-الـ handler بيحوّل كمان `django.core.exceptions.ValidationError` (اللي بترميه الـ services) لـ 400 بنفس الشكل.
-
-### Serializers: واحد لكل resource مع حقول read/write واضحة
-
-```python
-class RequestSerializer(serializers.ModelSerializer):
-    client    = ClientRefField()             # read: {id, name}، و write: id
-    apartment = ApartmentRefField(required=False, allow_null=True)
-    stage     = StageRefField()
-    assignee  = UserRefField(required=False, allow_null=True)
-    is_overdue      = serializers.BooleanField(read_only=True)        # من with_overdue() بالـ queryset
-    overdue_reasons = serializers.SerializerMethodField()             # [REASONS[k] for k in REASONS if getattr(obj, k)]
-    days_in_stage   = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Request
-        fields = ["id", "title", "description", "budget", "priority", "status", "client", "apartment",
-                  "stage", "next_follow_up_at", "last_contact_at", "assignee", "days_in_stage",
-                  "is_overdue", "overdue_reasons", "created_at", "updated_at"]
-        read_only_fields = ["status", "last_contact_at", "created_at", "updated_at"]
-
-    def validate(self, data):
-        if self.instance and "client" in data and data["client"] != self.instance.client:
-            raise ValidationError({"client": ["ما بينفع تغيّر عميل الطلب"]})
-        client = data.get("client") or self.instance.client
-        apt = data.get("apartment")
-        if apt and apt.client_id != client.id:
-            raise ValidationError({"apartment": ["الشقة مش لهالعميل"]})
-        return data
-
-    @transaction.atomic                                  # المرحلة وباقي الحقول بينحفظوا سوا أو ما بينحفظ شي
-    def update(self, instance, data):
-        stage = data.pop("stage", None)
-        if stage and stage != instance.stage:
-            instance = change_stage(instance, stage, by=self.context["request"].user,
-                                    follow_up_at=data.pop("next_follow_up_at", None))
-        instance = super().update(instance, data)
-        publish("request.changed", id=instance.pk)
-        return instance
-```
-
-الـ ViewSet بيرجّع دايماً `with_overdue(Request.objects.select_related(...))`، فالحقول المحسوبة جاهزة بدون N+1. وبعد `PATCH`، الـ response بيتبني من query جديد ليرجع `is_overdue` محدّث.
-
-`status` read-only لأنه بيتحدد من المرحلة (`closes_as`). هيك ما في طريقتين متضاربتين لإغلاق الطلب.
-
-### الصلاحيات
-- `ADMIN`: كل شي، وتعديل المراحل.
-- `STAFF`: كل العملاء والطلبات، وفي فلتر "تبعي" (`assignee=me`).
-- منحطها بـ permission class واحد + `get_queryset` بـ base ViewSet، فإذا تغيّرت القاعدة بتتغيّر بمكان واحد.
-
-### الملفات
-- **الرفع:** multipart. منفحص الامتداد + أول bytes (`%PDF-`، أو Pillow للصور)، والحد الأعلى للحجم بالـ settings، والاسم المخزّن UUID.
-- **العرض:** `documents/{id}/file/` بيفحص الجلسة، وبعدين بيرجّع `X-Accel-Redirect` لـ internal location، و nginx بيبعت الملف. `media/` ما بتنخدم مباشرة. بالتطوير (بدون nginx) بيرجّع `FileResponse` عادي، والسلوك بيتبدّل بـ setting واحد.
-
----
-
-## 6.1 Realtime: SSE
-
-### ليش SSE بالذات
-- الاتجاه **من السيرفر للمتصفح بس**. التعديلات أصلاً بتروح عبر الـ REST API، فما منحتاج WebSocket.
-- `EventSource` جزء من المتصفح: بيرجع يتصل لحاله إذا انقطع، وبيبعت الـ session cookie تلقائياً لأنه نفس الـ origin. يعني ما في auth إضافي.
-- HTTP عادي، بيمرق من nginx و Cloudflare بدون upgrade.
-
-### المبدأ الأهم: الـ event هو **إشارة**، مش بيانات
-الـ event بيحمل **نوع + ids بس**، متل `{"event": "request.changed", "data": {"id": 42}}`. لما توصل، الفرونت بيعمل `invalidateQueries`، و TanStack Query بيجيب البيانات من الـ REST API.
-- **الـ API بيضل المصدر الوحيد للحقيقة.** ما في نسختين من شكل البيانات (REST و SSE) ممكن يختلفوا.
-- **ما في replay ولا event store.** بعد أي انقطاع، المتصفح بيعمل resync (بيعيد جلب كل شي)، فما بيضيع ولا تحديث.
-- الـ payload صغير، وهاد مهم لأن حد `NOTIFY` هو 8KB.
-
-### المعمارية
-
-```
- services.py (جوّا transaction)          scan_overdue (process تاني)
-          │ publish() = pg_notify                 │ publish()
-          └──────────────┬────────────────────────┘
-                         ▼
-              Postgres  channel: crm_events     ← NOTIFY بيوصل بس بعد COMMIT
-                         │  LISTEN (اتصال واحد لكل process)
-          ┌──────────────┴──────────────┐
-     uvicorn worker 1              uvicorn worker 2
-        Hub (fan-out)                 Hub (fan-out)
-      ┌────┼────┐                       │
-     tab  tab  tab                     tab        ← GET /api/v1/events/  (text/event-stream)
-```
-
-**ليش Postgres `LISTEN/NOTIFY`؟**
-1. **Transactional مجاناً:** `pg_notify` جوّا transaction ما بينبعت إلا بعد الـ commit، وإذا صار rollback بينلغى. ما في event عن شي ما انحفظ.
-2. **بيقطع بين الـ processes:** الـ `scan_overdue` (process منفصل) وكل uvicorn worker بيوصلهم نفس الـ event. هاد اللي كنا بنحتاج Redis pub/sub مشانه.
-3. **Postgres حصراً:** ما في أداة جديدة.
-
-### الـ Events
-
-| Event | لمين | بينطلق من | الفرونت بيعمل invalidate لـ |
-|---|---|---|---|
-| `notification.created` | `user_id` محدد | `scan_overdue`، و`assign_task` (إشعار `TASK_ASSIGNED` إذا المسند شخص غير اللي عمل المهمة) | `notifications` + toast |
-| `request.changed` | الكل | `change_stage`، والإنشاء والتعديل، و `archive_client` | `requests`، `request/{id}`، `dashboard` |
-| `activity.created` | الكل | `log_activity` | `timeline`، `requests`، `clients` (بسبب `last_contact_at`) |
-| `document.created` | الكل | رفع ملف | `documents` |
-| `task.changed` | الكل | إنشاء/تعديل مهمة | `tasks`، `dashboard` |
-| `resync` | الكل | الـ listener رجع اتصل بالـ DB | **كل شي** |
-
-الـ events بتنطلق **من الـ services**، مش من Django signals. هيك كل event واضح وين انبعت.
-
-### Backend
-
-```python
-# apps/realtime/events.py
-CHANNEL = "crm_events"
-
-def publish(event: str, *, user_id: int | None = None, **data) -> None:
-    """بينادى جوّا transaction الـ service. Postgres بيأجّل التسليم للـ COMMIT."""
-    payload = json.dumps({"event": event, "user_id": user_id, "data": data}, default=str)
-    with connection.cursor() as cur:
-        cur.execute("SELECT pg_notify(%s, %s)", [CHANNEL, payload])
-```
-
-```python
-# apps/realtime/hub.py: واحد لكل process
-class Hub:
-    def __init__(self):
-        self.subscribers: set[asyncio.Queue] = set()
-        self._task: asyncio.Task | None = None
-
-    def subscribe(self) -> asyncio.Queue:
-        if self._task is None or self._task.done():
-            self._task = asyncio.create_task(self._listen())   # lazy: أول مشترك بيشغّل الـ listener
-        q = asyncio.Queue(maxsize=100)
-        self.subscribers.add(q)
-        return q
-
-    def unsubscribe(self, q: asyncio.Queue) -> None:
-        self.subscribers.discard(q)
-
-    async def _listen(self):
-        while True:                                            # بيرجع يتصل لحاله إذا وقعت الـ DB
-            try:
-                async with await psycopg.AsyncConnection.connect(DB_DSN, autocommit=True) as conn:
-                    await conn.execute(f"LISTEN {CHANNEL}")
-                    self._broadcast({"event": "resync"})       # ممكن يكون فات شي وقت الانقطاع
-                    async for n in conn.notifies():
-                        self._broadcast(json.loads(n.payload))
-            except Exception:
-                logger.exception("realtime listener dropped; retrying")
-                await asyncio.sleep(3)
-
-    def _broadcast(self, msg: dict) -> None:
-        for q in list(self.subscribers):
-            try:
-                q.put_nowait(msg)
-            except asyncio.QueueFull:                          # client بطيء/عالق
-                self.subscribers.discard(q)                    # الـ stream بيلاحظ وبيتسكّر، والمتصفح بيرجع يتصل ويعمل resync
-
-    def is_subscribed(self, q: asyncio.Queue) -> bool:
-        return q in self.subscribers
-
-hub = Hub()
-```
-
-```python
-# apps/realtime/views.py: Django view عادي (async)، مش DRF
-HEARTBEAT = 20  # ثانية. ما بيخلي nginx أو Cloudflare يسكّروا الاتصال لأنه idle
-
-async def event_stream(request):
-    user = await request.auser()
-    if not user.is_authenticated:
-        return HttpResponse(status=401)
-
-    q = hub.subscribe()
-
-    async def gen():
-        try:
-            yield "retry: 5000\n\n"                            # المتصفح بيرجع يتصل بعد 5 ثواني
-            while hub.is_subscribed(q):                        # إذا انشال بسبب overflow، منسكّر
-                try:
-                    msg = await asyncio.wait_for(q.get(), timeout=HEARTBEAT)
-                except asyncio.TimeoutError:
-                    yield ": ping\n\n"                         # comment، والمتصفح بيتجاهله
-                    continue
-                if msg.get("user_id") not in (None, user.id):  # إشعارات شخصية لصاحبها بس
-                    continue
-                yield f"event: {msg['event']}\ndata: {json.dumps(msg.get('data', {}))}\n\n"
-        finally:                                               # المتصفح سكّر الصفحة، فمنلغي الاشتراك
-            hub.unsubscribe(q)
-
-    resp = StreamingHttpResponse(gen(), content_type="text/event-stream")
-    resp["Cache-Control"] = "no-cache"
-    resp["X-Accel-Buffering"] = "no"                           # nginx ما بيعمل buffer لهالـ response
-    return resp
-
-# urls: path("api/v1/events/", event_stream)
-```
-
-**ملاحظات:**
-- **ASGI ضروري.** تحت WSGI، كل تاب مفتوح بيحجز worker كامل. تحت ASGI الاتصال المفتوح بيكلّف coroutine بس.
-- **اتصال DB واحد لكل process للـ LISTEN،** مش واحد لكل تاب.
-- الـ DRF views بتضل **sync** عادي (Django بيشغّلها بـ thread). الـ view الوحيد اللي async هو `event_stream`.
-- **الاختبار:** `TransactionTestCase` بيتأكد إنه الـ event بيوصل بعد الـ commit، وما بيوصل بعد rollback.
-- **EventSource مش موجود بالـ OpenAPI schema.** أسماء الـ events بتكون `TextChoices` بالـ backend، وبالفرونت union صغير بـ `realtime/events.ts`.
-
-### Frontend
-
-```ts
-// src/realtime/useLiveEvents.ts: بينادى مرة وحدة بالـ layout
-const INVALIDATE: Record<string, (d: any) => QueryKey[]> = {
-  "notification.created": () => [["notifications"]],
-  "request.changed":      (d) => [["requests"], ["request", d.id], ["dashboard"]],
-  "activity.created":     () => [["timeline"], ["requests"], ["clients"]],
-  "document.created":     () => [["documents"]],
-  "task.changed":         () => [["tasks"], ["dashboard"]],
-};
-
-export function useLiveEvents() {
-  const qc = useQueryClient();
-  useEffect(() => {
-    const es = new EventSource("/api/v1/events/");
-    let opened = false;
-    const resync = () => qc.invalidateQueries();
-
-    es.onopen = () => { if (opened) resync(); opened = true; };   // بعد أي reconnect: resync
-    es.addEventListener("resync", resync);
-    for (const [name, keys] of Object.entries(INVALIDATE)) {
-      es.addEventListener(name, (e) => {
-        keys(JSON.parse((e as MessageEvent).data)).forEach((k) => qc.invalidateQueries({ queryKey: k }));
-        if (name === "notification.created") toast("إشعار جديد");
-      });
-    }
-    return () => es.close();
-  }, [qc]);
-}
-```
-
-- جرس الإشعارات **ما بقى يعمل polling**. بيتحدّث لما يوصل event بس.
-- إذا الـ SSE وقع كلياً، النظام بيضل شغّال: TanStack Query بيعيد الجلب لما ترجع على التاب (`refetchOnWindowFocus`).
-- `invalidateQueries` بيعيد جلب الـ queries المعروضة على الشاشة بس، فالـ event ما بيعمل ضغط على الـ API.
-
----
-
-## 7. الـ Frontend
-
-| الأداة | ليش |
-|---|---|
-| **React 19 + Vite + TypeScript** | SPA، والـ build بيطلع ملفات static |
-| **React Router** | routing |
-| **TanStack Query** | cache وإعادة جلب البيانات وتحديثها بعد كل تعديل. الـ SSE events بتعمل `invalidateQueries` (القسم 6.1) |
-| **openapi-fetch** + types مولّدة | الـ API client بيعتمد على الـ schema تبع Django |
-| **react-hook-form** | الفورمات، وأخطاء السيرفر بتنحط على الحقول (`setError`) |
-| **shadcn/ui + Tailwind** | UI مع `dir="rtl"` |
-| **dnd-kit** | سحب بطاقات الـ Kanban، مع تحديث فوري بالواجهة ورجوع للمكان الأصلي إذا السيرفر رفض |
-| **react-pdf** | عرض PDF، وصورة مصغّرة لأول صفحة بالمتصفح |
-| **date-fns** | "منذ 3 أيام" بالعربي |
-
-```ts
-// lib/applyServerErrors.ts: بديل Zod
-export function applyServerErrors(err: ApiError, setError: UseFormSetError<any>) {
-  for (const [field, msgs] of Object.entries(err.errors ?? {}))
-    setError(field === "non_field_errors" ? "root" : field, { message: msgs[0] });
-}
-```
-
-```make
-schema:
-	cd backend && python manage.py spectacular --file ../frontend/src/api/schema.yml
-	cd frontend && npx openapi-typescript src/api/schema.yml -o src/api/schema.d.ts
-```
-
----
-
-## 8. ترتيب البناء
-
-| المرحلة | المحتوى |
-|---|---|
-| **1. الأساس** | Django (ASGI) + DRF + Postgres + auth (session/CSRF) + exception handler + pagination + spectacular + `publish()` (من أول يوم، لتستعمله كل الـ services). Vite + React + Router + Query + shadcn RTL + login + layout |
-| **2. العملاء** | Client: API + بطاقات + إنشاء/تعديل/أرشفة + بحث |
-| **3. الطلبات** | Stage seed + Request + `with_overdue` + `change_stage` + Kanban + Activity + Timeline |
-| **4. الشقق والملفات** | Apartment + Document + رفع + عرض |
-| **5. التذكير + Realtime** | Tasks + Notifications + `scan_overdue` + Dashboard + SSE (Hub / `event_stream` / `useLiveEvents`) |
-| **لاحقاً** | واتساب/إيميل (وقتها بيدخل Procrastinate)، تقارير مدة المراحل، تصدير Excel |
-
-## 9. لسا مفتوح
-1. **طبيعة الشغل**، لنثبت المراحل الافتراضية.
-2. **الطلب على شقة وحدة دائماً؟** (حالياً: شقة وحدة، اختياري)
-
----
-
-## 10. نتائج التشغيل والاختبار (2026-11-06)
-
-بنيت الـ backend كامل بـ `backend/` وشغّلته على PostgreSQL 16 حقيقي. النتيجة: **62 اختبار ناجح**، و **e2e للـ SSE على Granian** ناجح، و `ruff` نظيف، و OpenAPI schema بدون ولا warning، و `check --deploy` بدون مشاكل إلا قرارات الـ proxy.
-
-### Bugs طلعت بالاختبار (وكانت رح توصل للـ prod)
-| المشكلة | الأثر | الحل |
-|---|---|---|
-| `is_overdue` بيطلع `NULL` بدل `false` (منطق SQL الثلاثي: `NULL < now` = `NULL`) | الطلبات اللي ما إلها موعد متابعة كانت تطلع **أول** الـ Kanban مع `-is_overdue` | `COALESCE(..., false)` على كل سبب |
-| `Meta.ordering` بيتجاهله Django مع `Count` (GROUP BY) | الـ pagination تبع العملاء بيصير ترتيبه عشوائي | `order_by` صريح |
-| psycopg async بيرفض `ProactorEventLoop` تبع Windows | الـ SSE ما بيستقبل شي إذا السيرفر Windows | الـ LISTEN صار بـ **thread** مع اتصال sync، و `call_soon_threadsafe` للـ loop. بيشتغل على أي نظام وأي event loop |
-| `PhoneField`: الـ unique check كان بيقارن الرقم قبل التطبيع | "0991 234" مكرر بيرجع **500** بدل 400 | التطبيع جوّا `to_internal_value` (قبل الـ validators) |
-
-### تصحيحات من البحث (docs رسمية)
-| الموضوع | قبل | بعد | المصدر |
-|---|---|---|---|
-| Login CSRF | DRF ما بيفحص CSRF لـ login مجهول | `@csrf_protect` على `LoginView` (مختبر: بدون token = 403) | DRF auth docs |
-| 401 مقابل 403 | تحويل بالـ exception handler | `SessionAuth.authenticate_header()` بيرجّع `"Session"` (الطريقة الموثّقة، ومعها `WWW-Authenticate`) | DRF docs |
-| اتصالات الـ DB تحت ASGI | — | `CONN_MAX_AGE=0` + **pool تبع Django 5.1+** (`psycopg[pool]`)، و workers × `DB_POOL_MAX` < `max_connections` | Django databases docs |
-| Throttle الـ login | LocMem (لكل process) | **DatabaseCache** (مشترك، Postgres بس) + `NUM_PROXIES=1` | DRF throttling docs |
-| Advisory lock | session-level | **`pg_try_advisory_xact_lock`** جوّا `atomic()`، وبينفك مع COMMIT/ROLLBACK فما بيعلق أبداً | Postgres docs |
-| تنزيل الملفات | FileResponse | تحت ASGI بيقرا الملف كله بـ Python، فصار **X-Accel-Redirect** بالـ prod و FileResponse بالـ dev بس | Django docs |
-| أسماء الحقول للكتابة | `client: 7` | **`client_id: 7`** للكتابة و `client: {id, name}` للقراءة، مع `COMPONENT_SPLIT_REQUEST`. هيك الـ types المولّدة دقيقة | drf-spectacular docs |
-
-### ملاحظات لإلك (nginx / تشغيل)
-- **Granian:** `granian --interface asginl --workers N config.asgi:application`. (`asginl` لأنه Django ما بيدعم ASGI lifespan.) **على Windows، Granian بيشتغل بـ worker واحد بس** (قيد عنده)، وعلى Linux عدد الـ workers طبيعي. لمشروع بحجمنا، worker واحد كافي.
-- **SSE location:** `proxy_buffering off; proxy_read_timeout 1h; proxy_http_version 1.1; proxy_set_header Connection "";` والـ heartbeat كل 20 ثانية.
-- **HTTP/2** على nginx أو Cloudflare، لأنه بـ HTTP/1.1 المتصفح بيسمح بـ 6 اتصالات بس للدومين، وكل تاب مفتوح بياخد واحد للـ SSE.
-- **`client_max_body_size`** ≥ `MAX_UPLOAD_MB` (الافتراضي عند nginx هو 1MB).
-- **`/protected-media/`** كـ `internal` location بيأشّر على `MEDIA_ROOT`.
-- `manage.py createcachetable` بعد `migrate` (جدول الـ throttle).
-- الـ cron: `*/5 * * * * manage.py scan_overdue` و `30 2 * * * manage.py cleanup`.
-- `check --deploy` بيعطي 3 warnings بس: `SECURE_SSL_REDIRECT` و HSTS subdomains/preload. هدول بيتحددوا عندك بـ Cloudflare أو nginx.
-
-### تطوير محلي
-- PostgreSQL محلي عبر `pgserver` (pip). بنسخة Windows ناقصه ملفات المناطق الزمنية، فنسختها من حزمة `tzdata`. هاد **للتطوير بس**، وما بيأثر على الـ prod.
-- `uv run pytest` بيشغّل الاختبارات، و `uv run python scripts/e2e_sse.py` بيعمل e2e للـ SSE.
+| أعلام "بدها انتباه" | منطق SQL الثلاثي: `NULL < now` بيطلع `NULL` بدل false | `COALESCE(…, false)` على كل سبب |
+| الترتيب مع `Count` | Django بيتجاهل `Meta.ordering` مع GROUP BY | `order_by` صريح، والـ `-pk` بالآخر دايماً |
+| psycopg async على Windows | بيرفض `ProactorEventLoop`، فالـ SSE ما بيستقبل شي | LISTEN بـ thread مع اتصال sync و `call_soon_threadsafe` |
+| رقم مكرر بصيغة تانية | الـ unique check قبل التطبيع بيرجّع 500 | التطبيع جوّا `to_internal_value` |
+| Login CSRF | DRF ما بيفحص CSRF لمستخدم مجهول | `@csrf_protect` على `LoginView` |
+| 401 مقابل 403 | — | `SessionAuth.authenticate_header()` |
+| الـ DB تحت ASGI | — | `CONN_MAX_AGE=0` + pool تبع Django (`psycopg[pool]`)، و workers × `DB_POOL_MAX` < `max_connections` |
+| throttle الـ login | LocMem منفصل لكل process | `DatabaseCache` مشترك (`createcachetable`) |
+| تنزيل الملفات تحت ASGI | `FileResponse` بيقرا الملف بـ Python | `X-Accel-Redirect` بالإنتاج |
+| Kanban بحد 200 | 225 طلب مفتوح، فالأعداد غلط | كروت بـ pagination من السيرفر، و `stage-counts` |
+| كود العقار ما بيتبحث فيه | الكود بيتولّد بعد بناء نص البحث | إعادة بناء النص بعد توليد الكود، و migration للقديم |
+
+## 11. ملاحظات التشغيل (إلك)
+
+- **Granian على Linux:**
+  - `granian --interface asginl --host 127.0.0.1 --port 8000 --workers N config.asgi:application`.
+  - على Windows بيشتغل بـ worker واحد بس.
+- **SSE ورا nginx:** `proxy_buffering off`، و `proxy_read_timeout` أطول من 20 ثانية، و `proxy_http_version 1.1`.
+- **HTTP/2:** بـ HTTP/1.1 كل تاب مفتوح بياخد اتصال من الـ 6 المسموحين للدومين.
+- **ملفات nginx:**
+  - `client_max_body_size` ≥ `MAX_UPLOAD_MB` (25).
+  - `/protected-media/` كـ `internal` بيأشّر على `MEDIA_ROOT`.
+  - `/static/` بيأشّر على `staticfiles/` بعد `collectstatic`.
+- **بعد `migrate`:** `createcachetable`. والمجدول: `notify_tick` كل 5 دقائق.
+- **بالإنتاج:**
+  - الكوكيز `Secure`، فالدخول لازم يكون عبر **HTTPS**.
+  - `NUM_PROXIES` = عدد الـ proxies قدّام Django.
+  - `APP_URL` للروابط بالإيميلات.
