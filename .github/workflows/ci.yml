@@ -1,0 +1,116 @@
+# Tests on Linux (Ubuntu 24.04 + Python 3.12.3, the production server's versions) on every push / PR.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: backend (Postgres ${{ matrix.postgres }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        postgres: ["16", "18"]  # 16 = Ubuntu 24.04's own package, 18 = the dev database
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres }}
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: crm
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DB_NAME: crm
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: 127.0.0.1
+      DB_PORT: "5432"
+      DJANGO_SECRET_KEY: ci-only-not-a-secret-0123456789-abcdefghijklmnopqrstuvwxyz
+      PYTHONUTF8: "1"
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12.3"
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+
+      - name: Install (pip + venv, exactly like the server)
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install --upgrade pip
+          .venv/bin/python -m pip install -r requirements-dev.txt
+          .venv/bin/python --version
+          .venv/bin/python -m pip check
+
+      - name: Lint
+        run: .venv/bin/ruff check .
+
+      - name: Django checks (dev + production settings)
+        run: |
+          .venv/bin/python manage.py check
+          DJANGO_DEBUG=0 DJANGO_ALLOWED_HOSTS=crm.example.com .venv/bin/python manage.py check --deploy --fail-level ERROR
+          .venv/bin/python manage.py makemigrations --check --dry-run
+
+      - name: Migrate + seed
+        run: |
+          .venv/bin/python manage.py migrate --noinput
+          .venv/bin/python manage.py createcachetable
+          DJANGO_DEBUG=0 .venv/bin/python manage.py collectstatic --noinput -v 0
+
+      - name: Tests
+        run: .venv/bin/pytest -W error::DeprecationWarning
+
+      - name: OpenAPI schema is up to date
+        run: |
+          .venv/bin/python manage.py spectacular --file schema.yml --fail-on-warn
+          git diff --exit-code schema.yml
+
+      - name: Run under Granian and call the API (incl. live updates)
+        env:
+          DJANGO_DEBUG: "1"  # plain-http smoke test: production cookies are Secure (https only)
+        run: |
+          .venv/bin/python manage.py shell -c "from django.contrib.auth import get_user_model as U; U().objects.create_superuser('smoke', password='Smoke-pass-12345')"
+          .venv/bin/granian --interface asginl --host 127.0.0.1 --port 8000 --workers 2 config.asgi:application > granian.log 2>&1 &
+          for i in $(seq 1 30); do curl -fs -o /dev/null http://127.0.0.1:8000/api/v1/auth/csrf/ && break; sleep 1; done
+          jar=$(mktemp)
+          curl -fsS -c "$jar" -o /dev/null http://127.0.0.1:8000/api/v1/auth/csrf/
+          token=$(awk '$6=="csrftoken"{print $7}' "$jar")
+          curl -fsS -b "$jar" -c "$jar" -H "X-CSRFToken: $token" -H "Content-Type: application/json" \
+            -d '{"username":"smoke","password":"Smoke-pass-12345"}' http://127.0.0.1:8000/api/v1/auth/login/ > /dev/null
+          for p in auth/me/ dashboard/ deals/ deals/stage-counts/ contacts/ properties/ "search/?q=test" admin/roles/; do
+            code=$(curl -s -b "$jar" -o /dev/null -w "%{http_code}" "http://127.0.0.1:8000/api/v1/$p")
+            echo "$code /api/v1/$p"; [ "$code" = 200 ] || { cat granian.log; exit 1; }
+          done
+          first=$(curl -sN -b "$jar" --max-time 5 http://127.0.0.1:8000/api/v1/events/ | head -c 20 || true)
+          echo "SSE first bytes: $first"; echo "$first" | grep -q "retry:" || { cat granian.log; exit 1; }
+
+  frontend:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: node --version && npm --version
+      - run: npm ci --no-audit --no-fund
+      - run: npx oxlint src
+      - name: Type-check + build
+        run: npm run build
