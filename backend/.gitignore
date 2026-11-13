@@ -1,7 +1,20 @@
+# virtual environments (uv makes .venv; `python -m venv venv` makes venv)
 .venv/
-.pgdata/
+venv/
+env/
+
+# secrets: real settings stay on each machine; .env.example is the template
+.env
+.env.*
+!.env.example
+
+# uploads and collected static files
 media/
 staticfiles/
-.env
+
+# caches
 __pycache__/
 *.pyc
+.pytest_cache/
+.ruff_cache/
+*.log
