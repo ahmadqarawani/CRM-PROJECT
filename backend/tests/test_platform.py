@@ -164,7 +164,6 @@ def test_password_reset_flow(user, settings):
     from apps.accounts.password import reset_link
     from apps.core.models import SiteSettings
 
-    settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
     user.email = "staff@example.com"
     user.save()
     s = SiteSettings.load()
@@ -173,7 +172,10 @@ def test_password_reset_flow(user, settings):
     c = APIClient()
     from unittest.mock import patch
 
-    with patch("apps.core.mail.get_connection", return_value=mail.get_connection()):
+    from django.core.mail.backends.locmem import EmailBackend as MemoryBackend
+
+    # the test runner already collects mail in mail.outbox; swap the SMTP backend for the in-memory one
+    with patch("apps.core.mail.EmailBackend", return_value=MemoryBackend(alias="test")):
         # same answer for a real and an unknown account (no way to probe who exists)
         assert c.post("/api/v1/auth/password-reset/", {"login": "nobody"}, format="json").json() == {"email_enabled": True}
         assert c.post("/api/v1/auth/password-reset/", {"login": "STAFF@example.com"}, format="json").status_code == 200

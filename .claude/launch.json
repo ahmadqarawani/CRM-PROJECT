@@ -3,14 +3,29 @@
   "configurations": [
     {
       "name": "backend",
-      "runtimeExecutable": "uv",
-      "runtimeArgs": ["--directory", "backend", "run", "granian", "--interface", "asginl", "--host", "127.0.0.1", "--port", "8000", "config.asgi:application"],
+      "runtimeExecutable": "backend/.venv/Scripts/granian.exe",
+      "runtimeArgs": [
+        "--working-dir",
+        "backend",
+        "--interface",
+        "asginl",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8000",
+        "config.asgi:application"
+      ],
       "port": 8000
     },
     {
       "name": "frontend",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "frontend", "run", "dev"],
+      "runtimeArgs": [
+        "--prefix",
+        "frontend",
+        "run",
+        "dev"
+      ],
       "port": 5173
     }
   ]
