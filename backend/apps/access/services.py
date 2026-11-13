@@ -2,7 +2,7 @@
 
 from django.db.models import Q
 
-from .registry import ALL, DEFAULT_ROLE, NONE, OWN, PERMISSIONS, SCOPE_RANK, normalize
+from .registry import ALL, DEFAULT_ROLE, NONE, OWN, PERMISSIONS, normalize
 
 _FULL = {k: (ALL if kind == "scope" else True) for k, (_, _, kind) in PERMISSIONS.items()}
 
@@ -103,6 +103,3 @@ def can(user, key: str, obj=None, resource: str | None = None) -> bool:
         return True
     return is_own(user, resource or key.split(".")[0], obj)
 
-
-def stronger(a: str, b: str) -> bool:
-    return SCOPE_RANK[a] > SCOPE_RANK[b]

@@ -9,7 +9,6 @@ everything else, and field-level protection for money (Salesforce field-level se
 
 NONE, OWN, ALL = "none", "own", "all"
 SCOPES = (NONE, OWN, ALL)
-SCOPE_RANK = {NONE: 0, OWN: 1, ALL: 2}
 
 # key -> (group, label, kind) ; kind "scope" takes none/own/all, "bool" takes true/false
 PERMISSIONS: dict[str, tuple[str, str, str]] = {

@@ -188,7 +188,6 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # non-file request body
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # bigger uploads stream to a temp file
 SERVE_FILES_WITH_X_ACCEL = env_bool("SERVE_FILES_WITH_X_ACCEL", not DEBUG)
 X_ACCEL_PREFIX = env("X_ACCEL_PREFIX", "/protected-media/")
-NOTIFICATION_RETENTION_DAYS = 90
 
 LOGGING = {
     "version": 1,
@@ -206,5 +205,3 @@ AUDITLOG_DISABLE_REMOTE_ADDR = False
 # where people open the app: links in password-reset emails / password_link (the API builds them from the request)
 APP_URL = env("APP_URL", "http://localhost:5173")
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 24  # reset links work for 24 hours
-
-SERVICE_AREA = ["دمشق", "ريف دمشق"]  # finishing outside these -> lost "خارج منطقة الخدمة" on import

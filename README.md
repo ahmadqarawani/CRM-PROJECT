@@ -1,13 +1,11 @@
 # BGI CRM
 
-نظام إدارة العملاء والطلبات والشقق لـ **BGI Real Estate**.
+نظام إدارة العملاء والطلبات والعقارات لـ **BGI Real Estate**.
 
 - `backend/`: Django 5 + DRF + PostgreSQL (الـ API، والـ validation، والتذكيرات، والـ SSE)
 - `frontend/`: React 19 + Vite + Tailwind (SPA)
 - `ARCHITECTURE.md`: المعمارية والقرارات ونتائج الاختبار
-- `design/`: بحث التصميم وعيّنة الألوان
-- `data-import/`: نموذج البيانات، وتحليل الشيتات، وتقرير الاستيراد
-- `HANDOFF.md`: لوين وصلنا وشو الخطوة الجاية
+- `data-import/`: نموذج البيانات (`DATA_MODEL.md`). ملفات الشيت (`customers.csv`، `realestates.csv`) وتقرير الاستيراد بيضلوا هون محلياً، وما بيطلعوا على git
 
 ## التشغيل المحلي
 

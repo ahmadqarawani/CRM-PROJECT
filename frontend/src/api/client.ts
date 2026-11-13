@@ -15,7 +15,6 @@ export type Me = S['Me']
 export type UserRef = S['UserRef']
 export type DealKind = S['DealKindEnum']
 export type Pipeline = S['PipelineEnum']
-export type ActivityType = S['ActivityTypeEnum']
 export type Lookup = { id: number; name: string; order?: number; is_active?: boolean; [k: string]: unknown }
 
 /** The backend's single error shape. */

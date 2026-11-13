@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Link } from 'react-router'
 import type { Contact, Deal, Doc } from '../api/client'
 import { useAudit, usePatchDocument, useRemove, useTimeline, type TimelineItem } from '../api/hooks'
 import { ACTIVITY_LABEL, CATEGORY_LABEL, KIND_LABEL, REASON_LABEL, TEMP_LABEL, bytes, phoneLabel, shortDate, when,
@@ -195,10 +194,6 @@ export function DocumentList({ docs }: { docs: Doc[] }) {
       </Dialog>
     </>
   )
-}
-
-export function ContactLink({ id, name }: { id: number; name: string }) {
-  return <Link to={`/contacts/${id}`} className="text-primary no-underline hover:underline">{name}</Link>
 }
 
 export function Tabs<T extends string>({ value, onChange, items }: { value: T; onChange: (v: T) => void; items: [T, string, number?][] }) {
