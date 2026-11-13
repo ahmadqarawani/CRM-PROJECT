@@ -11,11 +11,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        get: operations["v1_activities_list"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        get: operations["activities_list"];
         put?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        post: operations["v1_activities_create"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        post: operations["activities_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -29,16 +35,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        get: operations["v1_activities_retrieve"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        get: operations["activities_retrieve"];
         put?: never;
         post?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        delete: operations["v1_activities_destroy"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        delete: operations["activities_destroy"];
         options?: never;
         head?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        patch: operations["v1_activities_partial_update"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        patch: operations["activities_partial_update"];
         trace?: never;
     };
     "/api/v1/activities/{id}/complete/": {
@@ -51,7 +66,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** @description Mark a planned activity done, write the outcome, and (optionally) plan the next one. */
-        post: operations["v1_activities_complete_create"];
+        post: operations["activities_complete_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -67,11 +82,65 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_admin_hand_over_create"];
+        post: operations["admin_hand_over_create"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/permissions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every permission (key, group, label, kind) — what the roles editor draws as rows. */
+        get: operations["admin_permissions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/roles/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Roles and their permission matrix. Built-in roles can be edited but not deleted; a role in use can't be. */
+        get: operations["admin_roles_list"];
+        put?: never;
+        /** @description Roles and their permission matrix. Built-in roles can be edited but not deleted; a role in use can't be. */
+        post: operations["admin_roles_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/roles/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Roles and their permission matrix. Built-in roles can be edited but not deleted; a role in use can't be. */
+        get: operations["admin_roles_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Roles and their permission matrix. Built-in roles can be edited but not deleted; a role in use can't be. */
+        delete: operations["admin_roles_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Roles and their permission matrix. Built-in roles can be edited but not deleted; a role in use can't be. */
+        patch: operations["admin_roles_partial_update"];
         trace?: never;
     };
     "/api/v1/admin/settings/": {
@@ -81,13 +150,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_admin_settings_retrieve"];
+        get: operations["admin_settings_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["v1_admin_settings_partial_update"];
+        patch: operations["admin_settings_partial_update"];
         trace?: never;
     };
     "/api/v1/admin/settings/test-email/": {
@@ -99,7 +168,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_admin_settings_test_email_create"];
+        post: operations["admin_settings_test_email_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -113,9 +182,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_admin_users_list"];
+        get: operations["admin_users_list"];
         put?: never;
-        post: operations["v1_admin_users_create"];
+        post: operations["admin_users_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -129,13 +198,30 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_admin_users_retrieve"];
+        get: operations["admin_users_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["v1_admin_users_partial_update"];
+        patch: operations["admin_users_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/reset-link/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description A one-time link to set a new password — for when the user has no email or email is off. */
+        post: operations["admin_users_reset_link_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/audit/": {
@@ -145,8 +231,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Who changed what and when (django-auditlog), for one record. */
-        get: operations["v1_audit_retrieve"];
+        /** @description Who changed what and when (django-auditlog), for one record, in readable Arabic. */
+        get: operations["audit_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -163,7 +249,7 @@ export interface paths {
             cookie?: never;
         };
         /** @description Call once on app start (and after login/logout): sets the csrftoken cookie. */
-        get: operations["v1_auth_csrf_retrieve"];
+        get: operations["auth_csrf_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -181,7 +267,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_auth_login_create"];
+        post: operations["auth_login_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -197,7 +283,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_auth_logout_create"];
+        post: operations["auth_logout_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -211,9 +297,75 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_auth_me_retrieve"];
+        get: operations["auth_me_retrieve"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/password-reset/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["auth_password_reset_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/password-reset/check/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Before showing the form: is the link still good, and for which account? */
+        post: operations["auth_password_reset_check_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/password-reset/confirm/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["auth_password_reset_confirm_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/password/change/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description A logged-in user changes their own password (needs the current one); they stay logged in. */
+        post: operations["auth_password_change_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -227,9 +379,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_catalog_features_list"];
+        get: operations["catalog_features_list"];
         put?: never;
-        post: operations["v1_catalog_features_create"];
+        post: operations["catalog_features_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -243,13 +395,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_catalog_features_retrieve"];
+        get: operations["catalog_features_retrieve"];
         put?: never;
         post?: never;
-        delete: operations["v1_catalog_features_destroy"];
+        delete: operations["catalog_features_destroy"];
         options?: never;
         head?: never;
-        patch: operations["v1_catalog_features_partial_update"];
+        patch: operations["catalog_features_partial_update"];
         trace?: never;
     };
     "/api/v1/catalog/finish-levels/": {
@@ -259,9 +411,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_catalog_finish_levels_list"];
+        get: operations["catalog_finish_levels_list"];
         put?: never;
-        post: operations["v1_catalog_finish_levels_create"];
+        post: operations["catalog_finish_levels_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -275,13 +427,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_catalog_finish_levels_retrieve"];
+        get: operations["catalog_finish_levels_retrieve"];
         put?: never;
         post?: never;
-        delete: operations["v1_catalog_finish_levels_destroy"];
+        delete: operations["catalog_finish_levels_destroy"];
         options?: never;
         head?: never;
-        patch: operations["v1_catalog_finish_levels_partial_update"];
+        patch: operations["catalog_finish_levels_partial_update"];
         trace?: never;
     };
     "/api/v1/catalog/locations/": {
@@ -291,9 +443,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_catalog_locations_list"];
+        get: operations["catalog_locations_list"];
         put?: never;
-        post: operations["v1_catalog_locations_create"];
+        post: operations["catalog_locations_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -307,13 +459,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_catalog_locations_retrieve"];
+        get: operations["catalog_locations_retrieve"];
         put?: never;
         post?: never;
-        delete: operations["v1_catalog_locations_destroy"];
+        delete: operations["catalog_locations_destroy"];
         options?: never;
         head?: never;
-        patch: operations["v1_catalog_locations_partial_update"];
+        patch: operations["catalog_locations_partial_update"];
         trace?: never;
     };
     "/api/v1/catalog/lost-reasons/": {
@@ -323,9 +475,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_catalog_lost_reasons_list"];
+        get: operations["catalog_lost_reasons_list"];
         put?: never;
-        post: operations["v1_catalog_lost_reasons_create"];
+        post: operations["catalog_lost_reasons_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -339,13 +491,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_catalog_lost_reasons_retrieve"];
+        get: operations["catalog_lost_reasons_retrieve"];
         put?: never;
         post?: never;
-        delete: operations["v1_catalog_lost_reasons_destroy"];
+        delete: operations["catalog_lost_reasons_destroy"];
         options?: never;
         head?: never;
-        patch: operations["v1_catalog_lost_reasons_partial_update"];
+        patch: operations["catalog_lost_reasons_partial_update"];
         trace?: never;
     };
     "/api/v1/catalog/ownership-types/": {
@@ -355,9 +507,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_catalog_ownership_types_list"];
+        get: operations["catalog_ownership_types_list"];
         put?: never;
-        post: operations["v1_catalog_ownership_types_create"];
+        post: operations["catalog_ownership_types_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -371,13 +523,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_catalog_ownership_types_retrieve"];
+        get: operations["catalog_ownership_types_retrieve"];
         put?: never;
         post?: never;
-        delete: operations["v1_catalog_ownership_types_destroy"];
+        delete: operations["catalog_ownership_types_destroy"];
         options?: never;
         head?: never;
-        patch: operations["v1_catalog_ownership_types_partial_update"];
+        patch: operations["catalog_ownership_types_partial_update"];
         trace?: never;
     };
     "/api/v1/catalog/property-types/": {
@@ -387,9 +539,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_catalog_property_types_list"];
+        get: operations["catalog_property_types_list"];
         put?: never;
-        post: operations["v1_catalog_property_types_create"];
+        post: operations["catalog_property_types_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -403,13 +555,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_catalog_property_types_retrieve"];
+        get: operations["catalog_property_types_retrieve"];
         put?: never;
         post?: never;
-        delete: operations["v1_catalog_property_types_destroy"];
+        delete: operations["catalog_property_types_destroy"];
         options?: never;
         head?: never;
-        patch: operations["v1_catalog_property_types_partial_update"];
+        patch: operations["catalog_property_types_partial_update"];
         trace?: never;
     };
     "/api/v1/catalog/service-types/": {
@@ -419,9 +571,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_catalog_service_types_list"];
+        get: operations["catalog_service_types_list"];
         put?: never;
-        post: operations["v1_catalog_service_types_create"];
+        post: operations["catalog_service_types_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -435,13 +587,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_catalog_service_types_retrieve"];
+        get: operations["catalog_service_types_retrieve"];
         put?: never;
         post?: never;
-        delete: operations["v1_catalog_service_types_destroy"];
+        delete: operations["catalog_service_types_destroy"];
         options?: never;
         head?: never;
-        patch: operations["v1_catalog_service_types_partial_update"];
+        patch: operations["catalog_service_types_partial_update"];
         trace?: never;
     };
     "/api/v1/catalog/sources/": {
@@ -451,9 +603,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_catalog_sources_list"];
+        get: operations["catalog_sources_list"];
         put?: never;
-        post: operations["v1_catalog_sources_create"];
+        post: operations["catalog_sources_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -467,13 +619,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_catalog_sources_retrieve"];
+        get: operations["catalog_sources_retrieve"];
         put?: never;
         post?: never;
-        delete: operations["v1_catalog_sources_destroy"];
+        delete: operations["catalog_sources_destroy"];
         options?: never;
         head?: never;
-        patch: operations["v1_catalog_sources_partial_update"];
+        patch: operations["catalog_sources_partial_update"];
         trace?: never;
     };
     "/api/v1/catalog/tags/": {
@@ -483,9 +635,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_catalog_tags_list"];
+        get: operations["catalog_tags_list"];
         put?: never;
-        post: operations["v1_catalog_tags_create"];
+        post: operations["catalog_tags_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -499,13 +651,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_catalog_tags_retrieve"];
+        get: operations["catalog_tags_retrieve"];
         put?: never;
         post?: never;
-        delete: operations["v1_catalog_tags_destroy"];
+        delete: operations["catalog_tags_destroy"];
         options?: never;
         head?: never;
-        patch: operations["v1_catalog_tags_partial_update"];
+        patch: operations["catalog_tags_partial_update"];
         trace?: never;
     };
     "/api/v1/contacts/": {
@@ -515,11 +667,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        get: operations["v1_contacts_list"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        get: operations["contacts_list"];
         put?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        post: operations["v1_contacts_create"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        post: operations["contacts_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -533,16 +691,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        get: operations["v1_contacts_retrieve"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        get: operations["contacts_retrieve"];
         put?: never;
         post?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        delete: operations["v1_contacts_destroy"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        delete: operations["contacts_destroy"];
         options?: never;
         head?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        patch: operations["v1_contacts_partial_update"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        patch: operations["contacts_partial_update"];
         trace?: never;
     };
     "/api/v1/contacts/{id}/merge/": {
@@ -554,8 +721,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        post: operations["v1_contacts_merge_create"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        post: operations["contacts_merge_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -570,7 +740,7 @@ export interface paths {
             cookie?: never;
         };
         /** @description Live duplicate check while typing a number. */
-        get: operations["v1_contacts_check_phone_retrieve"];
+        get: operations["contacts_check_phone_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -586,8 +756,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        get: operations["v1_contacts_duplicates_list"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        get: operations["contacts_duplicates_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -603,7 +776,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_dashboard_retrieve"];
+        get: operations["dashboard_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -619,11 +792,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        get: operations["v1_deals_list"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        get: operations["deals_list"];
         put?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        post: operations["v1_deals_create"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        post: operations["deals_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -637,16 +816,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        get: operations["v1_deals_retrieve"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        get: operations["deals_retrieve"];
         put?: never;
         post?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        delete: operations["v1_deals_destroy"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        delete: operations["deals_destroy"];
         options?: never;
         head?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        patch: operations["v1_deals_partial_update"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        patch: operations["deals_partial_update"];
         trace?: never;
     };
     "/api/v1/deals/{id}/convert-to-finishing/": {
@@ -658,8 +846,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        post: operations["v1_deals_convert_to_finishing_create"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        post: operations["deals_convert_to_finishing_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -675,8 +866,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        post: operations["v1_deals_match_create"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        post: operations["deals_match_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -691,7 +885,24 @@ export interface paths {
             cookie?: never;
         };
         /** @description Available properties fitting this buy/rent demand + what the client said about each. */
-        get: operations["v1_deals_matches_list"];
+        get: operations["deals_matches_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/deals/stage-counts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description How many requests are in each stage under the current filters (the numbers on the stage filter). */
+        get: operations["deals_stage_counts_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -707,11 +918,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        get: operations["v1_documents_list"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        get: operations["documents_list"];
         put?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        post: operations["v1_documents_create"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        post: operations["documents_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -725,16 +942,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        get: operations["v1_documents_retrieve"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        get: operations["documents_retrieve"];
         put?: never;
         post?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        delete: operations["v1_documents_destroy"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        delete: operations["documents_destroy"];
         options?: never;
         head?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        patch: operations["v1_documents_partial_update"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        patch: operations["documents_partial_update"];
         trace?: never;
     };
     "/api/v1/documents/{id}/file/": {
@@ -745,7 +971,7 @@ export interface paths {
             cookie?: never;
         };
         /** @description Auth checked here; bytes sent by nginx (X-Accel-Redirect) in production. */
-        get: operations["v1_documents_file_retrieve"];
+        get: operations["documents_file_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -762,10 +988,10 @@ export interface paths {
             cookie?: never;
         };
         /** @description Each user mutes the kinds they don't want. */
-        get: operations["v1_notification_preferences_list"];
+        get: operations["notification_preferences_list"];
         put?: never;
         /** @description Each user mutes the kinds they don't want. */
-        post: operations["v1_notification_preferences_create"];
+        post: operations["notification_preferences_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -779,7 +1005,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_notifications_list"];
+        get: operations["notifications_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -801,7 +1027,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["v1_notifications_partial_update"];
+        patch: operations["notifications_partial_update"];
         trace?: never;
     };
     "/api/v1/notifications/read-all/": {
@@ -813,7 +1039,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["v1_notifications_read_all_create"];
+        post: operations["notifications_read_all_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -827,11 +1053,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        get: operations["v1_payments_list"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        get: operations["payments_list"];
         put?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        post: operations["v1_payments_create"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        post: operations["payments_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -845,16 +1077,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        get: operations["v1_payments_retrieve"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        get: operations["payments_retrieve"];
         put?: never;
         post?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        delete: operations["v1_payments_destroy"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        delete: operations["payments_destroy"];
         options?: never;
         head?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        patch: operations["v1_payments_partial_update"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        patch: operations["payments_partial_update"];
         trace?: never;
     };
     "/api/v1/properties/": {
@@ -864,11 +1105,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        get: operations["v1_properties_list"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        get: operations["properties_list"];
         put?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        post: operations["v1_properties_create"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        post: operations["properties_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -882,16 +1129,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        get: operations["v1_properties_retrieve"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        get: operations["properties_retrieve"];
         put?: never;
         post?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        delete: operations["v1_properties_destroy"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        delete: operations["properties_destroy"];
         options?: never;
         head?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        patch: operations["v1_properties_partial_update"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        patch: operations["properties_partial_update"];
         trace?: never;
     };
     "/api/v1/properties/{id}/demands/": {
@@ -902,7 +1158,7 @@ export interface paths {
             cookie?: never;
         };
         /** @description Open buy/rent requests this property fits (matching, other direction). */
-        get: operations["v1_properties_demands_retrieve"];
+        get: operations["properties_demands_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -918,11 +1174,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        get: operations["v1_quotes_list"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        get: operations["quotes_list"];
         put?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        post: operations["v1_quotes_create"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        post: operations["quotes_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -936,16 +1198,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        get: operations["v1_quotes_retrieve"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        get: operations["quotes_retrieve"];
         put?: never;
         post?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        delete: operations["v1_quotes_destroy"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        delete: operations["quotes_destroy"];
         options?: never;
         head?: never;
-        /** @description Archive (PATCH is_archived) for everyone; DELETE only with the delete permission. */
-        patch: operations["v1_quotes_partial_update"];
+        /**
+         * @description Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
+         *     user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
+         */
+        patch: operations["quotes_partial_update"];
         trace?: never;
     };
     "/api/v1/reports/": {
@@ -955,8 +1226,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Simple counts for the weekly report / reports page: by source, by stage, lost reasons. */
-        get: operations["v1_reports_retrieve"];
+        get: operations["reports_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -972,7 +1242,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_search_retrieve"];
+        get: operations["search_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -988,9 +1258,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_stages_list"];
+        get: operations["stages_list"];
         put?: never;
-        post: operations["v1_stages_create"];
+        post: operations["stages_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1004,13 +1274,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_stages_retrieve"];
-        put: operations["v1_stages_update"];
+        get: operations["stages_retrieve"];
+        put: operations["stages_update"];
         post?: never;
-        delete: operations["v1_stages_destroy"];
+        delete: operations["stages_destroy"];
         options?: never;
         head?: never;
-        patch: operations["v1_stages_partial_update"];
+        patch: operations["stages_partial_update"];
         trace?: never;
     };
     "/api/v1/timeline/": {
@@ -1021,7 +1291,7 @@ export interface paths {
             cookie?: never;
         };
         /** @description Activities (done + planned + system) and uploaded files for a contact, deal or property. */
-        get: operations["v1_timeline_retrieve"];
+        get: operations["timeline_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1038,7 +1308,7 @@ export interface paths {
             cookie?: never;
         };
         /** @description Active users, for assignee pickers. */
-        get: operations["v1_users_list"];
+        get: operations["users_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1135,8 +1405,12 @@ export interface components {
             next_due?: string;
             next_type?: string;
         };
+        /** @description Adds `access: {edit, delete}` — what the current user may do with this record (role + own/all scope). */
         Contact: {
             readonly id: number;
+            readonly access: {
+                [key: string]: unknown;
+            };
             name?: string;
             readonly display_name: string;
             phones?: components["schemas"]["Phone"][];
@@ -1165,6 +1439,7 @@ export interface components {
             readonly id: number;
             readonly name: string;
         };
+        /** @description Adds `access: {edit, delete}` — what the current user may do with this record (role + own/all scope). */
         ContactRequest: {
             name?: string;
             phones?: components["schemas"]["PhoneRequest"][];
@@ -1176,8 +1451,12 @@ export interface components {
             tag_ids?: number[];
             is_archived?: boolean;
         };
+        /** @description Adds `access: {edit, delete}` — what the current user may do with this record (role + own/all scope). */
         Deal: {
             readonly id: number;
+            readonly access: {
+                [key: string]: unknown;
+            };
             kind: components["schemas"]["DealKindEnum"];
             readonly pipeline: components["schemas"]["PipelineEnum"];
             title?: string;
@@ -1246,6 +1525,7 @@ export interface components {
             title?: string;
             kind: components["schemas"]["DealKindEnum"];
         };
+        /** @description Adds `access: {edit, delete}` — what the current user may do with this record (role + own/all scope). */
         DealRequest: {
             kind: components["schemas"]["DealKindEnum"];
             title?: string;
@@ -1312,8 +1592,12 @@ export interface components {
             finish_level_ids?: number[];
             notes?: string;
         };
+        /** @description Adds `access: {edit, delete}` — what the current user may do with this record (role + own/all scope). */
         Document: {
             readonly id: number;
+            readonly access: {
+                [key: string]: unknown;
+            };
             readonly url: string;
             readonly original_name: string;
             readonly content_type: string;
@@ -1324,6 +1608,7 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
+        /** @description Adds `access: {edit, delete}` — what the current user may do with this record (role + own/all scope). */
         DocumentRequest: {
             /** Format: binary */
             file: string;
@@ -1415,6 +1700,10 @@ export interface components {
             activities: number;
             contacts: number;
             properties: number;
+        };
+        LinkRequest: {
+            uid: string;
+            token: string;
         };
         /**
          * @description * `SALE` - بيع
@@ -1662,6 +1951,32 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["PropertyMatch"][];
         };
+        PaginatedStageCountList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["StageCount"][];
+        };
+        PasswordChangeRequest: {
+            current_password: string;
+            new_password: string;
+        };
+        PasswordResetLink: {
+            username: string;
+            name: string;
+        };
+        PasswordResetRequested: {
+            email_enabled: boolean;
+        };
         PatchedActivityRequest: {
             type?: components["schemas"]["ActivityTypeEnum"];
             subject?: string;
@@ -1682,6 +1997,7 @@ export interface components {
             next_type?: components["schemas"]["ActivityTypeEnum"];
             next_subject?: string;
         };
+        /** @description Adds `access: {edit, delete}` — what the current user may do with this record (role + own/all scope). */
         PatchedContactRequest: {
             name?: string;
             phones?: components["schemas"]["PhoneRequest"][];
@@ -1693,6 +2009,7 @@ export interface components {
             tag_ids?: number[];
             is_archived?: boolean;
         };
+        /** @description Adds `access: {edit, delete}` — what the current user may do with this record (role + own/all scope). */
         PatchedDealRequest: {
             kind?: components["schemas"]["DealKindEnum"];
             title?: string;
@@ -1725,6 +2042,7 @@ export interface components {
             tag_ids?: number[];
             is_archived?: boolean;
         };
+        /** @description Adds `access: {edit, delete}` — what the current user may do with this record (role + own/all scope). */
         PatchedDocumentRequest: {
             /** Format: binary */
             file?: string;
@@ -1773,6 +2091,7 @@ export interface components {
             paid_at?: string;
             note?: string;
         };
+        /** @description Adds `access: {edit, delete}` — what the current user may do with this record (role + own/all scope). */
         PatchedPropertyRequest: {
             legacy_code?: string;
             owner_id?: number;
@@ -1827,6 +2146,13 @@ export interface components {
             valid_until?: string | null;
             notes?: string;
         };
+        PatchedRoleRequest: {
+            slug?: string;
+            name?: string;
+            description?: string;
+            permissions?: unknown;
+            order?: number;
+        };
         PatchedServiceTypeRequest: {
             name?: string;
             order?: number;
@@ -1866,7 +2192,7 @@ export interface components {
             is_active?: boolean;
             color?: string;
         };
-        /** @description Everyone has the same rights, plus two switches the admin sets: admin area, and hard delete. */
+        /** @description Users get a role (what they may do); "active" switches the account off without deleting it. */
         PatchedUserAdminRequest: {
             /**
              * اسم المستخدم
@@ -1881,8 +2207,7 @@ export interface components {
              * @description يحدد ما إذا كان المستخدم سيُعامل على أنّه نشط. أزل تحديد هذا الحقل بدلاً من حذف الحسابات.
              */
             is_active?: boolean;
-            is_admin?: boolean;
-            can_delete_input?: boolean;
+            role_id?: number;
             password?: string;
         };
         Payment: {
@@ -1903,6 +2228,18 @@ export interface components {
             paid_at: string;
             note?: string;
         };
+        PermissionCatalog: {
+            key: string;
+            group: string;
+            label: string;
+            kind: components["schemas"]["PermissionCatalogKindEnum"];
+        };
+        /**
+         * @description * `scope` - scope
+         *     * `bool` - bool
+         * @enum {string}
+         */
+        PermissionCatalogKindEnum: "scope" | "bool";
         Phone: {
             number: string;
             has_whatsapp?: boolean;
@@ -1933,8 +2270,12 @@ export interface components {
             kind: components["schemas"]["NotificationKindEnum"];
             muted: boolean;
         };
+        /** @description Adds `access: {edit, delete}` — what the current user may do with this record (role + own/all scope). */
         Property: {
             readonly id: number;
+            readonly access: {
+                [key: string]: unknown;
+            };
             readonly code: string;
             legacy_code?: string;
             readonly owner: components["schemas"]["ContactRef"];
@@ -1990,6 +2331,7 @@ export interface components {
             code?: string;
             address?: string;
         };
+        /** @description Adds `access: {edit, delete}` — what the current user may do with this record (role + own/all scope). */
         PropertyRequest: {
             legacy_code?: string;
             owner_id: number;
@@ -2095,6 +2437,36 @@ export interface components {
          * @enum {string}
          */
         QuoteStatusEnum: "DRAFT" | "SENT" | "ACCEPTED" | "REJECTED" | "EXPIRED" | "CANCELLED";
+        ResetConfirmRequest: {
+            uid: string;
+            token: string;
+            password: string;
+        };
+        ResetLink: {
+            url: string;
+            hours: number;
+        };
+        ResetRequestRequest: {
+            /** @description username or email */
+            login: string;
+        };
+        Role: {
+            readonly id: number;
+            slug: string;
+            name: string;
+            description?: string;
+            permissions?: unknown;
+            readonly is_system: boolean;
+            order?: number;
+            readonly members: number;
+        };
+        RoleRequest: {
+            slug: string;
+            name: string;
+            description?: string;
+            permissions?: unknown;
+            order?: number;
+        };
         ServiceType: {
             readonly id: number;
             name: string;
@@ -2158,6 +2530,10 @@ export interface components {
             rotting_days?: number | null;
             is_active?: boolean;
         };
+        StageCount: {
+            stage: number;
+            count: number;
+        };
         StageRef: {
             readonly id: number;
             name: string;
@@ -2214,7 +2590,10 @@ export interface components {
          * @enum {string}
          */
         TemperatureEnum: "HOT" | "WARM" | "COLD";
-        /** @description Everyone has the same rights, plus two switches the admin sets: admin area, and hard delete. */
+        TestEmailSent: {
+            to: string;
+        };
+        /** @description Users get a role (what they may do); "active" switches the account off without deleting it. */
         UserAdmin: {
             readonly id: number;
             /**
@@ -2230,15 +2609,21 @@ export interface components {
              * @description يحدد ما إذا كان المستخدم سيُعامل على أنّه نشط. أزل تحديد هذا الحقل بدلاً من حذف الحسابات.
              */
             is_active?: boolean;
-            is_admin?: boolean;
-            readonly can_delete: boolean;
+            /**
+             * حالة المستخدم الفائق
+             * @description يقضي بأن هذا المستخدم يمتلك كافة الصلاحيات دون الحاجة لمنحها له تصريحاً.
+             */
+            readonly is_superuser: boolean;
+            readonly role: {
+                [key: string]: unknown;
+            } | null;
             /**
              * آخر دخول
              * Format: date-time
              */
             readonly last_login: string | null;
         };
-        /** @description Everyone has the same rights, plus two switches the admin sets: admin area, and hard delete. */
+        /** @description Users get a role (what they may do); "active" switches the account off without deleting it. */
         UserAdminRequest: {
             /**
              * اسم المستخدم
@@ -2253,8 +2638,7 @@ export interface components {
              * @description يحدد ما إذا كان المستخدم سيُعامل على أنّه نشط. أزل تحديد هذا الحقل بدلاً من حذف الحسابات.
              */
             is_active?: boolean;
-            is_admin?: boolean;
-            can_delete_input?: boolean;
+            role_id?: number;
             password?: string;
         };
         UserRef: {
@@ -2270,7 +2654,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    v1_activities_list: {
+    activities_list: {
         parameters: {
             query?: {
                 assignee?: string;
@@ -2303,7 +2687,7 @@ export interface operations {
             };
         };
     };
-    v1_activities_create: {
+    activities_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2328,7 +2712,7 @@ export interface operations {
             };
         };
     };
-    v1_activities_retrieve: {
+    activities_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -2350,7 +2734,7 @@ export interface operations {
             };
         };
     };
-    v1_activities_destroy: {
+    activities_destroy: {
         parameters: {
             query?: never;
             header?: never;
@@ -2371,7 +2755,7 @@ export interface operations {
             };
         };
     };
-    v1_activities_partial_update: {
+    activities_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -2399,7 +2783,7 @@ export interface operations {
             };
         };
     };
-    v1_activities_complete_create: {
+    activities_complete_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2427,7 +2811,7 @@ export interface operations {
             };
         };
     };
-    v1_admin_hand_over_create: {
+    admin_hand_over_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2452,7 +2836,144 @@ export interface operations {
             };
         };
     };
-    v1_admin_settings_retrieve: {
+    admin_permissions_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PermissionCatalog"][];
+                };
+            };
+        };
+    };
+    admin_roles_list: {
+        parameters: {
+            query?: {
+                /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
+                ordering?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Role"][];
+                };
+            };
+        };
+    };
+    admin_roles_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RoleRequest"];
+                "multipart/form-data": components["schemas"]["RoleRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Role"];
+                };
+            };
+        };
+    };
+    admin_roles_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا role. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Role"];
+                };
+            };
+        };
+    };
+    admin_roles_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا role. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_roles_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا role. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedRoleRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedRoleRequest"];
+                "multipart/form-data": components["schemas"]["PatchedRoleRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Role"];
+                };
+            };
+        };
+    };
+    admin_settings_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -2471,7 +2992,7 @@ export interface operations {
             };
         };
     };
-    v1_admin_settings_partial_update: {
+    admin_settings_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -2496,7 +3017,7 @@ export interface operations {
             };
         };
     };
-    v1_admin_settings_test_email_create: {
+    admin_settings_test_email_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2505,16 +3026,17 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description No response body */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TestEmailSent"];
+                };
             };
         };
     };
-    v1_admin_users_list: {
+    admin_users_list: {
         parameters: {
             query?: {
                 /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
@@ -2536,7 +3058,7 @@ export interface operations {
             };
         };
     };
-    v1_admin_users_create: {
+    admin_users_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2561,7 +3083,7 @@ export interface operations {
             };
         };
     };
-    v1_admin_users_retrieve: {
+    admin_users_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -2583,7 +3105,7 @@ export interface operations {
             };
         };
     };
-    v1_admin_users_partial_update: {
+    admin_users_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -2611,7 +3133,29 @@ export interface operations {
             };
         };
     };
-    v1_audit_retrieve: {
+    admin_users_reset_link_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description نوع رقم صحيح فريد يحدد هذا المستخدم. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResetLink"];
+                };
+            };
+        };
+    };
+    audit_retrieve: {
         parameters: {
             query: {
                 id: number;
@@ -2635,7 +3179,7 @@ export interface operations {
             };
         };
     };
-    v1_auth_csrf_retrieve: {
+    auth_csrf_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -2653,7 +3197,7 @@ export interface operations {
             };
         };
     };
-    v1_auth_login_create: {
+    auth_login_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2678,7 +3222,7 @@ export interface operations {
             };
         };
     };
-    v1_auth_logout_create: {
+    auth_logout_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2696,7 +3240,7 @@ export interface operations {
             };
         };
     };
-    v1_auth_me_retrieve: {
+    auth_me_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -2715,7 +3259,105 @@ export interface operations {
             };
         };
     };
-    v1_catalog_features_list: {
+    auth_password_reset_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ResetRequestRequest"];
+                "multipart/form-data": components["schemas"]["ResetRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordResetRequested"];
+                };
+            };
+        };
+    };
+    auth_password_reset_check_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["LinkRequest"];
+                "multipart/form-data": components["schemas"]["LinkRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordResetLink"];
+                };
+            };
+        };
+    };
+    auth_password_reset_confirm_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetConfirmRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ResetConfirmRequest"];
+                "multipart/form-data": components["schemas"]["ResetConfirmRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    auth_password_change_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordChangeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PasswordChangeRequest"];
+                "multipart/form-data": components["schemas"]["PasswordChangeRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    catalog_features_list: {
         parameters: {
             query?: {
                 /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
@@ -2737,7 +3379,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_features_create: {
+    catalog_features_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2762,7 +3404,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_features_retrieve: {
+    catalog_features_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -2784,7 +3426,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_features_destroy: {
+    catalog_features_destroy: {
         parameters: {
             query?: never;
             header?: never;
@@ -2805,7 +3447,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_features_partial_update: {
+    catalog_features_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -2833,7 +3475,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_finish_levels_list: {
+    catalog_finish_levels_list: {
         parameters: {
             query?: {
                 /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
@@ -2855,7 +3497,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_finish_levels_create: {
+    catalog_finish_levels_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2880,7 +3522,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_finish_levels_retrieve: {
+    catalog_finish_levels_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -2902,7 +3544,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_finish_levels_destroy: {
+    catalog_finish_levels_destroy: {
         parameters: {
             query?: never;
             header?: never;
@@ -2923,7 +3565,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_finish_levels_partial_update: {
+    catalog_finish_levels_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -2951,7 +3593,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_locations_list: {
+    catalog_locations_list: {
         parameters: {
             query?: {
                 /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
@@ -2973,7 +3615,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_locations_create: {
+    catalog_locations_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -2998,7 +3640,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_locations_retrieve: {
+    catalog_locations_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3020,7 +3662,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_locations_destroy: {
+    catalog_locations_destroy: {
         parameters: {
             query?: never;
             header?: never;
@@ -3041,7 +3683,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_locations_partial_update: {
+    catalog_locations_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -3069,7 +3711,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_lost_reasons_list: {
+    catalog_lost_reasons_list: {
         parameters: {
             query?: {
                 /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
@@ -3091,7 +3733,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_lost_reasons_create: {
+    catalog_lost_reasons_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3116,7 +3758,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_lost_reasons_retrieve: {
+    catalog_lost_reasons_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3138,7 +3780,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_lost_reasons_destroy: {
+    catalog_lost_reasons_destroy: {
         parameters: {
             query?: never;
             header?: never;
@@ -3159,7 +3801,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_lost_reasons_partial_update: {
+    catalog_lost_reasons_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -3187,7 +3829,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_ownership_types_list: {
+    catalog_ownership_types_list: {
         parameters: {
             query?: {
                 /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
@@ -3209,7 +3851,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_ownership_types_create: {
+    catalog_ownership_types_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3234,7 +3876,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_ownership_types_retrieve: {
+    catalog_ownership_types_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3256,7 +3898,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_ownership_types_destroy: {
+    catalog_ownership_types_destroy: {
         parameters: {
             query?: never;
             header?: never;
@@ -3277,7 +3919,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_ownership_types_partial_update: {
+    catalog_ownership_types_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -3305,7 +3947,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_property_types_list: {
+    catalog_property_types_list: {
         parameters: {
             query?: {
                 /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
@@ -3327,7 +3969,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_property_types_create: {
+    catalog_property_types_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3352,7 +3994,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_property_types_retrieve: {
+    catalog_property_types_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3374,7 +4016,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_property_types_destroy: {
+    catalog_property_types_destroy: {
         parameters: {
             query?: never;
             header?: never;
@@ -3395,7 +4037,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_property_types_partial_update: {
+    catalog_property_types_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -3423,7 +4065,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_service_types_list: {
+    catalog_service_types_list: {
         parameters: {
             query?: {
                 /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
@@ -3445,7 +4087,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_service_types_create: {
+    catalog_service_types_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3470,7 +4112,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_service_types_retrieve: {
+    catalog_service_types_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3492,7 +4134,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_service_types_destroy: {
+    catalog_service_types_destroy: {
         parameters: {
             query?: never;
             header?: never;
@@ -3513,7 +4155,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_service_types_partial_update: {
+    catalog_service_types_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -3541,7 +4183,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_sources_list: {
+    catalog_sources_list: {
         parameters: {
             query?: {
                 /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
@@ -3563,7 +4205,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_sources_create: {
+    catalog_sources_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3588,7 +4230,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_sources_retrieve: {
+    catalog_sources_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3610,7 +4252,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_sources_destroy: {
+    catalog_sources_destroy: {
         parameters: {
             query?: never;
             header?: never;
@@ -3631,7 +4273,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_sources_partial_update: {
+    catalog_sources_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -3659,7 +4301,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_tags_list: {
+    catalog_tags_list: {
         parameters: {
             query?: {
                 /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
@@ -3681,7 +4323,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_tags_create: {
+    catalog_tags_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3706,7 +4348,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_tags_retrieve: {
+    catalog_tags_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3728,7 +4370,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_tags_destroy: {
+    catalog_tags_destroy: {
         parameters: {
             query?: never;
             header?: never;
@@ -3749,7 +4391,7 @@ export interface operations {
             };
         };
     };
-    v1_catalog_tags_partial_update: {
+    catalog_tags_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -3777,7 +4419,7 @@ export interface operations {
             };
         };
     };
-    v1_contacts_list: {
+    contacts_list: {
         parameters: {
             query?: {
                 archived?: boolean;
@@ -3809,7 +4451,7 @@ export interface operations {
             };
         };
     };
-    v1_contacts_create: {
+    contacts_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3834,7 +4476,7 @@ export interface operations {
             };
         };
     };
-    v1_contacts_retrieve: {
+    contacts_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -3856,7 +4498,7 @@ export interface operations {
             };
         };
     };
-    v1_contacts_destroy: {
+    contacts_destroy: {
         parameters: {
             query?: never;
             header?: never;
@@ -3877,7 +4519,7 @@ export interface operations {
             };
         };
     };
-    v1_contacts_partial_update: {
+    contacts_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -3905,7 +4547,7 @@ export interface operations {
             };
         };
     };
-    v1_contacts_merge_create: {
+    contacts_merge_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -3933,7 +4575,7 @@ export interface operations {
             };
         };
     };
-    v1_contacts_check_phone_retrieve: {
+    contacts_check_phone_retrieve: {
         parameters: {
             query: {
                 phone: string;
@@ -3954,7 +4596,7 @@ export interface operations {
             };
         };
     };
-    v1_contacts_duplicates_list: {
+    contacts_duplicates_list: {
         parameters: {
             query?: {
                 /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
@@ -3980,7 +4622,7 @@ export interface operations {
             };
         };
     };
-    v1_dashboard_retrieve: {
+    dashboard_retrieve: {
         parameters: {
             query?: {
                 scope?: "all" | "me";
@@ -4003,7 +4645,7 @@ export interface operations {
             };
         };
     };
-    v1_deals_list: {
+    deals_list: {
         parameters: {
             query?: {
                 archived?: boolean;
@@ -4041,7 +4683,7 @@ export interface operations {
             };
         };
     };
-    v1_deals_create: {
+    deals_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -4066,7 +4708,7 @@ export interface operations {
             };
         };
     };
-    v1_deals_retrieve: {
+    deals_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -4088,7 +4730,7 @@ export interface operations {
             };
         };
     };
-    v1_deals_destroy: {
+    deals_destroy: {
         parameters: {
             query?: never;
             header?: never;
@@ -4109,7 +4751,7 @@ export interface operations {
             };
         };
     };
-    v1_deals_partial_update: {
+    deals_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -4137,7 +4779,7 @@ export interface operations {
             };
         };
     };
-    v1_deals_convert_to_finishing_create: {
+    deals_convert_to_finishing_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -4159,7 +4801,7 @@ export interface operations {
             };
         };
     };
-    v1_deals_match_create: {
+    deals_match_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -4186,7 +4828,7 @@ export interface operations {
             };
         };
     };
-    v1_deals_matches_list: {
+    deals_matches_list: {
         parameters: {
             query?: {
                 /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
@@ -4215,7 +4857,40 @@ export interface operations {
             };
         };
     };
-    v1_documents_list: {
+    deals_stage_counts_list: {
+        parameters: {
+            query?: {
+                archived?: boolean;
+                assignee?: string;
+                attention?: boolean;
+                kind?: string;
+                /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
+                ordering?: string;
+                /** @description رقم الصفحة ضمن النتائج المقسمة. */
+                page?: number;
+                /** @description عدد النتائج التي يجب إرجاعها في كل صفحة. */
+                page_size?: number;
+                pipeline?: string;
+                search?: string;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedStageCountList"];
+                };
+            };
+        };
+    };
+    documents_list: {
         parameters: {
             query?: {
                 archived?: boolean;
@@ -4247,7 +4922,7 @@ export interface operations {
             };
         };
     };
-    v1_documents_create: {
+    documents_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -4272,7 +4947,7 @@ export interface operations {
             };
         };
     };
-    v1_documents_retrieve: {
+    documents_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -4294,7 +4969,7 @@ export interface operations {
             };
         };
     };
-    v1_documents_destroy: {
+    documents_destroy: {
         parameters: {
             query?: never;
             header?: never;
@@ -4315,7 +4990,7 @@ export interface operations {
             };
         };
     };
-    v1_documents_partial_update: {
+    documents_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -4343,7 +5018,7 @@ export interface operations {
             };
         };
     };
-    v1_documents_file_retrieve: {
+    documents_file_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -4365,7 +5040,7 @@ export interface operations {
             };
         };
     };
-    v1_notification_preferences_list: {
+    notification_preferences_list: {
         parameters: {
             query?: never;
             header?: never;
@@ -4384,7 +5059,7 @@ export interface operations {
             };
         };
     };
-    v1_notification_preferences_create: {
+    notification_preferences_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -4409,7 +5084,7 @@ export interface operations {
             };
         };
     };
-    v1_notifications_list: {
+    notifications_list: {
         parameters: {
             query?: {
                 /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */
@@ -4436,7 +5111,7 @@ export interface operations {
             };
         };
     };
-    v1_notifications_partial_update: {
+    notifications_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -4464,7 +5139,7 @@ export interface operations {
             };
         };
     };
-    v1_notifications_read_all_create: {
+    notifications_read_all_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -4482,7 +5157,7 @@ export interface operations {
             };
         };
     };
-    v1_payments_list: {
+    payments_list: {
         parameters: {
             query?: {
                 deal?: number;
@@ -4505,7 +5180,7 @@ export interface operations {
             };
         };
     };
-    v1_payments_create: {
+    payments_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -4530,7 +5205,7 @@ export interface operations {
             };
         };
     };
-    v1_payments_retrieve: {
+    payments_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -4552,7 +5227,7 @@ export interface operations {
             };
         };
     };
-    v1_payments_destroy: {
+    payments_destroy: {
         parameters: {
             query?: never;
             header?: never;
@@ -4573,7 +5248,7 @@ export interface operations {
             };
         };
     };
-    v1_payments_partial_update: {
+    payments_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -4601,7 +5276,7 @@ export interface operations {
             };
         };
     };
-    v1_properties_list: {
+    properties_list: {
         parameters: {
             query?: {
                 archived?: boolean;
@@ -4636,7 +5311,7 @@ export interface operations {
             };
         };
     };
-    v1_properties_create: {
+    properties_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -4661,7 +5336,7 @@ export interface operations {
             };
         };
     };
-    v1_properties_retrieve: {
+    properties_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -4683,7 +5358,7 @@ export interface operations {
             };
         };
     };
-    v1_properties_destroy: {
+    properties_destroy: {
         parameters: {
             query?: never;
             header?: never;
@@ -4704,7 +5379,7 @@ export interface operations {
             };
         };
     };
-    v1_properties_partial_update: {
+    properties_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -4732,7 +5407,7 @@ export interface operations {
             };
         };
     };
-    v1_properties_demands_retrieve: {
+    properties_demands_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -4754,7 +5429,7 @@ export interface operations {
             };
         };
     };
-    v1_quotes_list: {
+    quotes_list: {
         parameters: {
             query?: {
                 deal?: number;
@@ -4777,7 +5452,7 @@ export interface operations {
             };
         };
     };
-    v1_quotes_create: {
+    quotes_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -4802,7 +5477,7 @@ export interface operations {
             };
         };
     };
-    v1_quotes_retrieve: {
+    quotes_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -4824,7 +5499,7 @@ export interface operations {
             };
         };
     };
-    v1_quotes_destroy: {
+    quotes_destroy: {
         parameters: {
             query?: never;
             header?: never;
@@ -4845,7 +5520,7 @@ export interface operations {
             };
         };
     };
-    v1_quotes_partial_update: {
+    quotes_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -4873,7 +5548,7 @@ export interface operations {
             };
         };
     };
-    v1_reports_retrieve: {
+    reports_retrieve: {
         parameters: {
             query?: {
                 days?: number;
@@ -4896,7 +5571,7 @@ export interface operations {
             };
         };
     };
-    v1_search_retrieve: {
+    search_retrieve: {
         parameters: {
             query: {
                 q: string;
@@ -4919,7 +5594,7 @@ export interface operations {
             };
         };
     };
-    v1_stages_list: {
+    stages_list: {
         parameters: {
             query?: {
                 include_inactive?: boolean;
@@ -4943,7 +5618,7 @@ export interface operations {
             };
         };
     };
-    v1_stages_create: {
+    stages_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -4968,7 +5643,7 @@ export interface operations {
             };
         };
     };
-    v1_stages_retrieve: {
+    stages_retrieve: {
         parameters: {
             query?: never;
             header?: never;
@@ -4990,7 +5665,7 @@ export interface operations {
             };
         };
     };
-    v1_stages_update: {
+    stages_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -5018,7 +5693,7 @@ export interface operations {
             };
         };
     };
-    v1_stages_destroy: {
+    stages_destroy: {
         parameters: {
             query?: never;
             header?: never;
@@ -5039,7 +5714,7 @@ export interface operations {
             };
         };
     };
-    v1_stages_partial_update: {
+    stages_partial_update: {
         parameters: {
             query?: never;
             header?: never;
@@ -5067,7 +5742,7 @@ export interface operations {
             };
         };
     };
-    v1_timeline_retrieve: {
+    timeline_retrieve: {
         parameters: {
             query?: {
                 contact?: number;
@@ -5092,7 +5767,7 @@ export interface operations {
             };
         };
     };
-    v1_users_list: {
+    users_list: {
         parameters: {
             query?: {
                 /** @description أي حقل يجب استخدامه عند ترتيب النتائج. */

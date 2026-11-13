@@ -5,7 +5,7 @@ info:
 paths:
   /api/v1/activities/:
     get:
-      operationId: v1_activities_list
+      operationId: activities_list
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -61,7 +61,7 @@ paths:
         schema:
           type: string
       tags:
-      - v1
+      - activities
       security:
       - cookieAuth: []
       responses:
@@ -72,12 +72,12 @@ paths:
                 $ref: '#/components/schemas/PaginatedActivityList'
           description: ''
     post:
-      operationId: v1_activities_create
+      operationId: activities_create
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       tags:
-      - v1
+      - activities
       requestBody:
         content:
           application/json:
@@ -101,7 +101,7 @@ paths:
           description: ''
   /api/v1/activities/{id}/:
     get:
-      operationId: v1_activities_retrieve
+      operationId: activities_retrieve
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -113,7 +113,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا activity.
         required: true
       tags:
-      - v1
+      - activities
       security:
       - cookieAuth: []
       responses:
@@ -124,7 +124,7 @@ paths:
                 $ref: '#/components/schemas/Activity'
           description: ''
     patch:
-      operationId: v1_activities_partial_update
+      operationId: activities_partial_update
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -136,7 +136,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا activity.
         required: true
       tags:
-      - v1
+      - activities
       requestBody:
         content:
           application/json:
@@ -158,7 +158,7 @@ paths:
                 $ref: '#/components/schemas/Activity'
           description: ''
     delete:
-      operationId: v1_activities_destroy
+      operationId: activities_destroy
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -170,7 +170,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا activity.
         required: true
       tags:
-      - v1
+      - activities
       security:
       - cookieAuth: []
       responses:
@@ -178,7 +178,7 @@ paths:
           description: No response body
   /api/v1/activities/{id}/complete/:
     post:
-      operationId: v1_activities_complete_create
+      operationId: activities_complete_create
       description: Mark a planned activity done, write the outcome, and (optionally)
         plan the next one.
       parameters:
@@ -189,7 +189,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا activity.
         required: true
       tags:
-      - v1
+      - activities
       requestBody:
         content:
           application/json:
@@ -212,9 +212,9 @@ paths:
           description: ''
   /api/v1/admin/hand-over/:
     post:
-      operationId: v1_admin_hand_over_create
+      operationId: admin_hand_over_create
       tags:
-      - v1
+      - admin
       requestBody:
         content:
           application/json:
@@ -238,11 +238,11 @@ paths:
           description: ''
   /api/v1/admin/permissions/:
     get:
-      operationId: v1_admin_permissions_list
+      operationId: admin_permissions_list
       description: Every permission (key, group, label, kind) — what the roles editor
         draws as rows.
       tags:
-      - v1
+      - admin
       security:
       - cookieAuth: []
       responses:
@@ -256,7 +256,7 @@ paths:
           description: ''
   /api/v1/admin/roles/:
     get:
-      operationId: v1_admin_roles_list
+      operationId: admin_roles_list
       description: Roles and their permission matrix. Built-in roles can be edited
         but not deleted; a role in use can't be.
       parameters:
@@ -267,7 +267,7 @@ paths:
         schema:
           type: string
       tags:
-      - v1
+      - admin
       security:
       - cookieAuth: []
       responses:
@@ -280,11 +280,11 @@ paths:
                   $ref: '#/components/schemas/Role'
           description: ''
     post:
-      operationId: v1_admin_roles_create
+      operationId: admin_roles_create
       description: Roles and their permission matrix. Built-in roles can be edited
         but not deleted; a role in use can't be.
       tags:
-      - v1
+      - admin
       requestBody:
         content:
           application/json:
@@ -308,7 +308,7 @@ paths:
           description: ''
   /api/v1/admin/roles/{id}/:
     get:
-      operationId: v1_admin_roles_retrieve
+      operationId: admin_roles_retrieve
       description: Roles and their permission matrix. Built-in roles can be edited
         but not deleted; a role in use can't be.
       parameters:
@@ -319,7 +319,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا role.
         required: true
       tags:
-      - v1
+      - admin
       security:
       - cookieAuth: []
       responses:
@@ -330,7 +330,7 @@ paths:
                 $ref: '#/components/schemas/Role'
           description: ''
     patch:
-      operationId: v1_admin_roles_partial_update
+      operationId: admin_roles_partial_update
       description: Roles and their permission matrix. Built-in roles can be edited
         but not deleted; a role in use can't be.
       parameters:
@@ -341,7 +341,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا role.
         required: true
       tags:
-      - v1
+      - admin
       requestBody:
         content:
           application/json:
@@ -363,7 +363,7 @@ paths:
                 $ref: '#/components/schemas/Role'
           description: ''
     delete:
-      operationId: v1_admin_roles_destroy
+      operationId: admin_roles_destroy
       description: Roles and their permission matrix. Built-in roles can be edited
         but not deleted; a role in use can't be.
       parameters:
@@ -374,7 +374,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا role.
         required: true
       tags:
-      - v1
+      - admin
       security:
       - cookieAuth: []
       responses:
@@ -382,9 +382,9 @@ paths:
           description: No response body
   /api/v1/admin/settings/:
     get:
-      operationId: v1_admin_settings_retrieve
+      operationId: admin_settings_retrieve
       tags:
-      - v1
+      - admin
       security:
       - cookieAuth: []
       responses:
@@ -395,9 +395,9 @@ paths:
                 $ref: '#/components/schemas/SiteSettings'
           description: ''
     patch:
-      operationId: v1_admin_settings_partial_update
+      operationId: admin_settings_partial_update
       tags:
-      - v1
+      - admin
       requestBody:
         content:
           application/json:
@@ -420,9 +420,9 @@ paths:
           description: ''
   /api/v1/admin/settings/test-email/:
     post:
-      operationId: v1_admin_settings_test_email_create
+      operationId: admin_settings_test_email_create
       tags:
-      - v1
+      - admin
       security:
       - cookieAuth: []
       responses:
@@ -434,7 +434,7 @@ paths:
           description: ''
   /api/v1/admin/users/:
     get:
-      operationId: v1_admin_users_list
+      operationId: admin_users_list
       parameters:
       - name: ordering
         required: false
@@ -443,7 +443,7 @@ paths:
         schema:
           type: string
       tags:
-      - v1
+      - admin
       security:
       - cookieAuth: []
       responses:
@@ -456,9 +456,9 @@ paths:
                   $ref: '#/components/schemas/UserAdmin'
           description: ''
     post:
-      operationId: v1_admin_users_create
+      operationId: admin_users_create
       tags:
-      - v1
+      - admin
       requestBody:
         content:
           application/json:
@@ -482,7 +482,7 @@ paths:
           description: ''
   /api/v1/admin/users/{id}/:
     get:
-      operationId: v1_admin_users_retrieve
+      operationId: admin_users_retrieve
       parameters:
       - in: path
         name: id
@@ -491,7 +491,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا المستخدم.
         required: true
       tags:
-      - v1
+      - admin
       security:
       - cookieAuth: []
       responses:
@@ -502,7 +502,7 @@ paths:
                 $ref: '#/components/schemas/UserAdmin'
           description: ''
     patch:
-      operationId: v1_admin_users_partial_update
+      operationId: admin_users_partial_update
       parameters:
       - in: path
         name: id
@@ -511,7 +511,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا المستخدم.
         required: true
       tags:
-      - v1
+      - admin
       requestBody:
         content:
           application/json:
@@ -534,7 +534,7 @@ paths:
           description: ''
   /api/v1/admin/users/{id}/reset-link/:
     post:
-      operationId: v1_admin_users_reset_link_create
+      operationId: admin_users_reset_link_create
       description: A one-time link to set a new password — for when the user has no
         email or email is off.
       parameters:
@@ -545,7 +545,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا المستخدم.
         required: true
       tags:
-      - v1
+      - admin
       security:
       - cookieAuth: []
       responses:
@@ -557,7 +557,7 @@ paths:
           description: ''
   /api/v1/audit/:
     get:
-      operationId: v1_audit_retrieve
+      operationId: audit_retrieve
       description: Who changed what and when (django-auditlog), for one record, in
         readable Arabic.
       parameters:
@@ -577,7 +577,7 @@ paths:
           - property
         required: true
       tags:
-      - v1
+      - audit
       security:
       - cookieAuth: []
       responses:
@@ -590,11 +590,11 @@ paths:
           description: ''
   /api/v1/auth/csrf/:
     get:
-      operationId: v1_auth_csrf_retrieve
+      operationId: auth_csrf_retrieve
       description: 'Call once on app start (and after login/logout): sets the csrftoken
         cookie.'
       tags:
-      - v1
+      - auth
       security:
       - cookieAuth: []
       - {}
@@ -603,9 +603,9 @@ paths:
           description: No response body
   /api/v1/auth/login/:
     post:
-      operationId: v1_auth_login_create
+      operationId: auth_login_create
       tags:
-      - v1
+      - auth
       requestBody:
         content:
           application/json:
@@ -630,9 +630,9 @@ paths:
           description: ''
   /api/v1/auth/logout/:
     post:
-      operationId: v1_auth_logout_create
+      operationId: auth_logout_create
       tags:
-      - v1
+      - auth
       security:
       - cookieAuth: []
       responses:
@@ -640,9 +640,9 @@ paths:
           description: No response body
   /api/v1/auth/me/:
     get:
-      operationId: v1_auth_me_retrieve
+      operationId: auth_me_retrieve
       tags:
-      - v1
+      - auth
       security:
       - cookieAuth: []
       responses:
@@ -654,9 +654,9 @@ paths:
           description: ''
   /api/v1/auth/password-reset/:
     post:
-      operationId: v1_auth_password_reset_create
+      operationId: auth_password_reset_create
       tags:
-      - v1
+      - auth
       requestBody:
         content:
           application/json:
@@ -681,11 +681,11 @@ paths:
           description: ''
   /api/v1/auth/password-reset/check/:
     post:
-      operationId: v1_auth_password_reset_check_create
+      operationId: auth_password_reset_check_create
       description: 'Before showing the form: is the link still good, and for which
         account?'
       tags:
-      - v1
+      - auth
       requestBody:
         content:
           application/json:
@@ -710,9 +710,9 @@ paths:
           description: ''
   /api/v1/auth/password-reset/confirm/:
     post:
-      operationId: v1_auth_password_reset_confirm_create
+      operationId: auth_password_reset_confirm_create
       tags:
-      - v1
+      - auth
       requestBody:
         content:
           application/json:
@@ -733,11 +733,11 @@ paths:
           description: No response body
   /api/v1/auth/password/change/:
     post:
-      operationId: v1_auth_password_change_create
+      operationId: auth_password_change_create
       description: A logged-in user changes their own password (needs the current
         one); they stay logged in.
       tags:
-      - v1
+      - auth
       requestBody:
         content:
           application/json:
@@ -757,7 +757,7 @@ paths:
           description: No response body
   /api/v1/catalog/features/:
     get:
-      operationId: v1_catalog_features_list
+      operationId: catalog_features_list
       parameters:
       - name: ordering
         required: false
@@ -766,7 +766,7 @@ paths:
         schema:
           type: string
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -779,9 +779,9 @@ paths:
                   $ref: '#/components/schemas/Feature'
           description: ''
     post:
-      operationId: v1_catalog_features_create
+      operationId: catalog_features_create
       tags:
-      - v1
+      - catalog
       requestBody:
         content:
           application/json:
@@ -805,7 +805,7 @@ paths:
           description: ''
   /api/v1/catalog/features/{id}/:
     get:
-      operationId: v1_catalog_features_retrieve
+      operationId: catalog_features_retrieve
       parameters:
       - in: path
         name: id
@@ -814,7 +814,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا feature.
         required: true
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -825,7 +825,7 @@ paths:
                 $ref: '#/components/schemas/Feature'
           description: ''
     patch:
-      operationId: v1_catalog_features_partial_update
+      operationId: catalog_features_partial_update
       parameters:
       - in: path
         name: id
@@ -834,7 +834,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا feature.
         required: true
       tags:
-      - v1
+      - catalog
       requestBody:
         content:
           application/json:
@@ -856,7 +856,7 @@ paths:
                 $ref: '#/components/schemas/Feature'
           description: ''
     delete:
-      operationId: v1_catalog_features_destroy
+      operationId: catalog_features_destroy
       parameters:
       - in: path
         name: id
@@ -865,7 +865,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا feature.
         required: true
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -873,7 +873,7 @@ paths:
           description: No response body
   /api/v1/catalog/finish-levels/:
     get:
-      operationId: v1_catalog_finish_levels_list
+      operationId: catalog_finish_levels_list
       parameters:
       - name: ordering
         required: false
@@ -882,7 +882,7 @@ paths:
         schema:
           type: string
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -895,9 +895,9 @@ paths:
                   $ref: '#/components/schemas/FinishLevel'
           description: ''
     post:
-      operationId: v1_catalog_finish_levels_create
+      operationId: catalog_finish_levels_create
       tags:
-      - v1
+      - catalog
       requestBody:
         content:
           application/json:
@@ -921,7 +921,7 @@ paths:
           description: ''
   /api/v1/catalog/finish-levels/{id}/:
     get:
-      operationId: v1_catalog_finish_levels_retrieve
+      operationId: catalog_finish_levels_retrieve
       parameters:
       - in: path
         name: id
@@ -930,7 +930,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا finish level.
         required: true
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -941,7 +941,7 @@ paths:
                 $ref: '#/components/schemas/FinishLevel'
           description: ''
     patch:
-      operationId: v1_catalog_finish_levels_partial_update
+      operationId: catalog_finish_levels_partial_update
       parameters:
       - in: path
         name: id
@@ -950,7 +950,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا finish level.
         required: true
       tags:
-      - v1
+      - catalog
       requestBody:
         content:
           application/json:
@@ -972,7 +972,7 @@ paths:
                 $ref: '#/components/schemas/FinishLevel'
           description: ''
     delete:
-      operationId: v1_catalog_finish_levels_destroy
+      operationId: catalog_finish_levels_destroy
       parameters:
       - in: path
         name: id
@@ -981,7 +981,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا finish level.
         required: true
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -989,7 +989,7 @@ paths:
           description: No response body
   /api/v1/catalog/locations/:
     get:
-      operationId: v1_catalog_locations_list
+      operationId: catalog_locations_list
       parameters:
       - name: ordering
         required: false
@@ -998,7 +998,7 @@ paths:
         schema:
           type: string
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1011,9 +1011,9 @@ paths:
                   $ref: '#/components/schemas/Location'
           description: ''
     post:
-      operationId: v1_catalog_locations_create
+      operationId: catalog_locations_create
       tags:
-      - v1
+      - catalog
       requestBody:
         content:
           application/json:
@@ -1037,7 +1037,7 @@ paths:
           description: ''
   /api/v1/catalog/locations/{id}/:
     get:
-      operationId: v1_catalog_locations_retrieve
+      operationId: catalog_locations_retrieve
       parameters:
       - in: path
         name: id
@@ -1046,7 +1046,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا location.
         required: true
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1057,7 +1057,7 @@ paths:
                 $ref: '#/components/schemas/Location'
           description: ''
     patch:
-      operationId: v1_catalog_locations_partial_update
+      operationId: catalog_locations_partial_update
       parameters:
       - in: path
         name: id
@@ -1066,7 +1066,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا location.
         required: true
       tags:
-      - v1
+      - catalog
       requestBody:
         content:
           application/json:
@@ -1088,7 +1088,7 @@ paths:
                 $ref: '#/components/schemas/Location'
           description: ''
     delete:
-      operationId: v1_catalog_locations_destroy
+      operationId: catalog_locations_destroy
       parameters:
       - in: path
         name: id
@@ -1097,7 +1097,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا location.
         required: true
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1105,7 +1105,7 @@ paths:
           description: No response body
   /api/v1/catalog/lost-reasons/:
     get:
-      operationId: v1_catalog_lost_reasons_list
+      operationId: catalog_lost_reasons_list
       parameters:
       - name: ordering
         required: false
@@ -1114,7 +1114,7 @@ paths:
         schema:
           type: string
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1127,9 +1127,9 @@ paths:
                   $ref: '#/components/schemas/LostReason'
           description: ''
     post:
-      operationId: v1_catalog_lost_reasons_create
+      operationId: catalog_lost_reasons_create
       tags:
-      - v1
+      - catalog
       requestBody:
         content:
           application/json:
@@ -1153,7 +1153,7 @@ paths:
           description: ''
   /api/v1/catalog/lost-reasons/{id}/:
     get:
-      operationId: v1_catalog_lost_reasons_retrieve
+      operationId: catalog_lost_reasons_retrieve
       parameters:
       - in: path
         name: id
@@ -1162,7 +1162,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا lost reason.
         required: true
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1173,7 +1173,7 @@ paths:
                 $ref: '#/components/schemas/LostReason'
           description: ''
     patch:
-      operationId: v1_catalog_lost_reasons_partial_update
+      operationId: catalog_lost_reasons_partial_update
       parameters:
       - in: path
         name: id
@@ -1182,7 +1182,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا lost reason.
         required: true
       tags:
-      - v1
+      - catalog
       requestBody:
         content:
           application/json:
@@ -1204,7 +1204,7 @@ paths:
                 $ref: '#/components/schemas/LostReason'
           description: ''
     delete:
-      operationId: v1_catalog_lost_reasons_destroy
+      operationId: catalog_lost_reasons_destroy
       parameters:
       - in: path
         name: id
@@ -1213,7 +1213,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا lost reason.
         required: true
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1221,7 +1221,7 @@ paths:
           description: No response body
   /api/v1/catalog/ownership-types/:
     get:
-      operationId: v1_catalog_ownership_types_list
+      operationId: catalog_ownership_types_list
       parameters:
       - name: ordering
         required: false
@@ -1230,7 +1230,7 @@ paths:
         schema:
           type: string
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1243,9 +1243,9 @@ paths:
                   $ref: '#/components/schemas/OwnershipType'
           description: ''
     post:
-      operationId: v1_catalog_ownership_types_create
+      operationId: catalog_ownership_types_create
       tags:
-      - v1
+      - catalog
       requestBody:
         content:
           application/json:
@@ -1269,7 +1269,7 @@ paths:
           description: ''
   /api/v1/catalog/ownership-types/{id}/:
     get:
-      operationId: v1_catalog_ownership_types_retrieve
+      operationId: catalog_ownership_types_retrieve
       parameters:
       - in: path
         name: id
@@ -1278,7 +1278,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا ownership type.
         required: true
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1289,7 +1289,7 @@ paths:
                 $ref: '#/components/schemas/OwnershipType'
           description: ''
     patch:
-      operationId: v1_catalog_ownership_types_partial_update
+      operationId: catalog_ownership_types_partial_update
       parameters:
       - in: path
         name: id
@@ -1298,7 +1298,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا ownership type.
         required: true
       tags:
-      - v1
+      - catalog
       requestBody:
         content:
           application/json:
@@ -1320,7 +1320,7 @@ paths:
                 $ref: '#/components/schemas/OwnershipType'
           description: ''
     delete:
-      operationId: v1_catalog_ownership_types_destroy
+      operationId: catalog_ownership_types_destroy
       parameters:
       - in: path
         name: id
@@ -1329,7 +1329,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا ownership type.
         required: true
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1337,7 +1337,7 @@ paths:
           description: No response body
   /api/v1/catalog/property-types/:
     get:
-      operationId: v1_catalog_property_types_list
+      operationId: catalog_property_types_list
       parameters:
       - name: ordering
         required: false
@@ -1346,7 +1346,7 @@ paths:
         schema:
           type: string
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1359,9 +1359,9 @@ paths:
                   $ref: '#/components/schemas/PropertyType'
           description: ''
     post:
-      operationId: v1_catalog_property_types_create
+      operationId: catalog_property_types_create
       tags:
-      - v1
+      - catalog
       requestBody:
         content:
           application/json:
@@ -1385,7 +1385,7 @@ paths:
           description: ''
   /api/v1/catalog/property-types/{id}/:
     get:
-      operationId: v1_catalog_property_types_retrieve
+      operationId: catalog_property_types_retrieve
       parameters:
       - in: path
         name: id
@@ -1394,7 +1394,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا property type.
         required: true
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1405,7 +1405,7 @@ paths:
                 $ref: '#/components/schemas/PropertyType'
           description: ''
     patch:
-      operationId: v1_catalog_property_types_partial_update
+      operationId: catalog_property_types_partial_update
       parameters:
       - in: path
         name: id
@@ -1414,7 +1414,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا property type.
         required: true
       tags:
-      - v1
+      - catalog
       requestBody:
         content:
           application/json:
@@ -1436,7 +1436,7 @@ paths:
                 $ref: '#/components/schemas/PropertyType'
           description: ''
     delete:
-      operationId: v1_catalog_property_types_destroy
+      operationId: catalog_property_types_destroy
       parameters:
       - in: path
         name: id
@@ -1445,7 +1445,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا property type.
         required: true
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1453,7 +1453,7 @@ paths:
           description: No response body
   /api/v1/catalog/service-types/:
     get:
-      operationId: v1_catalog_service_types_list
+      operationId: catalog_service_types_list
       parameters:
       - name: ordering
         required: false
@@ -1462,7 +1462,7 @@ paths:
         schema:
           type: string
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1475,9 +1475,9 @@ paths:
                   $ref: '#/components/schemas/ServiceType'
           description: ''
     post:
-      operationId: v1_catalog_service_types_create
+      operationId: catalog_service_types_create
       tags:
-      - v1
+      - catalog
       requestBody:
         content:
           application/json:
@@ -1501,7 +1501,7 @@ paths:
           description: ''
   /api/v1/catalog/service-types/{id}/:
     get:
-      operationId: v1_catalog_service_types_retrieve
+      operationId: catalog_service_types_retrieve
       parameters:
       - in: path
         name: id
@@ -1510,7 +1510,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا service type.
         required: true
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1521,7 +1521,7 @@ paths:
                 $ref: '#/components/schemas/ServiceType'
           description: ''
     patch:
-      operationId: v1_catalog_service_types_partial_update
+      operationId: catalog_service_types_partial_update
       parameters:
       - in: path
         name: id
@@ -1530,7 +1530,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا service type.
         required: true
       tags:
-      - v1
+      - catalog
       requestBody:
         content:
           application/json:
@@ -1552,7 +1552,7 @@ paths:
                 $ref: '#/components/schemas/ServiceType'
           description: ''
     delete:
-      operationId: v1_catalog_service_types_destroy
+      operationId: catalog_service_types_destroy
       parameters:
       - in: path
         name: id
@@ -1561,7 +1561,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا service type.
         required: true
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1569,7 +1569,7 @@ paths:
           description: No response body
   /api/v1/catalog/sources/:
     get:
-      operationId: v1_catalog_sources_list
+      operationId: catalog_sources_list
       parameters:
       - name: ordering
         required: false
@@ -1578,7 +1578,7 @@ paths:
         schema:
           type: string
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1591,9 +1591,9 @@ paths:
                   $ref: '#/components/schemas/Source'
           description: ''
     post:
-      operationId: v1_catalog_sources_create
+      operationId: catalog_sources_create
       tags:
-      - v1
+      - catalog
       requestBody:
         content:
           application/json:
@@ -1617,7 +1617,7 @@ paths:
           description: ''
   /api/v1/catalog/sources/{id}/:
     get:
-      operationId: v1_catalog_sources_retrieve
+      operationId: catalog_sources_retrieve
       parameters:
       - in: path
         name: id
@@ -1626,7 +1626,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا source.
         required: true
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1637,7 +1637,7 @@ paths:
                 $ref: '#/components/schemas/Source'
           description: ''
     patch:
-      operationId: v1_catalog_sources_partial_update
+      operationId: catalog_sources_partial_update
       parameters:
       - in: path
         name: id
@@ -1646,7 +1646,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا source.
         required: true
       tags:
-      - v1
+      - catalog
       requestBody:
         content:
           application/json:
@@ -1668,7 +1668,7 @@ paths:
                 $ref: '#/components/schemas/Source'
           description: ''
     delete:
-      operationId: v1_catalog_sources_destroy
+      operationId: catalog_sources_destroy
       parameters:
       - in: path
         name: id
@@ -1677,7 +1677,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا source.
         required: true
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1685,7 +1685,7 @@ paths:
           description: No response body
   /api/v1/catalog/tags/:
     get:
-      operationId: v1_catalog_tags_list
+      operationId: catalog_tags_list
       parameters:
       - name: ordering
         required: false
@@ -1694,7 +1694,7 @@ paths:
         schema:
           type: string
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1707,9 +1707,9 @@ paths:
                   $ref: '#/components/schemas/Tag'
           description: ''
     post:
-      operationId: v1_catalog_tags_create
+      operationId: catalog_tags_create
       tags:
-      - v1
+      - catalog
       requestBody:
         content:
           application/json:
@@ -1733,7 +1733,7 @@ paths:
           description: ''
   /api/v1/catalog/tags/{id}/:
     get:
-      operationId: v1_catalog_tags_retrieve
+      operationId: catalog_tags_retrieve
       parameters:
       - in: path
         name: id
@@ -1742,7 +1742,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا tag.
         required: true
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1753,7 +1753,7 @@ paths:
                 $ref: '#/components/schemas/Tag'
           description: ''
     patch:
-      operationId: v1_catalog_tags_partial_update
+      operationId: catalog_tags_partial_update
       parameters:
       - in: path
         name: id
@@ -1762,7 +1762,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا tag.
         required: true
       tags:
-      - v1
+      - catalog
       requestBody:
         content:
           application/json:
@@ -1784,7 +1784,7 @@ paths:
                 $ref: '#/components/schemas/Tag'
           description: ''
     delete:
-      operationId: v1_catalog_tags_destroy
+      operationId: catalog_tags_destroy
       parameters:
       - in: path
         name: id
@@ -1793,7 +1793,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا tag.
         required: true
       tags:
-      - v1
+      - catalog
       security:
       - cookieAuth: []
       responses:
@@ -1801,7 +1801,7 @@ paths:
           description: No response body
   /api/v1/contacts/:
     get:
-      operationId: v1_contacts_list
+      operationId: contacts_list
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -1849,7 +1849,7 @@ paths:
         schema:
           type: integer
       tags:
-      - v1
+      - contacts
       security:
       - cookieAuth: []
       responses:
@@ -1860,12 +1860,12 @@ paths:
                 $ref: '#/components/schemas/PaginatedContactList'
           description: ''
     post:
-      operationId: v1_contacts_create
+      operationId: contacts_create
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       tags:
-      - v1
+      - contacts
       requestBody:
         content:
           application/json:
@@ -1888,7 +1888,7 @@ paths:
           description: ''
   /api/v1/contacts/{id}/:
     get:
-      operationId: v1_contacts_retrieve
+      operationId: contacts_retrieve
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -1900,7 +1900,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا contact.
         required: true
       tags:
-      - v1
+      - contacts
       security:
       - cookieAuth: []
       responses:
@@ -1911,7 +1911,7 @@ paths:
                 $ref: '#/components/schemas/Contact'
           description: ''
     patch:
-      operationId: v1_contacts_partial_update
+      operationId: contacts_partial_update
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -1923,7 +1923,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا contact.
         required: true
       tags:
-      - v1
+      - contacts
       requestBody:
         content:
           application/json:
@@ -1945,7 +1945,7 @@ paths:
                 $ref: '#/components/schemas/Contact'
           description: ''
     delete:
-      operationId: v1_contacts_destroy
+      operationId: contacts_destroy
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -1957,7 +1957,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا contact.
         required: true
       tags:
-      - v1
+      - contacts
       security:
       - cookieAuth: []
       responses:
@@ -1965,7 +1965,7 @@ paths:
           description: No response body
   /api/v1/contacts/{id}/merge/:
     post:
-      operationId: v1_contacts_merge_create
+      operationId: contacts_merge_create
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -1977,7 +1977,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا contact.
         required: true
       tags:
-      - v1
+      - contacts
       requestBody:
         content:
           application/json:
@@ -2001,7 +2001,7 @@ paths:
           description: ''
   /api/v1/contacts/check-phone/:
     get:
-      operationId: v1_contacts_check_phone_retrieve
+      operationId: contacts_check_phone_retrieve
       description: Live duplicate check while typing a number.
       parameters:
       - in: query
@@ -2010,7 +2010,7 @@ paths:
           type: string
         required: true
       tags:
-      - v1
+      - contacts
       security:
       - cookieAuth: []
       responses:
@@ -2022,7 +2022,7 @@ paths:
           description: ''
   /api/v1/contacts/duplicates/:
     get:
-      operationId: v1_contacts_duplicates_list
+      operationId: contacts_duplicates_list
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -2046,7 +2046,7 @@ paths:
         schema:
           type: integer
       tags:
-      - v1
+      - contacts
       security:
       - cookieAuth: []
       responses:
@@ -2058,7 +2058,7 @@ paths:
           description: ''
   /api/v1/dashboard/:
     get:
-      operationId: v1_dashboard_retrieve
+      operationId: dashboard_retrieve
       parameters:
       - in: query
         name: scope
@@ -2068,7 +2068,7 @@ paths:
           - all
           - me
       tags:
-      - v1
+      - dashboard
       security:
       - cookieAuth: []
       responses:
@@ -2081,7 +2081,7 @@ paths:
           description: ''
   /api/v1/deals/:
     get:
-      operationId: v1_deals_list
+      operationId: deals_list
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -2153,7 +2153,7 @@ paths:
         schema:
           type: integer
       tags:
-      - v1
+      - deals
       security:
       - cookieAuth: []
       responses:
@@ -2164,12 +2164,12 @@ paths:
                 $ref: '#/components/schemas/PaginatedDealList'
           description: ''
     post:
-      operationId: v1_deals_create
+      operationId: deals_create
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       tags:
-      - v1
+      - deals
       requestBody:
         content:
           application/json:
@@ -2193,7 +2193,7 @@ paths:
           description: ''
   /api/v1/deals/{id}/:
     get:
-      operationId: v1_deals_retrieve
+      operationId: deals_retrieve
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -2205,7 +2205,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا deal.
         required: true
       tags:
-      - v1
+      - deals
       security:
       - cookieAuth: []
       responses:
@@ -2216,7 +2216,7 @@ paths:
                 $ref: '#/components/schemas/Deal'
           description: ''
     patch:
-      operationId: v1_deals_partial_update
+      operationId: deals_partial_update
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -2228,7 +2228,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا deal.
         required: true
       tags:
-      - v1
+      - deals
       requestBody:
         content:
           application/json:
@@ -2250,7 +2250,7 @@ paths:
                 $ref: '#/components/schemas/Deal'
           description: ''
     delete:
-      operationId: v1_deals_destroy
+      operationId: deals_destroy
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -2262,7 +2262,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا deal.
         required: true
       tags:
-      - v1
+      - deals
       security:
       - cookieAuth: []
       responses:
@@ -2270,7 +2270,7 @@ paths:
           description: No response body
   /api/v1/deals/{id}/convert-to-finishing/:
     post:
-      operationId: v1_deals_convert_to_finishing_create
+      operationId: deals_convert_to_finishing_create
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -2282,7 +2282,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا deal.
         required: true
       tags:
-      - v1
+      - deals
       security:
       - cookieAuth: []
       responses:
@@ -2294,7 +2294,7 @@ paths:
           description: ''
   /api/v1/deals/{id}/match/:
     post:
-      operationId: v1_deals_match_create
+      operationId: deals_match_create
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -2306,7 +2306,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا deal.
         required: true
       tags:
-      - v1
+      - deals
       requestBody:
         content:
           application/json:
@@ -2326,7 +2326,7 @@ paths:
           description: No response body
   /api/v1/deals/{id}/matches/:
     get:
-      operationId: v1_deals_matches_list
+      operationId: deals_matches_list
       description: Available properties fitting this buy/rent demand + what the client
         said about each.
       parameters:
@@ -2355,7 +2355,7 @@ paths:
         schema:
           type: integer
       tags:
-      - v1
+      - deals
       security:
       - cookieAuth: []
       responses:
@@ -2367,7 +2367,7 @@ paths:
           description: ''
   /api/v1/deals/stage-counts/:
     get:
-      operationId: v1_deals_stage_counts_list
+      operationId: deals_stage_counts_list
       description: How many requests are in each stage under the current filters (the
         numbers on the stage filter).
       parameters:
@@ -2418,7 +2418,7 @@ paths:
         schema:
           type: string
       tags:
-      - v1
+      - deals
       security:
       - cookieAuth: []
       responses:
@@ -2430,7 +2430,7 @@ paths:
           description: ''
   /api/v1/documents/:
     get:
-      operationId: v1_documents_list
+      operationId: documents_list
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -2478,7 +2478,7 @@ paths:
         schema:
           type: integer
       tags:
-      - v1
+      - documents
       security:
       - cookieAuth: []
       responses:
@@ -2489,12 +2489,12 @@ paths:
                 $ref: '#/components/schemas/PaginatedDocumentList'
           description: ''
     post:
-      operationId: v1_documents_create
+      operationId: documents_create
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       tags:
-      - v1
+      - documents
       requestBody:
         content:
           multipart/form-data:
@@ -2518,7 +2518,7 @@ paths:
           description: ''
   /api/v1/documents/{id}/:
     get:
-      operationId: v1_documents_retrieve
+      operationId: documents_retrieve
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -2530,7 +2530,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا document.
         required: true
       tags:
-      - v1
+      - documents
       security:
       - cookieAuth: []
       responses:
@@ -2541,7 +2541,7 @@ paths:
                 $ref: '#/components/schemas/Document'
           description: ''
     patch:
-      operationId: v1_documents_partial_update
+      operationId: documents_partial_update
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -2553,7 +2553,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا document.
         required: true
       tags:
-      - v1
+      - documents
       requestBody:
         content:
           multipart/form-data:
@@ -2575,7 +2575,7 @@ paths:
                 $ref: '#/components/schemas/Document'
           description: ''
     delete:
-      operationId: v1_documents_destroy
+      operationId: documents_destroy
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -2587,7 +2587,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا document.
         required: true
       tags:
-      - v1
+      - documents
       security:
       - cookieAuth: []
       responses:
@@ -2595,7 +2595,7 @@ paths:
           description: No response body
   /api/v1/documents/{id}/file/:
     get:
-      operationId: v1_documents_file_retrieve
+      operationId: documents_file_retrieve
       description: Auth checked here; bytes sent by nginx (X-Accel-Redirect) in production.
       parameters:
       - in: path
@@ -2605,7 +2605,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا document.
         required: true
       tags:
-      - v1
+      - documents
       security:
       - cookieAuth: []
       responses:
@@ -2618,10 +2618,10 @@ paths:
           description: ''
   /api/v1/notification-preferences/:
     get:
-      operationId: v1_notification_preferences_list
+      operationId: notification_preferences_list
       description: Each user mutes the kinds they don't want.
       tags:
-      - v1
+      - notification-preferences
       security:
       - cookieAuth: []
       responses:
@@ -2634,10 +2634,10 @@ paths:
                   $ref: '#/components/schemas/Preference'
           description: ''
     post:
-      operationId: v1_notification_preferences_create
+      operationId: notification_preferences_create
       description: Each user mutes the kinds they don't want.
       tags:
-      - v1
+      - notification-preferences
       requestBody:
         content:
           application/json:
@@ -2661,7 +2661,7 @@ paths:
           description: ''
   /api/v1/notifications/:
     get:
-      operationId: v1_notifications_list
+      operationId: notifications_list
       parameters:
       - name: ordering
         required: false
@@ -2686,7 +2686,7 @@ paths:
         schema:
           type: boolean
       tags:
-      - v1
+      - notifications
       security:
       - cookieAuth: []
       responses:
@@ -2698,7 +2698,7 @@ paths:
           description: ''
   /api/v1/notifications/{id}/:
     patch:
-      operationId: v1_notifications_partial_update
+      operationId: notifications_partial_update
       parameters:
       - in: path
         name: id
@@ -2707,7 +2707,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا notification.
         required: true
       tags:
-      - v1
+      - notifications
       requestBody:
         content:
           application/json:
@@ -2730,9 +2730,9 @@ paths:
           description: ''
   /api/v1/notifications/read-all/:
     post:
-      operationId: v1_notifications_read_all_create
+      operationId: notifications_read_all_create
       tags:
-      - v1
+      - notifications
       security:
       - cookieAuth: []
       responses:
@@ -2740,7 +2740,7 @@ paths:
           description: No response body
   /api/v1/payments/:
     get:
-      operationId: v1_payments_list
+      operationId: payments_list
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -2756,7 +2756,7 @@ paths:
         schema:
           type: string
       tags:
-      - v1
+      - payments
       security:
       - cookieAuth: []
       responses:
@@ -2769,12 +2769,12 @@ paths:
                   $ref: '#/components/schemas/Payment'
           description: ''
     post:
-      operationId: v1_payments_create
+      operationId: payments_create
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       tags:
-      - v1
+      - payments
       requestBody:
         content:
           application/json:
@@ -2798,7 +2798,7 @@ paths:
           description: ''
   /api/v1/payments/{id}/:
     get:
-      operationId: v1_payments_retrieve
+      operationId: payments_retrieve
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -2810,7 +2810,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا payment.
         required: true
       tags:
-      - v1
+      - payments
       security:
       - cookieAuth: []
       responses:
@@ -2821,7 +2821,7 @@ paths:
                 $ref: '#/components/schemas/Payment'
           description: ''
     patch:
-      operationId: v1_payments_partial_update
+      operationId: payments_partial_update
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -2833,7 +2833,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا payment.
         required: true
       tags:
-      - v1
+      - payments
       requestBody:
         content:
           application/json:
@@ -2855,7 +2855,7 @@ paths:
                 $ref: '#/components/schemas/Payment'
           description: ''
     delete:
-      operationId: v1_payments_destroy
+      operationId: payments_destroy
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -2867,7 +2867,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا payment.
         required: true
       tags:
-      - v1
+      - payments
       security:
       - cookieAuth: []
       responses:
@@ -2875,7 +2875,7 @@ paths:
           description: No response body
   /api/v1/properties/:
     get:
-      operationId: v1_properties_list
+      operationId: properties_list
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -2935,7 +2935,7 @@ paths:
         schema:
           type: integer
       tags:
-      - v1
+      - properties
       security:
       - cookieAuth: []
       responses:
@@ -2946,12 +2946,12 @@ paths:
                 $ref: '#/components/schemas/PaginatedPropertyList'
           description: ''
     post:
-      operationId: v1_properties_create
+      operationId: properties_create
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       tags:
-      - v1
+      - properties
       requestBody:
         content:
           application/json:
@@ -2975,7 +2975,7 @@ paths:
           description: ''
   /api/v1/properties/{id}/:
     get:
-      operationId: v1_properties_retrieve
+      operationId: properties_retrieve
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -2987,7 +2987,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا property.
         required: true
       tags:
-      - v1
+      - properties
       security:
       - cookieAuth: []
       responses:
@@ -2998,7 +2998,7 @@ paths:
                 $ref: '#/components/schemas/Property'
           description: ''
     patch:
-      operationId: v1_properties_partial_update
+      operationId: properties_partial_update
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -3010,7 +3010,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا property.
         required: true
       tags:
-      - v1
+      - properties
       requestBody:
         content:
           application/json:
@@ -3032,7 +3032,7 @@ paths:
                 $ref: '#/components/schemas/Property'
           description: ''
     delete:
-      operationId: v1_properties_destroy
+      operationId: properties_destroy
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -3044,7 +3044,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا property.
         required: true
       tags:
-      - v1
+      - properties
       security:
       - cookieAuth: []
       responses:
@@ -3052,7 +3052,7 @@ paths:
           description: No response body
   /api/v1/properties/{id}/demands/:
     get:
-      operationId: v1_properties_demands_retrieve
+      operationId: properties_demands_retrieve
       description: Open buy/rent requests this property fits (matching, other direction).
       parameters:
       - in: path
@@ -3062,7 +3062,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا property.
         required: true
       tags:
-      - v1
+      - properties
       security:
       - cookieAuth: []
       responses:
@@ -3074,7 +3074,7 @@ paths:
           description: ''
   /api/v1/quotes/:
     get:
-      operationId: v1_quotes_list
+      operationId: quotes_list
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -3090,7 +3090,7 @@ paths:
         schema:
           type: string
       tags:
-      - v1
+      - quotes
       security:
       - cookieAuth: []
       responses:
@@ -3103,12 +3103,12 @@ paths:
                   $ref: '#/components/schemas/Quote'
           description: ''
     post:
-      operationId: v1_quotes_create
+      operationId: quotes_create
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
       tags:
-      - v1
+      - quotes
       requestBody:
         content:
           application/json:
@@ -3132,7 +3132,7 @@ paths:
           description: ''
   /api/v1/quotes/{id}/:
     get:
-      operationId: v1_quotes_retrieve
+      operationId: quotes_retrieve
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -3144,7 +3144,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا quote.
         required: true
       tags:
-      - v1
+      - quotes
       security:
       - cookieAuth: []
       responses:
@@ -3155,7 +3155,7 @@ paths:
                 $ref: '#/components/schemas/Quote'
           description: ''
     patch:
-      operationId: v1_quotes_partial_update
+      operationId: quotes_partial_update
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -3167,7 +3167,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا quote.
         required: true
       tags:
-      - v1
+      - quotes
       requestBody:
         content:
           application/json:
@@ -3189,7 +3189,7 @@ paths:
                 $ref: '#/components/schemas/Quote'
           description: ''
     delete:
-      operationId: v1_quotes_destroy
+      operationId: quotes_destroy
       description: |-
         Role-based: `resource` names the permission group (contacts, deals…). Every query is limited to what the
         user may see (none / own / all); create/edit/delete need the matching permission (see apps.access).
@@ -3201,7 +3201,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا quote.
         required: true
       tags:
-      - v1
+      - quotes
       security:
       - cookieAuth: []
       responses:
@@ -3209,14 +3209,14 @@ paths:
           description: No response body
   /api/v1/reports/:
     get:
-      operationId: v1_reports_retrieve
+      operationId: reports_retrieve
       parameters:
       - in: query
         name: days
         schema:
           type: integer
       tags:
-      - v1
+      - reports
       security:
       - cookieAuth: []
       responses:
@@ -3229,7 +3229,7 @@ paths:
           description: ''
   /api/v1/search/:
     get:
-      operationId: v1_search_retrieve
+      operationId: search_retrieve
       parameters:
       - in: query
         name: q
@@ -3237,7 +3237,7 @@ paths:
           type: string
         required: true
       tags:
-      - v1
+      - search
       security:
       - cookieAuth: []
       responses:
@@ -3250,7 +3250,7 @@ paths:
           description: ''
   /api/v1/stages/:
     get:
-      operationId: v1_stages_list
+      operationId: stages_list
       parameters:
       - in: query
         name: include_inactive
@@ -3267,7 +3267,7 @@ paths:
         schema:
           type: string
       tags:
-      - v1
+      - stages
       security:
       - cookieAuth: []
       responses:
@@ -3280,9 +3280,9 @@ paths:
                   $ref: '#/components/schemas/Stage'
           description: ''
     post:
-      operationId: v1_stages_create
+      operationId: stages_create
       tags:
-      - v1
+      - stages
       requestBody:
         content:
           application/json:
@@ -3306,7 +3306,7 @@ paths:
           description: ''
   /api/v1/stages/{id}/:
     get:
-      operationId: v1_stages_retrieve
+      operationId: stages_retrieve
       parameters:
       - in: path
         name: id
@@ -3315,7 +3315,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا stage.
         required: true
       tags:
-      - v1
+      - stages
       security:
       - cookieAuth: []
       responses:
@@ -3326,7 +3326,7 @@ paths:
                 $ref: '#/components/schemas/Stage'
           description: ''
     put:
-      operationId: v1_stages_update
+      operationId: stages_update
       parameters:
       - in: path
         name: id
@@ -3335,7 +3335,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا stage.
         required: true
       tags:
-      - v1
+      - stages
       requestBody:
         content:
           application/json:
@@ -3358,7 +3358,7 @@ paths:
                 $ref: '#/components/schemas/Stage'
           description: ''
     patch:
-      operationId: v1_stages_partial_update
+      operationId: stages_partial_update
       parameters:
       - in: path
         name: id
@@ -3367,7 +3367,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا stage.
         required: true
       tags:
-      - v1
+      - stages
       requestBody:
         content:
           application/json:
@@ -3389,7 +3389,7 @@ paths:
                 $ref: '#/components/schemas/Stage'
           description: ''
     delete:
-      operationId: v1_stages_destroy
+      operationId: stages_destroy
       parameters:
       - in: path
         name: id
@@ -3398,7 +3398,7 @@ paths:
         description: نوع رقم صحيح فريد يحدد هذا stage.
         required: true
       tags:
-      - v1
+      - stages
       security:
       - cookieAuth: []
       responses:
@@ -3406,7 +3406,7 @@ paths:
           description: No response body
   /api/v1/timeline/:
     get:
-      operationId: v1_timeline_retrieve
+      operationId: timeline_retrieve
       description: Activities (done + planned + system) and uploaded files for a contact,
         deal or property.
       parameters:
@@ -3423,7 +3423,7 @@ paths:
         schema:
           type: integer
       tags:
-      - v1
+      - timeline
       security:
       - cookieAuth: []
       responses:
@@ -3436,7 +3436,7 @@ paths:
           description: ''
   /api/v1/users/:
     get:
-      operationId: v1_users_list
+      operationId: users_list
       description: Active users, for assignee pickers.
       parameters:
       - name: ordering
@@ -3446,7 +3446,7 @@ paths:
         schema:
           type: string
       tags:
-      - v1
+      - users
       security:
       - cookieAuth: []
       responses:

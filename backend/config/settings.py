@@ -170,6 +170,7 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     "TITLE": "CRM API",
     "VERSION": "1.0.0",
+    "SCHEMA_PATH_PREFIX": r"/api/v1",  # fixed: auto-detect changes with DEBUG (api/schema/ is dev-only)
     "COMPONENT_SPLIT_REQUEST": True,  # separate read/write components (nested read, *_id write)
     "SERVE_INCLUDE_SCHEMA": False,
     # several models have a "type"/"kind" choice field: give each enum a stable, readable name
